@@ -9,6 +9,7 @@
 #include "stb_image.h"
 
 #define ENGINE_INCLUDES
+#include "axis.h"
 #include "shader.h"
 
 GLFWwindow *window;
@@ -26,6 +27,9 @@ int main() {
 
     int shader = load_shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     glUseProgram(shader);
+
+    axis_t axis;
+    init_axis(&axis);
 
     while (!glfwWindowShouldClose(window)) {
         double current_time = glfwGetTime();
@@ -59,11 +63,13 @@ int main() {
         glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float *)projection);
 
         // Render...
+        draw_axis(&axis, shader, (float *)scroll_pos, width, height);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
+    free_axis(&axis);
     deinit();
     return EXIT_SUCCESS;
 }
