@@ -10,6 +10,7 @@
 
 #define ENGINE_INCLUDES
 #include "axis.h"
+#include "grid.h"
 #include "shader.h"
 
 GLFWwindow *window;
@@ -30,6 +31,9 @@ int main() {
 
     axis_t axis;
     init_axis(&axis);
+
+    grid_t grid;
+    init_grid(&grid);
 
     while (!glfwWindowShouldClose(window)) {
         double current_time = glfwGetTime();
@@ -63,6 +67,7 @@ int main() {
         glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float *)projection);
 
         // Render...
+        draw_grid(&grid, shader);
         draw_axis(&axis, shader, (float *)scroll_pos, width, height);
 
         glfwSwapBuffers(window);
@@ -70,6 +75,8 @@ int main() {
     }
 
     free_axis(&axis);
+    free_grid(&grid);
+
     deinit();
     return EXIT_SUCCESS;
 }
