@@ -64,6 +64,8 @@ int main() {
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
+        glViewport(0, 0, width - 600, height);
+
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -95,6 +97,21 @@ int main() {
         draw_axis(&axis, shader, (float *)scroll_pos, width, height);
 
         render_text(fps_text, 0, 0, width, height);
+
+        glEnable(GL_SCISSOR_TEST);
+        glScissor(width - 600, 0, 600, height);
+        glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDisable(GL_SCISSOR_TEST);
+
+        glViewport(width - 600, 0, 600, height);
+        render_text("VERTICES", 0, 0, 600, height);
+
+        for (int i = 0; i < object.vertices_len; i++) {
+            char text[100];
+            sprintf(text, "%d:%.3f,%.3f,%.3f", i, object.vertices[i][0], object.vertices[i][1], object.vertices[i][2]);
+            render_text(text, 0, -(i + 1) * 40, 600, height);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
