@@ -48,14 +48,29 @@ void add_vertex(model_t* model, vec3 vertex) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
 }
 
-void draw_model(model_t* model, int shader) {
+void move_vertex(model_t* model, int index, vec3 delta) {
+    vec3_add(model->vertices[index], model->vertices[index], delta);
+    glBindVertexArray(model->vao);
+
+    // Vertices
+    glBindBuffer(GL_ARRAY_BUFFER, model->vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
+}
+
+void draw_model(model_t* model, int current_index, int shader) {
     GLint color_loc = glGetUniformLocation(shader, "color");
     glUniform3f(color_loc, 0.35f, 0.25f, 0.95f);
 
-    glPointSize(10);
-
     glBindVertexArray(model->vao);
     glDrawElements(GL_TRIANGLES, model->vertices_len, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 0));
+
+    glPointSize(20);
+
+    glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
+    glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * current_index));
+
+    glUniform3f(color_loc, 1.0f, 0.75f, 0.5f);
+    glDrawElements(GL_POINTS, model->vertices_len, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 0));
 }
 
 void free_model(model_t* model) {

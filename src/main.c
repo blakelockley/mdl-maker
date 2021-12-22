@@ -22,11 +22,15 @@ int width, height;
 float zoom = 5.0f;
 vec2 scroll_pos = {0.0f, M_PI_4};
 
+int current_index = 1;
+
 model_t object;
 
 void init();
 void deinit();
 void display_fps();
+
+char buffer[256];
 
 int main() {
     init();
@@ -75,8 +79,15 @@ int main() {
 
         // Render...
         draw_grid(&grid, shader);
-        draw_model(&object, shader);
+        draw_model(&object, current_index, shader);
+
         display_fps();
+
+        sprintf(buffer, "INDEX:%d\n", current_index);
+        render_text(buffer, 0, -32, width, height);
+
+        sprintf(buffer, "ROTATION:%.2f %.2f\n", scroll_pos[0], scroll_pos[1]);
+        render_text(buffer, 0, -64, width, height);
 
         draw_axis(&axis, shader, (float *)scroll_pos, width, height);
 
@@ -102,16 +113,35 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-    if (key == GLFW_KEY_MINUS && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        zoom += 0.05f;
+    if (key == GLFW_KEY_MINUS && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        zoom += 0.5f;
+        zoom = fmin(fmax(zoom, 0.5f), 10.0f);
+    }
 
-    if (key == GLFW_KEY_EQUAL && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        zoom -= 0.05f;
+    if (key == GLFW_KEY_EQUAL && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        zoom -= 0.5f;
+        zoom = fmin(fmax(zoom, 0.5f), 10.0f);
+    }
 
-    zoom = fmin(fmax(zoom, 0.5f), 10.0f);
+    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+        add_vertex(&object, (vec3){0.0f, 1.0f, 0.0f});
+        current_index = object.vertices_len - 1;
+    }
 
-    if (key == GLFW_KEY_A && action == GLFW_PRESS)
-        add_vertex(&object, (vec3){(float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX});
+    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        move_vertex(&object, current_index, (vec3){0.0f, 0.1f, 0.0f});
+
+    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        move_vertex(&object, current_index, (vec3){0.0f, -0.1f, 0.0f});
+
+    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        move_vertex(&object, current_index, (vec3){-0.1f, 0.0f, 0.0f});
+
+    if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        move_vertex(&object, current_index, (vec3){0.1f, 0.0f, 0.0f});
+
+    if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+        current_index = (current_index + 1) % object.vertices_len;
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
