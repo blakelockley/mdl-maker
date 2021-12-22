@@ -12,6 +12,7 @@
 #include "axis.h"
 #include "grid.h"
 #include "shader.h"
+#include "text.h"
 
 GLFWwindow *window;
 
@@ -26,19 +27,20 @@ void deinit();
 int main() {
     init();
 
-    char title[16];
+    char fps_text[16] = {};
 
     double time_elapsed = 0, last_second = 0;
     int frames = 0;
 
     int shader = load_shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-    glUseProgram(shader);
 
     axis_t axis;
     init_axis(&axis);
 
     grid_t grid;
     init_grid(&grid);
+
+    init_text();
 
     while (!glfwWindowShouldClose(window)) {
         double current_time = glfwGetTime();
@@ -48,9 +50,7 @@ int main() {
         frames++;
         if (current_time - last_second > 1.0) {
             double fps = frames / (current_time - last_second);
-
-            sprintf(title, "FPS: %.2f", fps);
-            glfwSetWindowTitle(window, title);
+            sprintf(fps_text, "FPS:%.2f", fps);
 
             frames = 0;
             last_second = current_time;
@@ -61,6 +61,8 @@ int main() {
 
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glUseProgram(shader);
 
         zoom += delta * zoom_dir * 2.5f;
         zoom = fmin(fmax(zoom, 0.5f), 10.0f);
@@ -88,12 +90,16 @@ int main() {
         draw_grid(&grid, shader);
         draw_axis(&axis, shader, (float *)scroll_pos, width, height);
 
+        render_text(fps_text, 0, 0, width, height);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     free_axis(&axis);
     free_grid(&grid);
+
+    free_text();
 
     deinit();
     return EXIT_SUCCESS;
@@ -120,6 +126,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         zoom_dir = 0;
 }
 
+void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
+    // pass
+}
+
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     scroll_pos[0] += xoffset;
 }
@@ -143,7 +153,10 @@ void init() {
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
+    glfwSetWindowTitle(window, "mdl-maker");
+
     glfwSetKeyCallback(window, key_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
     // OpenGL setup
