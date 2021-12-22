@@ -1,9 +1,14 @@
 #include "axis.h"
 
 #include "linmath.h"
+#include "shader.h"
+
+int shader;
 
 void init_axis(axis_t *axis) {
     // clang-format off
+
+    shader = load_shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     
     vec3 vertices[4] = {
         {0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}
@@ -32,6 +37,7 @@ void init_axis(axis_t *axis) {
 }
 
 void draw_axis(axis_t *axis, int shader, vec2 scroll_pos, int width, int height) {
+    glUseProgram(shader);
     glViewport(width - 400, height - 400, 400, 400);
 
     mat4x4 model, view, projection;
