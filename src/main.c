@@ -17,6 +17,8 @@
 
 GLFWwindow *window;
 
+int width, height;
+
 float zoom = 5.0f;
 vec2 scroll_pos = {0.0f, M_PI_4};
 
@@ -24,14 +26,10 @@ model_t object;
 
 void init();
 void deinit();
+void display_fps();
 
 int main() {
     init();
-
-    char fps_text[16] = {};
-
-    double time_elapsed = 0, last_second = 0;
-    int frames = 0;
 
     int shader = load_shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
@@ -49,22 +47,7 @@ int main() {
     init_text();
 
     while (!glfwWindowShouldClose(window)) {
-        double current_time = glfwGetTime();
-        time_elapsed = current_time;
-
-        frames++;
-        if (current_time - last_second > 1.0) {
-            double fps = frames / (current_time - last_second);
-            sprintf(fps_text, "FPS:%.2f", fps);
-
-            frames = 0;
-            last_second = current_time;
-        }
-
-        int width, height;
         glfwGetFramebufferSize(window, &width, &height);
-
-        glViewport(0, 0, width - 600, height);
 
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -93,6 +76,7 @@ int main() {
         // Render...
         draw_grid(&grid, shader);
         draw_model(&object, shader);
+        display_fps();
 
         draw_axis(&axis, shader, (float *)scroll_pos, width, height);
 
@@ -189,4 +173,23 @@ void init() {
 void deinit() {
     glfwDestroyWindow(window);
     glfwTerminate();
+}
+
+void display_fps() {
+    static char fps_text[16];
+    static double last_second = 0;
+    static int frames = 0;
+
+    double current_time = glfwGetTime();
+
+    frames++;
+    if (current_time - last_second > 1.0) {
+        double fps = frames / (current_time - last_second);
+        sprintf(fps_text, "FPS:%.2f", fps);
+
+        frames = 0;
+        last_second = current_time;
+    }
+
+    render_text(fps_text, 0, 0, width, height);
 }
