@@ -50,7 +50,6 @@ int main() {
 
     while (!glfwWindowShouldClose(window)) {
         double current_time = glfwGetTime();
-        double delta = current_time - time_elapsed;
         time_elapsed = current_time;
 
         frames++;
@@ -149,7 +148,7 @@ void init() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(800, 600, "GLFW Window", NULL, NULL);
+    window = glfwCreateWindow(1200, 800, "mdl-maker", NULL, NULL);
     if (!window) {
         glfwTerminate();
         exit(EXIT_FAILURE);
@@ -158,15 +157,12 @@ void init() {
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
-    glfwSetWindowTitle(window, "mdl-maker");
-
     glfwSetKeyCallback(window, key_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
     // OpenGL setup
 
-    glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
     glEnable(GL_BLEND);
