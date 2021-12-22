@@ -17,6 +17,7 @@
 
 GLFWwindow *window;
 
+float zoom = 5.0f;
 vec2 scroll_pos = {0.0f, M_PI_4};
 
 model_t object;
@@ -67,15 +68,12 @@ int main() {
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(shader);
-
-        zoom += delta * zoom_dir * 2.5f;
-        zoom = fmin(fmax(zoom, 0.5f), 10.0f);
-
         vec3 camera_pos;
-        camera_pos[0] = sinf(scroll_pos[1]) * cosf(scroll_pos[0]) * zoom;
-        camera_pos[1] = cosf(scroll_pos[1]) * zoom;
-        camera_pos[2] = sinf(scroll_pos[1]) * sinf(scroll_pos[0]) * zoom;
+        camera_pos[0] = cosf(scroll_pos[1]) * -sinf(scroll_pos[0]) * zoom;
+        camera_pos[1] = sinf(scroll_pos[1]) * zoom;
+        camera_pos[2] = cosf(scroll_pos[1]) * cosf(scroll_pos[0]) * zoom;
+
+        glUseProgram(shader);
 
         mat4x4 model, view, projection;
         mat4x4_identity(model);
@@ -121,14 +119,13 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-    if (key == GLFW_KEY_UP && action == GLFW_PRESS)
-        zoom_dir = -1;
+    if (key == GLFW_KEY_MINUS && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        zoom += 0.05f;
 
-    if (key == GLFW_KEY_UP && action == GLFW_RELEASE)
-        zoom_dir = 0;
+    if (key == GLFW_KEY_EQUAL && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        zoom -= 0.05f;
 
-    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
-        zoom_dir = +1;
+    zoom = fmin(fmax(zoom, 0.5f), 10.0f);
 
     if (key == GLFW_KEY_A && action == GLFW_PRESS)
         add_vertex(&object, (vec3){(float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX});
