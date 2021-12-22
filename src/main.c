@@ -11,6 +11,7 @@
 #define ENGINE_INCLUDES
 #include "axis.h"
 #include "grid.h"
+#include "model.h"
 #include "shader.h"
 #include "text.h"
 
@@ -18,8 +19,7 @@ GLFWwindow *window;
 
 vec2 scroll_pos = {0.0f, M_PI_4};
 
-int zoom_dir = 0;
-float zoom = 5.0f;
+model_t object;
 
 void init();
 void deinit();
@@ -39,6 +39,11 @@ int main() {
 
     grid_t grid;
     init_grid(&grid);
+
+    init_model(&object);
+    add_vertex(&object, (vec3){0.5f, 0.0f, 0.0f});
+    add_vertex(&object, (vec3){0.0f, 0.5f, 1.0f});
+    add_vertex(&object, (vec3){-0.5f, 0.0f, 0.0f});
 
     init_text();
 
@@ -88,6 +93,8 @@ int main() {
 
         // Render...
         draw_grid(&grid, shader);
+        draw_model(&object, shader);
+
         draw_axis(&axis, shader, (float *)scroll_pos, width, height);
 
         render_text(fps_text, 0, 0, width, height);
@@ -98,6 +105,7 @@ int main() {
 
     free_axis(&axis);
     free_grid(&grid);
+    free_model(&object);
 
     free_text();
 
@@ -122,8 +130,8 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
         zoom_dir = +1;
 
-    if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
-        zoom_dir = 0;
+    if (key == GLFW_KEY_A && action == GLFW_PRESS)
+        add_vertex(&object, (vec3){(float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX});
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
