@@ -10,6 +10,7 @@
 
 #define ENGINE_INCLUDES
 #include "axis.h"
+#include "camera.h"
 #include "grid.h"
 #include "model.h"
 #include "shader.h"
@@ -18,12 +19,9 @@
 GLFWwindow *window;
 
 int width, height;
-
-float zoom = 5.0f;
-vec2 scroll_pos = {0.0f, M_PI_4};
-
 int current_index = 1;
 
+camera_t camera;
 model_t object;
 
 void init();
@@ -43,6 +41,8 @@ int main() {
     grid_t grid;
     init_grid(&grid);
 
+    init_camera(&camera);
+
     init_model(&object);
     add_vertex(&object, (vec3){0.5f, 0.0f, 0.0f});
     add_vertex(&object, (vec3){0.0f, 0.5f, 1.0f});
@@ -56,17 +56,12 @@ int main() {
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        vec3 camera_pos;
-        camera_pos[0] = cosf(scroll_pos[1]) * -sinf(scroll_pos[0]) * zoom;
-        camera_pos[1] = sinf(scroll_pos[1]) * zoom;
-        camera_pos[2] = cosf(scroll_pos[1]) * cosf(scroll_pos[0]) * zoom;
-
         glUseProgram(shader);
 
         mat4x4 model, view, projection;
         mat4x4_identity(model);
-        mat4x4_look_at(view, camera_pos, (vec3){0, 0, 0}, (vec3){0, 1, 0});
         mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
+        get_view_matrix(&camera, view);
 
         GLint model_loc = glGetUniformLocation(shader, "model");
         glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float *)model);
@@ -81,15 +76,14 @@ int main() {
         draw_grid(&grid, shader);
         draw_model(&object, current_index, shader);
 
+        draw_camera(&camera);
+
         display_fps();
 
         sprintf(buffer, "INDEX:%d\n", current_index);
         render_text(buffer, 0, -32, width, height);
 
-        sprintf(buffer, "ROTATION:%.2f %.2f\n", scroll_pos[0], scroll_pos[1]);
-        render_text(buffer, 0, -64, width, height);
-
-        draw_axis(&axis, shader, (float *)scroll_pos, width, height);
+        draw_axis(&axis, shader, camera.pos, width, height);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -98,6 +92,7 @@ int main() {
     free_axis(&axis);
     free_grid(&grid);
     free_model(&object);
+    free_camera(&camera);
 
     free_text();
 
@@ -113,15 +108,11 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-    if (key == GLFW_KEY_MINUS && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        zoom += 0.5f;
-        zoom = fmin(fmax(zoom, 0.5f), 10.0f);
-    }
+    if (key == GLFW_KEY_MINUS && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        update_zoom(&camera, 0.5f);
 
-    if (key == GLFW_KEY_EQUAL && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        zoom -= 0.5f;
-        zoom = fmin(fmax(zoom, 0.5f), 10.0f);
-    }
+    if (key == GLFW_KEY_EQUAL && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        update_zoom(&camera, -0.5f);
 
     if (key == GLFW_KEY_A && action == GLFW_PRESS) {
         add_vertex(&object, (vec3){0.0f, 1.0f, 0.0f});
@@ -142,6 +133,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
         current_index = (current_index + 1) % object.vertices_len;
+
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+        camera.third_person = !camera.third_person;
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
@@ -149,7 +143,7 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-    scroll_pos[0] += xoffset;
+    update_scroll(&camera, xoffset, yoffset);
 }
 
 void init() {

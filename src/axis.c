@@ -36,16 +36,15 @@ void init_axis(axis_t *axis) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void *)0);  // Attrib pointer for currently bound buffer
 }
 
-void draw_axis(axis_t *axis, int shader, vec2 scroll_pos, int width, int height) {
+void draw_axis(axis_t *axis, int shader, vec3 camera_pos, int width, int height) {
     glUseProgram(shader);
     glViewport(width - 400, height - 400, 400, 400);
 
     mat4x4 model, view, projection;
     mat4x4_identity(model);
-    mat4x4_rotate_y(model, model, scroll_pos[0]);
 
-    mat4x4_look_at(view, (vec3){0, 1, 1}, (vec3){0, 0, 0}, (vec3){0, 1, 0});
-    mat4x4_ortho(projection, -1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 10.0f);
+    mat4x4_look_at(view, camera_pos, (vec3){0, 0, 0}, (vec3){0, 1, 0});
+    mat4x4_ortho(projection, -1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
 
     GLint model_loc = glGetUniformLocation(shader, "model");
     glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float *)model);
