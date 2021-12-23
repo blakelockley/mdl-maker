@@ -20,6 +20,8 @@ GLFWwindow *window;
 
 int width, height;
 int current_index = 1;
+int third_person = 0;
+int shift_pressed = 0;
 
 camera_t camera;
 model_t object;
@@ -148,8 +150,16 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         shift_pressed = 0;
 }
 
-void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
-    // pass
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        int w, h;
+        glfwGetWindowSize(window, &w, &h);
+
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+
+        set_ray(&camera, xpos, ypos, w, h);
+    }
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
@@ -179,7 +189,7 @@ void init() {
     glfwSwapInterval(1);
 
     glfwSetKeyCallback(window, key_callback);
-    glfwSetCursorPosCallback(window, cursor_position_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
     // OpenGL setup

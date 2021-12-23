@@ -1,8 +1,7 @@
 #include "camera.h"
 
+#include <stdio.h>
 #include <stdlib.h>
-
-#include "shader.h"
 
 extern int width, height;
 
@@ -12,13 +11,14 @@ void init_camera(camera_t* camera) {
     vec3_set(camera->scroll, 0.0f, 2.0f, 2.0f);
     update_camera_position(camera);
 
-    camera->shader = load_shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+    vec3_zero(camera->ray_start);
+    vec3_zero(camera->ray);
 
     glGenVertexArrays(1, &camera->vao);
     glBindVertexArray(camera->vao);
 
-    uint32_t edges[2] = {0, 1};
-    vec3 vertices[2];
+    uint32_t edges[4] = {0, 1, 2, 3};
+    vec3 vertices[4];
 
     // Edges
     glGenBuffers(1, &camera->ebo);
@@ -28,7 +28,7 @@ void init_camera(camera_t* camera) {
     // Vertices
     glGenBuffers(1, &camera->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, camera->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), NULL, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);  // Attrib pointer for currently bound buffer
@@ -46,7 +46,7 @@ void draw_camera(camera_t* camera, int shader) {
     glBindVertexArray(camera->vao);
     glPointSize(40);
 
-    vec3 vertices[3];
+    vec3 vertices[4];
     vec3_copy(vertices[0], camera->pos);
 
     vec3 vector;
@@ -56,6 +56,13 @@ void draw_camera(camera_t* camera, int shader) {
     vec3_add(vector, camera->pos, vector);
     vec3_copy(vertices[1], vector);
 
+    vec3 ray_end;
+    vec3_scale(ray_end, camera->ray, 10.0f);
+    vec3_add(ray_end, camera->ray_start, ray_end);
+
+    vec3_copy(vertices[2], camera->ray_start);
+    vec3_copy(vertices[3], ray_end);
+
     glBindBuffer(GL_ARRAY_BUFFER, camera->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
@@ -64,6 +71,9 @@ void draw_camera(camera_t* camera, int shader) {
 
     glUniform3f(color_loc, 0.25f, 0.35f, 0.25f);
     glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 0));
+
+    glUniform3f(color_loc, 0.0f, 0.0f, 1.0f);
+    glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 2));
 }
 
 void free_camera(camera_t* camera) {
@@ -92,9 +102,36 @@ void update_zoom(camera_t* camera, double delta) {
     update_camera_position(camera);
 }
 
-void get_view_matrix(camera_t* camera, mat4x4 view) {
-    if (camera->third_person)
-        mat4x4_look_at(view, (vec3){5, 5, 5}, (vec3){0, 0, 0}, (vec3){0, 1, 0});
-    else
-        mat4x4_look_at(view, camera->pos, (vec3){0, 0, 0}, (vec3){0, 1, 0});
+void set_ray(camera_t* camera, double mouse_x, double mouse_y, int width, int height) {
+    double normal_x = (2.0f * mouse_x) / width - 1.0f;
+    double normal_y = 1.0f - (2.0f * mouse_y) / height;
+
+    vec4 ray_start = (vec4){normal_x, normal_y, -1.0f, 1.0f};
+    vec4 ray_end = (vec4){normal_x, normal_y, 0.0f, 1.0f};
+
+    mat4x4 view, projection;
+    mat4x4_look_at(view, camera->pos, (vec3){0, 0, 0}, (vec3){0, 1, 0});
+    mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
+
+    mat4x4_invert(view, view);
+    mat4x4_invert(projection, projection);
+
+    mat4x4_mul_vec4(ray_start, projection, ray_start);
+    vec4_scale(ray_start, ray_start, 1.0f / ray_start[3]);
+
+    mat4x4_mul_vec4(ray_start, view, ray_start);
+    vec4_scale(ray_start, ray_start, 1.0f / ray_start[3]);
+
+    mat4x4_mul_vec4(ray_end, projection, ray_end);
+    vec4_scale(ray_end, ray_end, 1.0f / ray_end[3]);
+
+    mat4x4_mul_vec4(ray_end, view, ray_end);
+    vec4_scale(ray_end, ray_end, 1.0f / ray_end[3]);
+
+    vec3 ray_dir;
+    vec3_sub(ray_dir, ray_end, ray_start);
+    vec3_normalize(ray_dir, ray_dir);
+
+    vec3_copy(camera->ray_start, ray_start);
+    vec3_copy(camera->ray, ray_dir);
 }

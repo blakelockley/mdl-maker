@@ -5,8 +5,8 @@
 #include "linmath.h"
 
 struct _camera_t {
-    int shader, third_person;
     vec3 scroll, pos;
+    vec3 ray_start, ray;
     GLuint vao, vbo, ebo;
 };
 
@@ -19,6 +19,6 @@ void free_camera(camera_t* camera);
 void update_scroll(camera_t* camera, double xoffset, double yoffset);
 void update_zoom(camera_t* camera, double delta);
 
-void get_view_matrix(camera_t* camera, mat4x4 view);
+void set_ray(camera_t* camera, double mouse_x, double mouse_y, int width, int height);
 
 #endif  // CAMERA_H
