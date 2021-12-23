@@ -33,7 +33,6 @@ void init_text() {
         return;
 
     has_init = 1;
-
     program = load_shader("shaders/text_vert.glsl", "shaders/text_frag.glsl");
 
     glGenVertexArrays(1, &vao);
@@ -56,8 +55,6 @@ void init_text() {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(tex_coords[0]) * 2, (void *)0);
     glBufferData(GL_ARRAY_BUFFER, sizeof(tex_coords), tex_coords, GL_STATIC_DRAW);
-
-    glBindVertexArray(0);
 
     int w, h, n;
     image = stbi_load("rsc/characters.png", &w, &h, &n, STBI_rgb_alpha);
