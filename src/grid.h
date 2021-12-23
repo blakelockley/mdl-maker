@@ -8,7 +8,7 @@
 #define GRID_HALF (GRID_SIZE / 2.0f)
 
 struct _grid_t {
-    GLuint vao, vbo, ebo;
+    GLuint vao, vbo;
 };
 
 typedef struct _grid_t grid_t;
