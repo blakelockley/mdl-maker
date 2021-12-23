@@ -56,12 +56,16 @@ int main() {
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        vec3 camera_pos = (vec3){5.0f, 5.0f, 5.0f};
+        if (!third_person)
+            vec3_copy(camera_pos, camera.pos);
+
         glUseProgram(shader);
 
         mat4x4 model, view, projection;
         mat4x4_identity(model);
+        mat4x4_look_at(view, camera_pos, (vec3){0, 0, 0}, (vec3){0, 1, 0});
         mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
-        get_view_matrix(&camera, view);
 
         GLint model_loc = glGetUniformLocation(shader, "model");
         glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float *)model);
@@ -76,7 +80,7 @@ int main() {
         draw_grid(&grid, shader);
         draw_model(&object, current_index, shader);
 
-        draw_camera(&camera);
+        draw_camera(&camera, shader);
 
         display_fps();
 
@@ -135,7 +139,13 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         current_index = (current_index + 1) % object.vertices_len;
 
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-        camera.third_person = !camera.third_person;
+        third_person = !third_person;
+
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS)
+        shift_pressed = 1;
+
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE)
+        shift_pressed = 0;
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
@@ -143,6 +153,9 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+    if (shift_pressed)
+        yoffset = 0.0;
+
     update_scroll(&camera, xoffset, yoffset);
 }
 

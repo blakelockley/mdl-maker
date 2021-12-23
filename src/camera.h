@@ -13,7 +13,7 @@ struct _camera_t {
 typedef struct _camera_t camera_t;
 
 void init_camera(camera_t* camera);
-void draw_camera(camera_t* camera);
+void draw_camera(camera_t* camera, int shader);
 void free_camera(camera_t* camera);
 
 void update_scroll(camera_t* camera, double xoffset, double yoffset);
