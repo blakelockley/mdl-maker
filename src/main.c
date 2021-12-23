@@ -19,12 +19,11 @@
 GLFWwindow *window;
 
 int width, height;
-int current_index = 1;
 int third_person = 0;
 int shift_pressed = 0;
 
-int index_len = 0;
-int index_buffer[256] = {};
+int selection_len = 0;
+int selection_buffer[256];
 
 camera_t camera;
 model_t object;
@@ -50,56 +49,32 @@ int main() {
     init_camera(&camera);
 
     init_model(&object);
-    add_vertex(&object, (vec3){0.5f, 0.0f, 0.0f});
-    add_vertex(&object, (vec3){0.0f, 0.5f, 1.0f});
-    add_vertex(&object, (vec3){-0.5f, 0.0f, 0.0f});
+    add_vertex(&object, (vec3){0.0f, 0.0f, 0.0f});
 
     init_text();
 
     while (!glfwWindowShouldClose(window)) {
+        vec3 camera_pos = (vec3){5.0f, 5.0f, 5.0f};
+        if (!third_person)
+            vec3_copy(camera_pos, camera.pos);
+
         glfwGetFramebufferSize(window, &width, &height);
 
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        vec3 camera_pos = (vec3){5.0f, 5.0f, 5.0f};
-        if (!third_person)
-            vec3_copy(camera_pos, camera.pos);
-
-        glUseProgram(shader);
-
-        mat4x4 model, view, projection;
-        mat4x4_identity(model);
-        mat4x4_look_at(view, camera_pos, (vec3){0, 0, 0}, (vec3){0, 1, 0});
-        mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
-
-        GLint model_loc = glGetUniformLocation(shader, "model");
-        glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float *)model);
-
-        GLint view_loc = glGetUniformLocation(shader, "view");
-        glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float *)view);
-
-        GLint projection_loc = glGetUniformLocation(shader, "projection");
-        glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float *)projection);
-
-        // Render...
-        draw_grid(&grid, shader);
-        draw_model(&object, index_buffer, index_len, shader);
-
-        draw_camera(&camera, shader);
+        draw_axis(&axis, camera.pos, shader, width, height);
+        draw_grid(&grid, camera_pos, shader);
+        draw_camera(&camera, camera_pos, shader);
+        draw_model(&object, camera_pos, shader);
 
         display_fps();
 
-        sprintf(buffer, "INDEX:%d\n", current_index);
+        sprintf(buffer, "SELECTED:%d\n", selection_len);
         render_text(buffer, 0, -32, width, height);
 
-        sprintf(buffer, "INDEX LEN:%d\n", index_len);
-        render_text(buffer, 0, -64, width, height);
-
         sprintf(buffer, "COMMAND:%c\n", current_command);
-        render_text(buffer, 0, -96, width, height);
-
-        draw_axis(&axis, shader, camera.pos, width, height);
+        render_text(buffer, 0, -64, width, height);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -124,8 +99,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-    if ((key == GLFW_KEY_ENTER || key == GLFW_KEY_SPACE) && action == GLFW_PRESS)
+    if ((key == GLFW_KEY_ENTER || key == GLFW_KEY_SPACE) && action == GLFW_PRESS) {
         current_command = '\0';
+        selection_len = 0;
+    }
 
     if (key == GLFW_KEY_MINUS && (action == GLFW_PRESS || action == GLFW_REPEAT))
         update_zoom(&camera, 0.5f);
@@ -135,20 +112,25 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_A && action == GLFW_PRESS) {
         add_vertex(&object, (vec3){0.0f, 1.0f, 0.0f});
-        current_index = object.vertices_len - 1;
+
+        selection_len = 0;
+        selection_buffer[selection_len++] = object.vertices_len - 1;
     }
 
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
-        add_face(&object, index_buffer, index_len);
+        add_face(&object);
 
-    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        current_index--;
-        if (current_index < 0)
-            current_index = object.vertices_len - 1;
-    }
+    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        move_selection(&object, (vec3){-0.1f, 0.0f, 0.0f});
 
     if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        current_index = (current_index + 1) % object.vertices_len;
+        move_selection(&object, (vec3){0.1f, 0.0f, 0.0f});
+
+    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        move_selection(&object, (vec3){0.0f, -0.1f, 0.0f});
+
+    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        move_selection(&object, (vec3){0.0f, 0.1f, 0.0f});
 
     if (key == GLFW_KEY_0 && action == GLFW_PRESS)
         third_person = !third_person;
@@ -179,24 +161,22 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         set_ray(&camera, xpos, ypos, w, h);
         int index = find_intercept(&object, &camera);
 
-        current_index = index;
-
         if (!shift_pressed)
-            index_len = 0;
+            selection_len = 0;
 
-        index_buffer[index_len++] = index;
+        selection_buffer[selection_len++] = index;
     }
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     if (current_command == 'X')
-        return move_vertex(&object, current_index, (vec3){xoffset, 0.0f, 0.0f});
+        return move_selection(&object, (vec3){xoffset, 0.0f, 0.0f});
 
     if (current_command == 'Y')
-        return move_vertex(&object, current_index, (vec3){0.0f, -yoffset, 0.0f});
+        return move_selection(&object, (vec3){0.0f, yoffset, 0.0f});
 
     if (current_command == 'Z')
-        return move_vertex(&object, current_index, (vec3){0.0f, 0.0f, yoffset});
+        return move_selection(&object, (vec3){0.0f, 0.0f, xoffset});
 
     if (shift_pressed)
         yoffset = 0.0;
@@ -214,7 +194,7 @@ void init() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(1200, 800, "mdl-maker", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "mdl-maker", NULL, NULL);
     if (!window) {
         glfwTerminate();
         exit(EXIT_FAILURE);
