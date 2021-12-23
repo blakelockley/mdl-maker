@@ -66,8 +66,10 @@ void draw_model(model_t* model, int current_index, int shader) {
 
     glPointSize(20);
 
-    glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
-    glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * current_index));
+    if (0 <= current_index && current_index < model->vertices_len) {
+        glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
+        glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * current_index));
+    }
 
     glUniform3f(color_loc, 1.0f, 0.75f, 0.5f);
     glDrawElements(GL_POINTS, model->vertices_len, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 0));
@@ -79,4 +81,30 @@ void free_model(model_t* model) {
     glDeleteVertexArrays(1, &model->vao);
     glDeleteBuffers(1, &model->vbo);
     glDeleteBuffers(1, &model->ebo);
+}
+
+int find_intercept(model_t* model, camera_t* camera) {
+    vec3 ray_start, ray_dir;
+    vec3_copy(ray_start, camera->ray_start);
+    vec3_copy(ray_dir, camera->ray);
+
+    for (float t = 0.0f; t < 10.0f; t += 0.01f) {
+        vec3 point;
+        vec3_scale(point, ray_dir, t);
+        vec3_add(point, point, ray_start);
+
+        for (int i = 0; i < model->vertices_len; i++) {
+            vec3 vertex, tmp;
+            vec3_copy(vertex, model->vertices[i]);
+
+            float dist;
+            vec3_sub(tmp, point, vertex);
+            dist = vec3_len(tmp);
+
+            if (dist < 0.02f)
+                return i;
+        }
+    }
+
+    return -1;
 }

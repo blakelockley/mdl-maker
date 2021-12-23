@@ -159,6 +159,7 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         glfwGetCursorPos(window, &xpos, &ypos);
 
         set_ray(&camera, xpos, ypos, w, h);
+        current_index = find_intercept(&object, &camera);
     }
 }
 

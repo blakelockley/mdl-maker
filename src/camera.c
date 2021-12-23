@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define SHOW_RAY 0
+
 extern int width, height;
 
 void update_camera_position(camera_t*);
@@ -72,8 +74,10 @@ void draw_camera(camera_t* camera, int shader) {
     glUniform3f(color_loc, 0.25f, 0.35f, 0.25f);
     glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 0));
 
-    glUniform3f(color_loc, 0.0f, 0.0f, 1.0f);
-    glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 2));
+    if (SHOW_RAY) {
+        glUniform3f(color_loc, 0.0f, 0.0f, 1.0f);
+        glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 2));
+    }
 }
 
 void free_camera(camera_t* camera) {
