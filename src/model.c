@@ -2,6 +2,10 @@
 
 #include <stdlib.h>
 
+extern int width, height;
+extern int selection_len;
+extern int selection_buffer[];
+
 void init_model(model_t* model) {
     model->vertices = (vec3*)malloc(sizeof(vec3) * 10);
     model->vertices_cap = 10;
@@ -37,55 +41,80 @@ void add_vertex(model_t* model, vec3 vertex) {
     vec3_set(model->vertices[model->vertices_len], vertex[0], vertex[1], vertex[2]);
     model->vertices_len++;
 
-    // Vertices
-    glBindBuffer(GL_ARRAY_BUFFER, model->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
-}
-
-void move_vertex(model_t* model, int index, vec3 delta) {
-    vec3_add(model->vertices[index], model->vertices[index], delta);
+    glBindVertexArray(model->vao);
 
     // Vertices
     glBindBuffer(GL_ARRAY_BUFFER, model->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
 }
 
-void add_face(model_t* model, int* index_buffer, int index_len) {
-    for (int i = 0; i < index_len; i++) {
+void add_face(model_t* model) {
+    if (selection_len != 3)
+        return;
+
+    for (int i = 0; i < selection_len; i++) {
         if (model->indices_len == model->indices_cap) {
             model->indices_cap *= 2;
             model->indices = (uint32_t*)realloc(model->indices, sizeof(uint32_t) * model->indices_cap);
         }
 
-        model->indices[model->indices_len++] = index_buffer[i];
+        model->indices[model->indices_len++] = selection_buffer[i];
     }
+
+    glBindVertexArray(model->vao);
 
     // Indices
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * model->indices_len, model->indices, GL_DYNAMIC_DRAW);
 }
 
-void draw_model(model_t* model, int* indices, int index_len, int shader) {
-    GLint color_loc = glGetUniformLocation(shader, "color");
-    glUniform3f(color_loc, 0.35f, 0.25f, 0.95f);
+void move_selection(model_t* model, vec3 delta) {
+    for (int i = 0; i < selection_len; i++) {
+        int index = selection_buffer[i];
+        vec3_add(model->vertices[index], model->vertices[index], delta);
+    }
 
     glBindVertexArray(model->vao);
-    glDrawElements(GL_TRIANGLES, model->indices_len, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 0));
+
+    // Vertices
+    glBindBuffer(GL_ARRAY_BUFFER, model->vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
+}
+
+void draw_model(model_t* object, vec3 camera_pos, int shader) {
+    glUseProgram(shader);
+
+    mat4x4 model, view, projection;
+    mat4x4_identity(model);
+    mat4x4_look_at(view, camera_pos, (vec3){0, 0, 0}, (vec3){0, 1, 0});
+    mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
+
+    GLint model_loc = glGetUniformLocation(shader, "model");
+    glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)model);
+
+    GLint view_loc = glGetUniformLocation(shader, "view");
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)view);
+
+    GLint projection_loc = glGetUniformLocation(shader, "projection");
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
+
+    GLint color_loc = glGetUniformLocation(shader, "color");
 
     glPointSize(20);
+    glBindVertexArray(object->vao);
 
-    // if (0 <= current_index && current_index < model->vertices_len) {
-    //     glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
-    //     glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * current_index));
-    // }
+    for (int i = 0; i < selection_len; i++) {
+        int index = selection_buffer[i];
 
-    for (int i = 0; i < index_len; i++) {
         glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
-        glDrawArrays(GL_POINTS, indices[i], 1);
+        glDrawArrays(GL_POINTS, index, 1);
     }
 
     glUniform3f(color_loc, 1.0f, 0.75f, 0.5f);
-    glDrawArrays(GL_POINTS, 0, model->vertices_len);
+    glDrawArrays(GL_POINTS, 0, object->vertices_len);
+
+    glUniform3f(color_loc, 0.35f, 0.25f, 0.95f);
+    glDrawElements(GL_TRIANGLES, object->indices_len, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 0));
 }
 
 void free_model(model_t* model) {
