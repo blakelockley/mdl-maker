@@ -36,7 +36,7 @@ void init_camera(camera_t* camera) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);  // Attrib pointer for currently bound buffer
 }
 
-void draw_camera(camera_t* camera, int shader) {
+void draw_camera(camera_t* camera, vec3 camera_pos, int shader) {
     mat4x4 model;
     mat4x4_identity(model);
 
