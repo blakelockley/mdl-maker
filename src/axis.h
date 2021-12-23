@@ -11,7 +11,7 @@ struct _axis_t {
 typedef struct _axis_t axis_t;
 
 void init_axis(axis_t* axis);
-void draw_axis(axis_t* axis, int shader, vec3 camera_pos, int width, int height);
+void draw_axis(axis_t* axis, vec3 camera_pos, int shader, int width, int height);
 void free_axis(axis_t* axis);
 
 #endif  // AXIS_H
