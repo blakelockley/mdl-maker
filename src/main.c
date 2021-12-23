@@ -23,6 +23,9 @@ int current_index = 1;
 int third_person = 0;
 int shift_pressed = 0;
 
+int index_len = 0;
+int index_buffer[256] = {};
+
 camera_t camera;
 model_t object;
 
@@ -30,6 +33,7 @@ void init();
 void deinit();
 void display_fps();
 
+unsigned int current_command = '\0';
 char buffer[256];
 
 int main() {
@@ -80,7 +84,7 @@ int main() {
 
         // Render...
         draw_grid(&grid, shader);
-        draw_model(&object, current_index, shader);
+        draw_model(&object, index_buffer, index_len, shader);
 
         draw_camera(&camera, shader);
 
@@ -88,6 +92,12 @@ int main() {
 
         sprintf(buffer, "INDEX:%d\n", current_index);
         render_text(buffer, 0, -32, width, height);
+
+        sprintf(buffer, "INDEX LEN:%d\n", index_len);
+        render_text(buffer, 0, -64, width, height);
+
+        sprintf(buffer, "COMMAND:%c\n", current_command);
+        render_text(buffer, 0, -96, width, height);
 
         draw_axis(&axis, shader, camera.pos, width, height);
 
@@ -114,6 +124,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
+    if ((key == GLFW_KEY_ENTER || key == GLFW_KEY_SPACE) && action == GLFW_PRESS)
+        current_command = '\0';
+
     if (key == GLFW_KEY_MINUS && (action == GLFW_PRESS || action == GLFW_REPEAT))
         update_zoom(&camera, 0.5f);
 
@@ -125,22 +138,19 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         current_index = object.vertices_len - 1;
     }
 
-    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        move_vertex(&object, current_index, (vec3){0.0f, 0.1f, 0.0f});
+    if (key == GLFW_KEY_F && action == GLFW_PRESS)
+        add_face(&object, index_buffer, index_len);
 
-    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        move_vertex(&object, current_index, (vec3){0.0f, -0.1f, 0.0f});
-
-    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        move_vertex(&object, current_index, (vec3){-0.1f, 0.0f, 0.0f});
+    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        current_index--;
+        if (current_index < 0)
+            current_index = object.vertices_len - 1;
+    }
 
     if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        move_vertex(&object, current_index, (vec3){0.1f, 0.0f, 0.0f});
-
-    if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
         current_index = (current_index + 1) % object.vertices_len;
 
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+    if (key == GLFW_KEY_0 && action == GLFW_PRESS)
         third_person = !third_person;
 
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS)
@@ -148,6 +158,14 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE)
         shift_pressed = 0;
+}
+
+void character_callback(GLFWwindow *window, unsigned int codepoint) {
+    if ('a' <= codepoint && codepoint <= 'z')
+        current_command = codepoint - 32;
+}
+
+void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
@@ -159,11 +177,27 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         glfwGetCursorPos(window, &xpos, &ypos);
 
         set_ray(&camera, xpos, ypos, w, h);
-        current_index = find_intercept(&object, &camera);
+        int index = find_intercept(&object, &camera);
+
+        current_index = index;
+
+        if (!shift_pressed)
+            index_len = 0;
+
+        index_buffer[index_len++] = index;
     }
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+    if (current_command == 'X')
+        return move_vertex(&object, current_index, (vec3){xoffset, 0.0f, 0.0f});
+
+    if (current_command == 'Y')
+        return move_vertex(&object, current_index, (vec3){0.0f, -yoffset, 0.0f});
+
+    if (current_command == 'Z')
+        return move_vertex(&object, current_index, (vec3){0.0f, 0.0f, yoffset});
+
     if (shift_pressed)
         yoffset = 0.0;
 
@@ -190,6 +224,8 @@ void init() {
     glfwSwapInterval(1);
 
     glfwSetKeyCallback(window, key_callback);
+    glfwSetCharCallback(window, character_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
