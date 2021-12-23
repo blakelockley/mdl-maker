@@ -161,10 +161,26 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         set_ray(&camera, xpos, ypos, w, h);
         int index = find_intercept(&object, &camera);
 
-        if (!shift_pressed)
-            selection_len = 0;
+        int already_selected = 0;
+        for (int i = 0; i < selection_len; i++)
+            if (selection_buffer[i] == index) {
+                already_selected = 1;
+                break;
+            }
 
-        selection_buffer[selection_len++] = index;
+        if (already_selected) {
+            int j = 0;
+            for (int i = 0; i < selection_len; i++)
+                if (selection_buffer[i] != index)
+                    selection_buffer[j++] = selection_buffer[i];
+
+            selection_len--;
+        } else {
+            if (!shift_pressed)
+                selection_len = 0;
+
+            selection_buffer[selection_len++] = index;
+        }
     }
 }
 
