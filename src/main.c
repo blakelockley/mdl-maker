@@ -120,11 +120,21 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
         add_face(&object);
 
-    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        move_selection(&object, (vec3){-0.1f, 0.0f, 0.0f});
+    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        vec3 vector;
+        vec3_copy(vector, camera.right);
+        vec3_scale(vector, vector, -0.1f);
 
-    if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        move_selection(&object, (vec3){0.1f, 0.0f, 0.0f});
+        move_selection(&object, vector);
+    }
+
+    if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        vec3 vector;
+        vec3_copy(vector, camera.right);
+        vec3_scale(vector, vector, 0.1f);
+
+        move_selection(&object, vector);
+    }
 
     if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT))
         move_selection(&object, (vec3){0.0f, -0.1f, 0.0f});

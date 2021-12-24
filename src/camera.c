@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SHOW_RAY 0
+#define SHOW_RAY 1
 
 extern int width, height;
 
@@ -19,8 +19,8 @@ void init_camera(camera_t* camera) {
     glGenVertexArrays(1, &camera->vao);
     glBindVertexArray(camera->vao);
 
-    uint32_t edges[4] = {0, 1, 2, 3};
-    vec3 vertices[4];
+    uint32_t edges[6] = {0, 1, 0, 2, 3, 4};
+    vec3 vertices[5];
 
     // Edges
     glGenBuffers(1, &camera->ebo);
@@ -48,7 +48,7 @@ void draw_camera(camera_t* camera, vec3 camera_pos, int shader) {
     glBindVertexArray(camera->vao);
     glPointSize(40);
 
-    vec3 vertices[4];
+    vec3 vertices[5];
     vec3_copy(vertices[0], camera->pos);
 
     vec3 vector;
@@ -58,12 +58,18 @@ void draw_camera(camera_t* camera, vec3 camera_pos, int shader) {
     vec3_add(vector, camera->pos, vector);
     vec3_copy(vertices[1], vector);
 
+    vec3 right;
+    vec3_copy(right, camera->right);
+    vec3_scale(right, right, 0.5f);
+    vec3_add(right, camera->pos, right);
+    vec3_copy(vertices[2], right);
+
     vec3 ray_end;
     vec3_scale(ray_end, camera->ray, 10.0f);
     vec3_add(ray_end, camera->ray_start, ray_end);
 
-    vec3_copy(vertices[2], camera->ray_start);
-    vec3_copy(vertices[3], ray_end);
+    vec3_copy(vertices[3], camera->ray_start);
+    vec3_copy(vertices[4], ray_end);
 
     glBindBuffer(GL_ARRAY_BUFFER, camera->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
@@ -74,9 +80,12 @@ void draw_camera(camera_t* camera, vec3 camera_pos, int shader) {
     glUniform3f(color_loc, 0.25f, 0.35f, 0.25f);
     glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 0));
 
+    glUniform3f(color_loc, 0.75f, 0.95f, 0.25f);
+    glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 2));
+
     if (SHOW_RAY) {
         glUniform3f(color_loc, 0.0f, 0.0f, 1.0f);
-        glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 2));
+        glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 4));
     }
 }
 
@@ -90,6 +99,21 @@ void update_camera_position(camera_t* camera) {
     camera->pos[0] = -sinf(camera->scroll[0]) * camera->scroll[2];
     camera->pos[1] = camera->scroll[1];
     camera->pos[2] = cosf(camera->scroll[0]) * camera->scroll[2];
+
+    vec3 forward;
+    vec3_set(forward, camera->pos[0], 0.0f, camera->pos[2]);
+    vec3_sub(forward, (vec3){0, 0, 0}, forward);
+    vec3_normalize(forward, forward);
+
+    mat4x4 rotate;
+    mat4x4_identity(rotate);
+    mat4x4_rotate_y(rotate, rotate, -M_PI / 2);
+
+    vec4 tmp;
+    vec4_from_vec3(tmp, forward, 0.0f);
+    mat4x4_mul_vec4(tmp, rotate, tmp);
+
+    vec3_copy(camera->right, tmp);
 }
 
 void update_scroll(camera_t* camera, double xoffset, double yoffset) {

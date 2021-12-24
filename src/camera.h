@@ -7,6 +7,7 @@
 struct _camera_t {
     vec3 scroll, pos;
     vec3 ray_start, ray;
+    vec3 right;
     GLuint vao, vbo, ebo;
 };
 
