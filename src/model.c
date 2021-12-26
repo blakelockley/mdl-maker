@@ -71,7 +71,19 @@ void add_face(model_t* model) {
 void move_selection(model_t* model, vec3 delta) {
     for (int i = 0; i < selection_len; i++) {
         int index = selection_buffer[i];
-        vec3_add(model->vertices[index], model->vertices[index], delta);
+
+        vec3 tmp;
+        vec3_copy(tmp, model->vertices[index]);
+        vec3_add(tmp, tmp, delta);
+
+        if (tmp[0] < -0.5f) tmp[0] = -0.5f;
+        if (tmp[0] > +0.5f) tmp[0] = +0.5f;
+        if (tmp[1] < +0.0f) tmp[1] = +0.0f;
+        if (tmp[1] > +1.0f) tmp[1] = +1.0f;
+        if (tmp[2] < -0.5f) tmp[2] = -0.5f;
+        if (tmp[2] > +0.5f) tmp[2] = +0.5f;
+
+        vec3_copy(model->vertices[index], tmp);
     }
 
     glBindVertexArray(model->vao);
