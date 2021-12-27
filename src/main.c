@@ -40,13 +40,7 @@ int main() {
 
     int shader = load_shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
-    axis_t axis;
-    init_axis(&axis);
-
-    grid_t grid;
-    init_grid(&grid);
-
-    init_camera(&camera);
+    init_axis();
 
     init_model(&object);
     add_vertex(&object, (vec3){0.0f, 0.0f, 0.0f});
@@ -63,9 +57,7 @@ int main() {
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        draw_axis(&axis, camera.pos, shader, width, height);
-        draw_grid(&grid, camera_pos, shader);
-        draw_camera(&camera, camera_pos, shader);
+        draw_axis();
         draw_model(&object, camera_pos, shader);
 
         display_fps();
@@ -80,8 +72,7 @@ int main() {
         glfwPollEvents();
     }
 
-    free_axis(&axis);
-    free_grid(&grid);
+    free_axis();
     free_model(&object);
     free_camera(&camera);
 
