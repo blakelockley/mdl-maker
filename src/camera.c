@@ -9,32 +9,44 @@ extern int width, height;
 void update_camera_position();
 
 void init_camera() {
-    vec3_set(camera.scroll, 0.0f, 0.5f, 2.0f);
+    camera.scroll = 0.0f;
+    camera.zoom = 2.0f;
+    update_camera_position(camera);
+
     vec3_set(camera.up, 0.0f, 1.0f, 0.0f);
 
     vec3_zero(camera.ray_start);
     vec3_zero(camera.ray);
-
-    update_camera_position(camera);
 }
 
-void update_scroll(double xoffset, double yoffset) {
-    camera.scroll[0] += xoffset;
+void set_scroll(double angle) {
+    camera.scroll = angle;
+    update_camera_position();
+}
+
+void update_scroll(double delta) {
+    camera.scroll += delta;
+    update_camera_position();
+}
+
+void set_zoom(double angle) {
+    camera.zoom = angle;
+    camera.zoom = fmin(fmax(camera.zoom, 0.5f), 10.0f);
 
     update_camera_position();
 }
 
 void update_zoom(double delta) {
-    camera.scroll[2] += delta;
-    camera.scroll[2] = fmin(fmax(camera.scroll[2], 0.5f), 10.0f);
+    camera.zoom += delta;
+    camera.zoom = fmin(fmax(camera.zoom, 0.5f), 10.0f);
 
     update_camera_position();
 }
 
 void update_camera_position() {
-    camera.pos[0] = -sinf(camera.scroll[0]) * camera.scroll[2];
-    camera.pos[1] = camera.scroll[1];
-    camera.pos[2] = cosf(camera.scroll[0]) * camera.scroll[2];
+    camera.pos[0] = -sinf(camera.scroll) * camera.zoom;
+    camera.pos[1] = 0.5f;
+    camera.pos[2] = cosf(camera.scroll) * camera.zoom;
 
     vec3_copy(camera.dir, (vec3){0.0f, 0.0f, 0.0f});
     camera.dir[1] = camera.pos[1];

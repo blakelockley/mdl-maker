@@ -94,6 +94,21 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         selection_len = 0;
     }
 
+    if (key == GLFW_KEY_1 && action == GLFW_PRESS)
+        set_scroll(0.0f);
+
+    if (key == GLFW_KEY_2 && action == GLFW_PRESS)
+        set_scroll(90 * M_PI / 180);
+
+    if (key == GLFW_KEY_3 && action == GLFW_PRESS)
+        set_scroll(180 * M_PI / 180);
+
+    if (key == GLFW_KEY_4 && action == GLFW_PRESS)
+        set_scroll(270 * M_PI / 180);
+
+    if (key == GLFW_KEY_1 && action == GLFW_PRESS)
+        set_scroll(0.0f);
+
     if (key == GLFW_KEY_MINUS && (action == GLFW_PRESS || action == GLFW_REPEAT))
         update_zoom(0.5f);
 
@@ -197,7 +212,7 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     if (shift_pressed)
         yoffset = 0.0;
 
-    update_scroll(xoffset, yoffset);
+    update_scroll(xoffset);
 }
 
 void init() {
