@@ -1,5 +1,6 @@
 #include "controls.h"
 
+#include "array.h"
 #include "camera.h"
 #include "linmath.h"
 #include "model.h"
@@ -105,27 +106,18 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         glfwGetCursorPos(window, &xpos, &ypos);
 
         set_ray(xpos, ypos, w, h);
-        int index = find_intercept(&object);
+        int vertex = find_intercept(&object);
 
-        int already_selected = 0;
-        for (int i = 0; i < selection_len; i++)
-            if (selection_buffer[i] == index) {
-                already_selected = 1;
-                break;
-            }
-
-        if (already_selected) {
-            int j = 0;
-            for (int i = 0; i < selection_len; i++)
-                if (selection_buffer[i] != index)
-                    selection_buffer[j++] = selection_buffer[i];
-
-            selection_len--;
+        if (shift_pressed) {
+            int index = find_index(selection_buffer, selection_len, vertex);
+            if (index == -1)
+                selection_buffer[selection_len++] = vertex;
+            else
+                remove_index(selection_buffer, &selection_len, index);
         } else {
-            if (!shift_pressed)
-                selection_len = 0;
-
-            selection_buffer[selection_len++] = index;
+            selection_len = 0;
+            if (vertex >= 0)
+                selection_buffer[selection_len++] = vertex;
         }
     }
 }
