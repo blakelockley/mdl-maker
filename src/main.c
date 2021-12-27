@@ -106,6 +106,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_4 && action == GLFW_PRESS)
         set_scroll(270 * M_PI / 180);
 
+    if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
+        toggle_camera_view();
+
     if (key == GLFW_KEY_1 && action == GLFW_PRESS)
         set_scroll(0.0f);
 
@@ -127,25 +130,31 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 vector;
-        vec3_copy(vector, camera.right);
-        vec3_scale(vector, vector, -0.1f);
+        vec3_scale(vector, camera.right, -0.1f);
 
         move_selection(&object, vector);
     }
 
     if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 vector;
-        vec3_copy(vector, camera.right);
-        vec3_scale(vector, vector, 0.1f);
+        vec3_scale(vector, camera.right, 0.1f);
 
         move_selection(&object, vector);
     }
 
-    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        move_selection(&object, (vec3){0.0f, -0.1f, 0.0f});
+    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        vec3 vector;
+        vec3_scale(vector, camera.up, -0.1f);
 
-    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        move_selection(&object, (vec3){0.0f, 0.1f, 0.0f});
+        move_selection(&object, vector);
+    }
+
+    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        vec3 vector;
+        vec3_scale(vector, camera.up, 0.1f);
+
+        move_selection(&object, vector);
+    }
 
     if (key == GLFW_KEY_0 && action == GLFW_PRESS)
         third_person = !third_person;

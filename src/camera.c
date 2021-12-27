@@ -9,14 +9,23 @@ extern int width, height;
 void update_camera_position();
 
 void init_camera() {
+    camera.view = CAMERA_VIEW_FORWARD;
+
     camera.scroll = 0.0f;
     camera.zoom = 2.0f;
-    update_camera_position(camera);
-
-    vec3_set(camera.up, 0.0f, 1.0f, 0.0f);
+    update_camera_position();
 
     vec3_zero(camera.ray_start);
     vec3_zero(camera.ray);
+}
+
+void toggle_camera_view() {
+    if (camera.view == CAMERA_VIEW_FORWARD)
+        camera.view = CAMERA_VIEW_TOP;
+    else
+        camera.view = CAMERA_VIEW_FORWARD;
+
+    update_camera_position();
 }
 
 void set_scroll(double angle) {
@@ -44,26 +53,38 @@ void update_zoom(double delta) {
 }
 
 void update_camera_position() {
-    camera.pos[0] = -sinf(camera.scroll) * camera.zoom;
-    camera.pos[1] = 0.5f;
-    camera.pos[2] = cosf(camera.scroll) * camera.zoom;
+    vec4 vector;
 
-    vec3_copy(camera.dir, (vec3){0.0f, 0.0f, 0.0f});
-    camera.dir[1] = camera.pos[1];
+    if (camera.view == CAMERA_VIEW_FORWARD) {
+        camera.pos[0] = -sinf(camera.scroll) * camera.zoom;
+        camera.pos[1] = 0.5f;
+        camera.pos[2] = cosf(camera.scroll) * camera.zoom;
 
-    vec3 forward;
-    vec3_sub(forward, camera.dir, camera.pos);
-    vec3_normalize(forward, forward);
+        vec3_copy(camera.dir, (vec3){0.0f, 0.0f, 0.0f});
+        camera.dir[1] = camera.pos[1];
+
+        vec3_set(camera.up, 0.0f, 1.0f, 0.0f);
+
+        vec3 forward;
+        vec3_sub(forward, camera.dir, camera.pos);
+        vec3_normalize(forward, forward);
+
+        vec4_from_vec3(vector, forward, 0.0f);
+
+    } else {
+        camera.pos[0] = 0.0f;
+        camera.pos[1] = camera.zoom;
+        camera.pos[2] = 0.0f;
+
+        vec3_copy(camera.dir, (vec3){0.0f, -1.0f, 0.0f});
+        vec3_set(camera.up, sinf(camera.scroll + M_PI), 0.0f, cosf(camera.scroll + M_PI));
+        vec4_from_vec3(vector, camera.up, 0.0f);
+    }
 
     mat4x4 rotate;
-    mat4x4_identity(rotate);
-    mat4x4_rotate_y(rotate, rotate, -M_PI / 2);
-
-    vec4 right;
-    vec4_from_vec3(right, forward, 0.0f);
-    mat4x4_mul_vec4(right, rotate, right);
-
-    vec3_copy(camera.right, right);
+    mat4x4_rotation_y(rotate, -M_PI / 2);
+    mat4x4_mul_vec4(vector, rotate, vector);
+    vec3_copy(camera.right, vector);
 }
 
 void set_ray(double mouse_x, double mouse_y, int width, int height) {

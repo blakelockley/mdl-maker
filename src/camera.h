@@ -4,7 +4,13 @@
 #include "glfw.h"
 #include "linmath.h"
 
+enum camera_view_t {
+    CAMERA_VIEW_FORWARD,
+    CAMERA_VIEW_TOP,
+};
+
 struct _camera_t {
+    enum camera_view_t view;
     float scroll, zoom;
     vec3 pos, dir, right, up;
     vec3 ray_start, ray;
@@ -13,6 +19,8 @@ struct _camera_t {
 typedef struct _camera_t camera_t;
 
 void init_camera();
+
+void toggle_camera_view();
 
 void set_scroll(double angle);
 void update_scroll(double delta);
