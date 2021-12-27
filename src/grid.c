@@ -1,6 +1,9 @@
 #include "grid.h"
 
+#include "camera.h"
+
 grid_t grid;
+extern camera_t camera;
 extern int width, height;
 
 void init_grid() {
@@ -45,12 +48,12 @@ void init_grid() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void *)0);  // Attrib pointer for currently bound buffer
 }
 
-void draw_grid(vec3 camera_pos, int shader) {
+void draw_grid(int shader) {
     glUseProgram(shader);
 
     mat4x4 model, view, projection;
     mat4x4_identity(model);
-    mat4x4_look_at(view, camera_pos, (vec3){0, 0, 0}, (vec3){0, 1, 0});
+    mat4x4_look_at(view, camera.pos, camera.dir, camera.up);
     mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
 
     GLint model_loc = glGetUniformLocation(shader, "model");

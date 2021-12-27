@@ -1,9 +1,12 @@
 #include "stage.h"
 
+#include "camera.h"
+
 #define STAGE_SLICES 16
 
-extern int width, height;
 stage_t stage;
+extern camera_t camera;
+extern int width, height;
 
 void init_stage() {
     vec3 vertices[STAGE_SLICES + 2];
@@ -38,7 +41,7 @@ void draw_stage(vec3 camera_pos, int shader) {
 
     mat4x4 model, view, projection;
     mat4x4_identity(model);
-    mat4x4_look_at(view, camera_pos, (vec3){0, 0, 0}, (vec3){0, 1, 0});
+    mat4x4_look_at(view, camera.pos, camera.dir, camera.up);
     mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
 
     GLint model_loc = glGetUniformLocation(shader, "model");

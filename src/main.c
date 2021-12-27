@@ -14,6 +14,7 @@
 #include "grid.h"
 #include "model.h"
 #include "shader.h"
+#include "stage.h"
 #include "text.h"
 
 GLFWwindow *window;
@@ -25,7 +26,7 @@ int shift_pressed = 0;
 int selection_len = 0;
 int selection_buffer[256];
 
-camera_t camera;
+extern camera_t camera;
 model_t object;
 
 void init();
@@ -41,24 +42,23 @@ int main() {
     int shader = load_shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
     init_axis();
+    init_camera();
+    init_grid();
 
     init_model(&object);
-    add_vertex(&object, (vec3){0.0f, 0.0f, 0.0f});
+    add_vertex(&object, (vec3){0.0f, 0.5f, 0.0f});
 
     init_text();
 
     while (!glfwWindowShouldClose(window)) {
-        vec3 camera_pos = (vec3){5.0f, 5.0f, 5.0f};
-        if (!third_person)
-            vec3_copy(camera_pos, camera.pos);
-
         glfwGetFramebufferSize(window, &width, &height);
 
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         draw_axis();
-        draw_model(&object, camera_pos, shader);
+        draw_grid(shader);
+        draw_model(&object, shader);
 
         display_fps();
 
@@ -74,8 +74,7 @@ int main() {
 
     free_axis();
     free_model(&object);
-    free_camera(&camera);
-
+    free_grid();
     free_text();
 
     deinit();
@@ -96,10 +95,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     }
 
     if (key == GLFW_KEY_MINUS && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        update_zoom(&camera, 0.5f);
+        update_zoom(0.5f);
 
     if (key == GLFW_KEY_EQUAL && (action == GLFW_PRESS || action == GLFW_REPEAT))
-        update_zoom(&camera, -0.5f);
+        update_zoom(-0.5f);
 
     if (key == GLFW_KEY_A && action == GLFW_PRESS) {
         add_vertex(&object, (vec3){0.0f, 1.0f, 0.0f});
@@ -159,8 +158,8 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
 
-        set_ray(&camera, xpos, ypos, w, h);
-        int index = find_intercept(&object, &camera);
+        set_ray(xpos, ypos, w, h);
+        int index = find_intercept(&object);
 
         int already_selected = 0;
         for (int i = 0; i < selection_len; i++)
@@ -198,7 +197,7 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     if (shift_pressed)
         yoffset = 0.0;
 
-    update_scroll(&camera, xoffset, yoffset);
+    update_scroll(xoffset, yoffset);
 }
 
 void init() {

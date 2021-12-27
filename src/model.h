@@ -20,7 +20,7 @@ struct _model_t {
 typedef struct _model_t model_t;
 
 void init_model(model_t* model);
-void draw_model(model_t* model, vec3 camera_pos, int shader);
+void draw_model(model_t* model, int shader);
 void free_model(model_t* model);
 
 void add_vertex(model_t* model, vec3 vertex);
@@ -28,6 +28,6 @@ void add_face(model_t* model);
 
 void move_selection(model_t* model, vec3 delta);
 
-int find_intercept(model_t* model, camera_t* camera);
+int find_intercept(model_t* model);
 
 #endif  // MODEL_H

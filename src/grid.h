@@ -11,7 +11,7 @@ struct _grid_t {
 typedef struct _grid_t grid_t;
 
 void init_grid();
-void draw_grid(vec3 camera_pos, int shader);
+void draw_grid(int shader);
 void free_grid();
 
 #endif  // GRID_H

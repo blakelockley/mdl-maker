@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 
+extern camera_t camera;
 extern int width, height;
 extern int selection_len;
 extern int selection_buffer[];
@@ -93,12 +94,12 @@ void move_selection(model_t* model, vec3 delta) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
 }
 
-void draw_model(model_t* object, vec3 camera_pos, int shader) {
+void draw_model(model_t* object, int shader) {
     glUseProgram(shader);
 
     mat4x4 model, view, projection;
     mat4x4_identity(model);
-    mat4x4_look_at(view, camera_pos, (vec3){0, 0, 0}, (vec3){0, 1, 0});
+    mat4x4_look_at(view, camera.pos, camera.dir, camera.up);
     mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
 
     GLint model_loc = glGetUniformLocation(shader, "model");
@@ -137,10 +138,10 @@ void free_model(model_t* model) {
     glDeleteBuffers(1, &model->ebo);
 }
 
-int find_intercept(model_t* model, camera_t* camera) {
+int find_intercept(model_t* model) {
     vec3 ray_start, ray_dir;
-    vec3_copy(ray_start, camera->ray_start);
-    vec3_copy(ray_dir, camera->ray);
+    vec3_copy(ray_start, camera.ray_start);
+    vec3_copy(ray_dir, camera.ray);
 
     for (float t = 0.0f; t < 10.0f; t += 0.01f) {
         vec3 point;
