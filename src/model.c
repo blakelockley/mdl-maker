@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 
+#include "compare.h"
+
 extern camera_t camera;
 extern int width, height;
 extern int selection_len;
@@ -70,21 +72,30 @@ void add_face(model_t* model) {
 }
 
 void move_selection(model_t* model, vec3 delta) {
+    float epsilon = 0.001f;
+
     for (int i = 0; i < selection_len; i++) {
         int index = selection_buffer[i];
 
-        vec3 tmp;
-        vec3_copy(tmp, model->vertices[index]);
-        vec3_add(tmp, tmp, delta);
+        vec3 vertex;
+        vec3_copy(vertex, model->vertices[index]);
 
-        if (tmp[0] < -0.5f) tmp[0] = -0.5f;
-        if (tmp[0] > +0.5f) tmp[0] = +0.5f;
-        if (tmp[1] < +0.0f) tmp[1] = +0.0f;
-        if (tmp[1] > +1.0f) tmp[1] = +1.0f;
-        if (tmp[2] < -0.5f) tmp[2] = -0.5f;
-        if (tmp[2] > +0.5f) tmp[2] = +0.5f;
+        // Check bounds
+        if ((delta[0] < 0) && compare(vertex[0] + delta[0], -0.5f + delta[0], epsilon) <= 0)
+            return;
+        if ((delta[0] > 0) && compare(vertex[0] + delta[0], +0.5f + delta[0], epsilon) >= 0)
+            return;
 
-        vec3_copy(model->vertices[index], tmp);
+        if ((delta[1] < 0) && compare(vertex[1] + delta[1], +0.0f + delta[1], epsilon) <= 0) return;
+        if ((delta[1] > 0) && compare(vertex[1] + delta[1], +1.0f + delta[1], epsilon) >= 0) return;
+
+        if ((delta[2] < 0) && compare(vertex[2] + delta[2], -0.5f + delta[2], epsilon) <= 0) return;
+        if ((delta[2] > 0) && compare(vertex[2] + delta[2], +0.5f + delta[2], epsilon) >= 0) return;
+    }
+
+    for (int i = 0; i < selection_len; i++) {
+        int index = selection_buffer[i];
+        vec3_add(model->vertices[index], model->vertices[index], delta);
     }
 
     glBindVertexArray(model->vao);
