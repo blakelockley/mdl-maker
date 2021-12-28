@@ -24,8 +24,9 @@ void init_model(model_t* model);
 void draw_model(model_t* model);
 void free_model(model_t* model);
 
-void add_vertex(model_t* model, vec3 vertex);
 void add_face(model_t* model);
+void add_vertex(model_t* model, vec3 vertex);
+void remove_vertex(model_t* model);
 
 void move_selection(model_t* model, vec3 delta);
 

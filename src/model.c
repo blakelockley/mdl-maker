@@ -54,6 +54,48 @@ void add_vertex(model_t* model, vec3 vertex) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
 }
 
+void remove_vertex(model_t* model) {
+    for (int i = 0; i < selection_len; i++) {
+        int index = selection_buffer[i];
+
+        for (int i = index; i < model->vertices_len - 1; i++)
+            vec3_copy(model->vertices[i], model->vertices[i + 1]);
+
+        model->vertices_len--;
+
+        for (int idx = 0; idx < model->indices_len; idx += 3) {
+            int remove_face = model->indices[idx] == index;
+            remove_face = remove_face || model->indices[idx + 1] == index;
+            remove_face = remove_face || model->indices[idx + 2] == index;
+
+            if (!remove_face)
+                continue;
+
+            model->indices[idx + 0] = -1;
+            model->indices[idx + 1] = -1;
+            model->indices[idx + 2] = -1;
+        }
+    }
+
+    int j = 0;
+    for (int i = 0; i < model->indices_len; i++) {
+        if (model->indices[i] != -1)
+            model->indices[j++] = model->indices[i];
+    }
+
+    model->indices_len = j;
+
+    glBindVertexArray(model->vao);
+
+    // Vertices
+    glBindBuffer(GL_ARRAY_BUFFER, model->vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
+
+    // Indices
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * model->indices_len, model->indices, GL_DYNAMIC_DRAW);
+}
+
 void add_face(model_t* model) {
     if (selection_len != 3)
         return;

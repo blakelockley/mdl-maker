@@ -54,6 +54,14 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
         add_face(&object);
 
+    if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+        if (selection_len == 0)
+            return;
+
+        remove_vertex(&object);
+        selection_len = 0;
+    }
+
     if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 vector;
         vec3_scale(vector, camera.right, -(shift_pressed ? 0.01f : 0.1f));
