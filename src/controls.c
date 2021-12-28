@@ -1,7 +1,10 @@
 #include "controls.h"
 
+#include <stdio.h>
+
 #include "array.h"
 #include "camera.h"
+#include "filemanager.h"
 #include "linmath.h"
 #include "model.h"
 
@@ -13,6 +16,7 @@ int selection_buffer[256];
 int show_lines = 0;
 extern int width, height;
 
+extern char *filename;
 extern model_t object;
 extern camera_t camera;
 
@@ -102,6 +106,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE)
         shift_pressed = 0;
+
+    if (key == GLFW_KEY_S && action == GLFW_PRESS && mods == GLFW_MOD_SUPER)
+        save_file(filename, &object);
 }
 
 void character_callback(GLFWwindow *window, unsigned int codepoint) {

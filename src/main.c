@@ -12,6 +12,7 @@
 #include "axis.h"
 #include "camera.h"
 #include "controls.h"
+#include "filemanager.h"
 #include "grid.h"
 #include "model.h"
 #include "stage.h"
@@ -19,6 +20,8 @@
 
 GLFWwindow *window;
 int width, height;
+
+char *filename;
 
 extern int selection_len;
 extern camera_t camera;
@@ -32,7 +35,14 @@ void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
 }
 
-int main() {
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        printf("Usage: %s <filename>\n", argv[0]);
+        return 1;
+    }
+
+    filename = argv[1];
+
     glfwSetErrorCallback(error_callback);
     if (!glfwInit())
         exit(EXIT_FAILURE);
@@ -69,7 +79,7 @@ int main() {
     init_grid();
 
     init_model(&object);
-    add_vertex(&object, (vec3){0.0f, 0.5f, 0.0f});
+    open_file(filename, &object);
 
     init_text();
 

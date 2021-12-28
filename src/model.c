@@ -97,6 +97,21 @@ void remove_vertex(model_t* model) {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * model->indices_len, model->indices, GL_DYNAMIC_DRAW);
 }
 
+void add_index(model_t* model, uint32_t index) {
+    if (model->indices_len == model->indices_cap) {
+        model->indices_cap *= 2;
+        model->indices = (uint32_t*)realloc(model->indices, sizeof(uint32_t) * model->indices_cap);
+    }
+
+    model->indices[model->indices_len++] = index;
+
+    glBindVertexArray(model->vao);
+
+    // Indices
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * model->indices_len, model->indices, GL_DYNAMIC_DRAW);
+}
+
 void add_face(model_t* model) {
     if (selection_len != 3)
         return;
