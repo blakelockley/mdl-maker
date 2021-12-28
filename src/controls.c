@@ -10,6 +10,9 @@ int shift_pressed = 0;
 int selection_len = 0;
 int selection_buffer[256];
 
+int show_lines = 0;
+extern int width, height;
+
 extern model_t object;
 extern camera_t camera;
 
@@ -45,11 +48,15 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         update_zoom(-0.5f);
 
     if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-        add_vertex(&object, (vec3){0.0f, 1.0f, 0.0f});
+        if (!shift_pressed)
+            selection_len = 0;
 
-        selection_len = 0;
+        add_vertex(&object, (vec3){0.0f, 0.5f, 0.0f});
         selection_buffer[selection_len++] = object.vertices_len - 1;
     }
+
+    if (key == GLFW_KEY_P && action == GLFW_PRESS)
+        show_lines = !show_lines;
 
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
         add_face(&object);
@@ -103,6 +110,26 @@ void character_callback(GLFWwindow *window, unsigned int codepoint) {
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
+    int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+    if (state == GLFW_PRESS && selection_len > 0) {
+        int w, h;
+        glfwGetWindowSize(window, &w, &h);
+
+        set_ray(xpos, ypos, w, h);
+
+        vec3 p0, n, q;
+        vec3_copy(p0, object.vertices[selection_buffer[0]]);
+        vec3_cross(n, camera.up, camera.right);
+        vec3_sub(q, p0, camera.ray_start);
+
+        float t = vec3_dot(q, n) / vec3_dot(camera.ray, n);
+
+        vec3 ray;
+        vec3_scale(ray, camera.ray, t);
+        vec3_add(ray, ray, camera.ray_start);
+
+        set_selection_position(&object, ray);
+    }
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
@@ -117,6 +144,9 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         int vertex = find_intercept(&object);
 
         if (shift_pressed) {
+            if (vertex == -1)
+                return;
+
             int index = find_index(selection_buffer, selection_len, vertex);
             if (index == -1)
                 selection_buffer[selection_len++] = vertex;

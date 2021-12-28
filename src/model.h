@@ -29,6 +29,7 @@ void add_vertex(model_t* model, vec3 vertex);
 void remove_vertex(model_t* model);
 
 void move_selection(model_t* model, vec3 delta);
+void set_selection_position(model_t* model, vec3 origin);
 
 int find_intercept(model_t* model);
 

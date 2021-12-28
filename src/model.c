@@ -7,6 +7,7 @@
 
 extern camera_t camera;
 extern int width, height;
+extern int show_lines;
 extern int selection_len;
 extern int selection_buffer[];
 
@@ -150,6 +151,29 @@ void move_selection(model_t* model, vec3 delta) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
 }
 
+void set_selection_position(model_t* model, vec3 origin) {
+    vec3 midpoint;
+    vec3_zero(midpoint);
+
+    for (int i = 0; i < selection_len; i++)
+        vec3_add(midpoint, midpoint, model->vertices[selection_buffer[i]]);
+
+    vec3_scale(midpoint, midpoint, (float)selection_len);
+
+    vec3 deltas[selection_len];
+    for (int i = 0; i < selection_len; i++)
+        vec3_sub(deltas[i], midpoint, model->vertices[selection_buffer[i]]);
+
+    for (int i = 0; i < selection_len; i++)
+        vec3_add(model->vertices[selection_buffer[i]], origin, deltas[i]);
+
+    glBindVertexArray(model->vao);
+
+    // Vertices
+    glBindBuffer(GL_ARRAY_BUFFER, model->vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
+}
+
 void draw_model(model_t* object) {
     glUseProgram(object->shader);
 
@@ -182,8 +206,13 @@ void draw_model(model_t* object) {
     glUniform3f(color_loc, 1.0f, 0.75f, 0.5f);
     glDrawArrays(GL_POINTS, 0, object->vertices_len);
 
+    if (show_lines)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
     glUniform3f(color_loc, 0.35f, 0.25f, 0.95f);
     glDrawElements(GL_TRIANGLES, object->indices_len, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 0));
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void free_model(model_t* model) {
