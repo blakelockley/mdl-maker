@@ -1,6 +1,7 @@
 #include "grid.h"
 
 #include "camera.h"
+#include "shader.h"
 
 grid_t grid;
 extern camera_t camera;
@@ -46,26 +47,28 @@ void init_grid() {
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void *)0);  // Attrib pointer for currently bound buffer
+
+    grid.shader = load_shader("shaders/static.vert", "shaders/static.frag");
 }
 
-void draw_grid(int shader) {
-    glUseProgram(shader);
+void draw_grid() {
+    glUseProgram(grid.shader);
 
     mat4x4 model, view, projection;
     mat4x4_identity(model);
     mat4x4_look_at(view, camera.pos, camera.dir, camera.up);
     mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
 
-    GLint model_loc = glGetUniformLocation(shader, "model");
+    GLint model_loc = glGetUniformLocation(grid.shader, "model");
     glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float *)model);
 
-    GLint view_loc = glGetUniformLocation(shader, "view");
+    GLint view_loc = glGetUniformLocation(grid.shader, "view");
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float *)view);
 
-    GLint projection_loc = glGetUniformLocation(shader, "projection");
+    GLint projection_loc = glGetUniformLocation(grid.shader, "projection");
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float *)projection);
 
-    GLint color_loc = glGetUniformLocation(shader, "color");
+    GLint color_loc = glGetUniformLocation(grid.shader, "color");
     glUniform3f(color_loc, 0.5f, 0.5f, 0.5f);
 
     glBindVertexArray(grid.vao);

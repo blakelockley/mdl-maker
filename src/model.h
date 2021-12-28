@@ -14,13 +14,14 @@ struct _model_t {
     uint32_t indices_cap;
     uint32_t indices_len;
 
+    GLuint shader;
     GLuint vao, vbo, ebo;
 };
 
 typedef struct _model_t model_t;
 
 void init_model(model_t* model);
-void draw_model(model_t* model, int shader);
+void draw_model(model_t* model);
 void free_model(model_t* model);
 
 void add_vertex(model_t* model, vec3 vertex);

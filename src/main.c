@@ -14,7 +14,6 @@
 #include "controls.h"
 #include "grid.h"
 #include "model.h"
-#include "shader.h"
 #include "stage.h"
 #include "text.h"
 
@@ -65,8 +64,6 @@ int main() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    int shader = load_shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-
     init_axis();
     init_camera();
     init_grid();
@@ -83,8 +80,8 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         draw_axis();
-        draw_grid(shader);
-        draw_model(&object, shader);
+        draw_grid();
+        draw_model(&object);
 
         display_fps();
 

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "compare.h"
+#include "shader.h"
 
 extern camera_t camera;
 extern int width, height;
@@ -33,6 +34,8 @@ void init_model(model_t* model) {
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);  // Attrib pointer for currently bound buffer
+
+    model->shader = load_shader("shaders/static.vert", "shaders/static.frag");
 }
 
 void add_vertex(model_t* model, vec3 vertex) {
@@ -105,24 +108,24 @@ void move_selection(model_t* model, vec3 delta) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
 }
 
-void draw_model(model_t* object, int shader) {
-    glUseProgram(shader);
+void draw_model(model_t* object) {
+    glUseProgram(object->shader);
 
     mat4x4 model, view, projection;
     mat4x4_identity(model);
     mat4x4_look_at(view, camera.pos, camera.dir, camera.up);
     mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
 
-    GLint model_loc = glGetUniformLocation(shader, "model");
+    GLint model_loc = glGetUniformLocation(object->shader, "model");
     glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)model);
 
-    GLint view_loc = glGetUniformLocation(shader, "view");
+    GLint view_loc = glGetUniformLocation(object->shader, "view");
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)view);
 
-    GLint projection_loc = glGetUniformLocation(shader, "projection");
+    GLint projection_loc = glGetUniformLocation(object->shader, "projection");
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
 
-    GLint color_loc = glGetUniformLocation(shader, "color");
+    GLint color_loc = glGetUniformLocation(object->shader, "color");
 
     glPointSize(20);
     glBindVertexArray(object->vao);
