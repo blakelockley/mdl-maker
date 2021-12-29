@@ -13,6 +13,7 @@ extern int selection_len;
 extern int selection_buffer[];
 
 void calc_vertices(object_t* object);
+void calc_face_normal(vec3 normal, const vec3 a, const vec3 b, const vec3 c);
 
 void init_object(object_t* object) {
     object->positions = (vec3*)malloc(sizeof(vec3) * 10);
@@ -185,7 +186,7 @@ void position_selection(object_t* object, vec3 origin) {
     for (int i = 0; i < selection_len; i++)
         vec3_add(midpoint, midpoint, object->positions[selection_buffer[i]]);
 
-    vec3_scale(midpoint, midpoint, (float)selection_len);
+    vec3_scale(midpoint, midpoint, 1.0f / (float)selection_len);
 
     vec3 deltas[selection_len];
     for (int i = 0; i < selection_len; i++)
@@ -201,14 +202,8 @@ void add_face_selection(object_t* object) {
     if (selection_len != 3)
         return;
 
-    for (int i = 0; i < selection_len; i++) {
-        if (object->indices_len == object->indices_cap) {
-            object->indices_cap *= 2;
-            object->indices = (uint32_t*)realloc(object->indices, sizeof(uint32_t) * object->indices_cap);
-        }
-
-        object->indices[object->indices_len++] = selection_buffer[i];
-    }
+    for (int i = 0; i < selection_len; i++)
+        add_index(object, selection_buffer[i]);
 
     buffer_object(object);
 }
@@ -278,12 +273,15 @@ void draw_object(object_t* object) {
     GLint color_loc = glGetUniformLocation(object->obj_shader, "color");
     glUniform3f(color_loc, 0.35f, 0.25f, 0.95f);
 
-    if (show_lines)
+    if (show_lines) {
+        glDisable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
 
     glBindVertexArray(object->obj_vao);
     glDrawArrays(GL_TRIANGLES, 0, object->vertices_len);
 
+    glEnable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
@@ -329,20 +327,45 @@ void calc_face_normal(vec3 normal, const vec3 a, const vec3 b, const vec3 c) {
 void calc_vertices(object_t* object) {
     object->vertices_len = 0;
 
+    vec3 origin;
+    vec3_zero(origin);
+
+    for (int i = 0; i < object->positions_len; i++)
+        vec3_add(origin, origin, object->positions[i]);
+
+    vec3_scale(origin, origin, 1.0f / (float)object->positions_len);
+
     for (int i = 0; i < object->indices_len; i += 3) {
-        vertex_t a, b, c;
-        vec3_copy(a.position, object->positions[object->indices[i]]);
-        vec3_copy(b.position, object->positions[object->indices[i + 1]]);
-        vec3_copy(c.position, object->positions[object->indices[i + 2]]);
+        vec3 a, b, c, mid, normal;
+        vec3_copy(a, object->positions[object->indices[i + 0]]);
+        vec3_copy(b, object->positions[object->indices[i + 1]]);
+        vec3_copy(c, object->positions[object->indices[i + 2]]);
+        calc_face_normal(normal, a, b, c);
 
-        vec3 normal;
-        calc_face_normal(normal, a.position, b.position, c.position);
-        vec3_copy(a.normal, normal);
-        vec3_copy(b.normal, normal);
-        vec3_copy(c.normal, normal);
+        vec3_add(mid, a, b);
+        vec3_add(mid, mid, c);
+        vec3_scale(mid, mid, 1.0f / 3.0f);
+        vec3_sub(mid, mid, origin);
 
-        add_vertex(object, a);
-        add_vertex(object, b);
-        add_vertex(object, c);
+        float dot = vec3_dot(normal, mid);
+        if (dot < 0) {
+            object->indices[i + 1] ^= object->indices[i + 2];
+            object->indices[i + 2] ^= object->indices[i + 1];
+            object->indices[i + 1] ^= object->indices[i + 2];
+        }
+
+        vertex_t va, vb, vc;
+        vec3_copy(va.position, object->positions[object->indices[i + 0]]);
+        vec3_copy(vb.position, object->positions[object->indices[i + 1]]);
+        vec3_copy(vc.position, object->positions[object->indices[i + 2]]);
+
+        calc_face_normal(normal, va.position, vb.position, vc.position);
+        vec3_copy(va.normal, normal);
+        vec3_copy(vb.normal, normal);
+        vec3_copy(vc.normal, normal);
+
+        add_vertex(object, va);
+        add_vertex(object, vb);
+        add_vertex(object, vc);
     }
 }
