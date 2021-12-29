@@ -118,7 +118,7 @@ void remove_selection(object_t* object) {
         for (int i = index; i < object->positions_len - 1; i++)
             vec3_copy(object->positions[i], object->positions[i + 1]);
 
-        object->vertices_len--;
+        object->positions_len--;
 
         // Mark no longer valid face indices with -1
         for (int idx = 0; idx < object->indices_len; idx += 3) {
@@ -143,6 +143,7 @@ void remove_selection(object_t* object) {
     }
 
     object->indices_len = index_count;
+    selection_len = 0;
 
     buffer_object(object);
 }
