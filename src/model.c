@@ -8,6 +8,7 @@
 extern camera_t camera;
 extern int width, height;
 extern int show_lines;
+extern int show_points;
 extern int selection_len;
 extern int selection_buffer[];
 
@@ -211,15 +212,17 @@ void draw_model(model_t* object) {
     glPointSize(20);
     glBindVertexArray(object->vao);
 
-    for (int i = 0; i < selection_len; i++) {
-        int index = selection_buffer[i];
+    if (show_points) {
+        for (int i = 0; i < selection_len; i++) {
+            int index = selection_buffer[i];
 
-        glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
-        glDrawArrays(GL_POINTS, index, 1);
+            glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
+            glDrawArrays(GL_POINTS, index, 1);
+        }
+
+        glUniform3f(color_loc, 1.0f, 0.75f, 0.5f);
+        glDrawArrays(GL_POINTS, 0, object->vertices_len);
     }
-
-    glUniform3f(color_loc, 1.0f, 0.75f, 0.5f);
-    glDrawArrays(GL_POINTS, 0, object->vertices_len);
 
     if (show_lines)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

@@ -13,6 +13,7 @@ int shift_pressed = 0;
 int selection_len = 0;
 int selection_buffer[256];
 
+int show_points = 1;
 int show_lines = 0;
 extern int width, height;
 
@@ -59,8 +60,11 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         selection_buffer[selection_len++] = object.vertices_len - 1;
     }
 
-    if (key == GLFW_KEY_P && action == GLFW_PRESS)
+    if (key == GLFW_KEY_L && action == GLFW_PRESS)
         show_lines = !show_lines;
+
+    if (key == GLFW_KEY_P && action == GLFW_PRESS)
+        show_points = !show_points;
 
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
         add_face(&object);
