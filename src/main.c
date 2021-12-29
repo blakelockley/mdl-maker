@@ -14,7 +14,7 @@
 #include "controls.h"
 #include "filemanager.h"
 #include "grid.h"
-#include "model.h"
+#include "object.h"
 #include "stage.h"
 #include "text.h"
 
@@ -25,7 +25,7 @@ char *filename;
 
 extern int selection_len;
 extern camera_t camera;
-model_t object;
+object_t object;
 
 void display_fps();
 
@@ -78,8 +78,9 @@ int main(int argc, char **argv) {
     init_camera();
     init_grid();
 
-    init_model(&object);
+    init_object(&object);
     open_file(filename, &object);
+    buffer_object(&object);
 
     init_text();
 
@@ -91,7 +92,7 @@ int main(int argc, char **argv) {
 
         draw_axis();
         draw_grid();
-        draw_model(&object);
+        draw_object(&object);
 
         display_fps();
 
@@ -102,8 +103,9 @@ int main(int argc, char **argv) {
         glfwPollEvents();
     }
 
+    free_object(&object);
+
     free_axis();
-    free_model(&object);
     free_grid();
     free_text();
 

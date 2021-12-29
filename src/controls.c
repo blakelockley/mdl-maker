@@ -6,7 +6,7 @@
 #include "camera.h"
 #include "filemanager.h"
 #include "linmath.h"
-#include "model.h"
+#include "object.h"
 
 int shift_pressed = 0;
 
@@ -18,7 +18,7 @@ int show_lines = 0;
 extern int width, height;
 
 extern char *filename;
-extern model_t object;
+extern object_t object;
 extern camera_t camera;
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
@@ -56,8 +56,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         if (!shift_pressed)
             selection_len = 0;
 
-        add_vertex(&object, (vec3){0.0f, 0.5f, 0.0f});
-        selection_buffer[selection_len++] = object.vertices_len - 1;
+        add_point_selection(&object);
     }
 
     if (key == GLFW_KEY_L && action == GLFW_PRESS)
@@ -67,13 +66,13 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         show_points = !show_points;
 
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
-        add_face(&object);
+        add_face_selection(&object);
 
     if (key == GLFW_KEY_X && action == GLFW_PRESS) {
         if (selection_len == 0)
             return;
 
-        remove_vertex(&object);
+        remove_selection(&object);
         selection_len = 0;
     }
 
@@ -129,7 +128,7 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
         set_ray(xpos, ypos, w, h);
 
         vec3 p0, n, q;
-        vec3_copy(p0, object.vertices[selection_buffer[0]]);
+        vec3_copy(p0, object.positions[selection_buffer[0]]);
         vec3_cross(n, camera.up, camera.right);
         vec3_sub(q, p0, camera.ray_start);
 
@@ -139,7 +138,7 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
         vec3_scale(ray, camera.ray, t);
         vec3_add(ray, ray, camera.ray_start);
 
-        set_selection_position(&object, ray);
+        position_selection(&object, ray);
     }
 }
 
