@@ -1,7 +1,6 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include "camera.h"
 #include "glfw.h"
 #include "linmath.h"
 

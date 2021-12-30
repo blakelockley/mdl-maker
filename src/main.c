@@ -14,6 +14,7 @@
 #include "controls.h"
 #include "filemanager.h"
 #include "grid.h"
+#include "light.h"
 #include "object.h"
 #include "stage.h"
 #include "text.h"
@@ -79,6 +80,7 @@ int main(int argc, char **argv) {
 
     init_axis();
     init_camera();
+    init_light();
     init_grid();
 
     init_object(&object);
@@ -94,6 +96,7 @@ int main(int argc, char **argv) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         draw_axis();
+        draw_light();
         draw_grid();
         draw_object(&object);
 
@@ -109,6 +112,7 @@ int main(int argc, char **argv) {
     free_object(&object);
 
     free_axis();
+    free_light();
     free_grid();
     free_text();
 

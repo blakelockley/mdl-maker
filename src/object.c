@@ -2,10 +2,13 @@
 
 #include <stdlib.h>
 
+#include "camera.h"
 #include "compare.h"
+#include "light.h"
 #include "shader.h"
 
 extern camera_t camera;
+extern light_t light;
 extern int width, height;
 extern int show_lines;
 extern int show_points;
@@ -36,7 +39,7 @@ void init_object(object_t* object) {
     // Positions
     glGenBuffers(1, &object->pos_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, object->pos_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * 3, NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);  // Positions
@@ -51,7 +54,7 @@ void init_object(object_t* object) {
     // Vertices
     glGenBuffers(1, &object->obj_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, object->obj_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * 3, NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)0);  // Positions
@@ -238,6 +241,12 @@ void load_uniforms(int shader) {
 
     GLint projection_loc = glGetUniformLocation(shader, "projection");
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
+
+    GLint lightpos_loc = glGetUniformLocation(shader, "lightPos");
+    glUniform3fv(lightpos_loc, 1, (float*)light.pos);
+
+    GLint lightcolor_loc = glGetUniformLocation(shader, "lightColor");
+    glUniform3fv(lightcolor_loc, 1, (float*)light.color);
 }
 
 void draw_positions(object_t* object) {
@@ -267,11 +276,8 @@ void draw_object(object_t* object) {
     glUseProgram(object->obj_shader);
     load_uniforms(object->obj_shader);
 
-    GLint lightpos_loc = glGetUniformLocation(object->obj_shader, "lightPos");
-    glUniform3f(lightpos_loc, 0.0f, 1.0f, 0.0f);
-
     GLint color_loc = glGetUniformLocation(object->obj_shader, "color");
-    glUniform3f(color_loc, 0.35f, 0.25f, 0.95f);
+    glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
 
     if (show_lines) {
         glDisable(GL_CULL_FACE);

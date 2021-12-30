@@ -5,6 +5,7 @@
 #include "array.h"
 #include "camera.h"
 #include "filemanager.h"
+#include "light.h"
 #include "linmath.h"
 #include "object.h"
 
@@ -12,6 +13,8 @@ int shift_pressed = 0;
 
 int selection_len = 0;
 int selection_buffer[256];
+
+int light_selected = 0;
 
 int show_points = 1;
 int show_lines = 0;
@@ -107,6 +110,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS)
         shift_pressed = 1;
 
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+        if (light_selected)
+            set_light_position((vec3){0.0f, 1.0f, 0.0f});
+
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE)
         shift_pressed = 0;
 
@@ -121,7 +128,7 @@ void character_callback(GLFWwindow *window, unsigned int codepoint) {
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-    if (state == GLFW_PRESS && selection_len > 0) {
+    if (state == GLFW_PRESS) {
         int w, h;
         glfwGetWindowSize(window, &w, &h);
 
@@ -138,7 +145,10 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
         vec3_scale(ray, camera.ray, t);
         vec3_add(ray, ray, camera.ray_start);
 
-        position_selection(&object, ray);
+        if (light_selected)
+            set_light_position(ray);
+        else if (selection_len > 0)
+            position_selection(&object, ray);
     }
 }
 
@@ -151,8 +161,12 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         glfwGetCursorPos(window, &xpos, &ypos);
 
         set_ray(xpos, ypos, w, h);
-        int vertex = find_intercept(&object);
 
+        light_selected = check_light_intercept();
+        if (light_selected)
+            return;
+
+        int vertex = find_intercept(&object);
         if (shift_pressed) {
             if (vertex == -1)
                 return;
