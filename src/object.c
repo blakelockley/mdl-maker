@@ -164,8 +164,8 @@ void move_selection(object_t* object, vec3 delta) {
         if ((delta[0] > 0) && compare(pos[0] + delta[0], +0.5f + delta[0], epsilon) >= 0)
             return;
 
-        if ((delta[1] < 0) && compare(pos[1] + delta[1], +0.0f + delta[1], epsilon) <= 0) return;
-        if ((delta[1] > 0) && compare(pos[1] + delta[1], +1.0f + delta[1], epsilon) >= 0) return;
+        if ((delta[1] < 0) && compare(pos[1] + delta[1], -0.5f + delta[1], epsilon) <= 0) return;
+        if ((delta[1] > 0) && compare(pos[1] + delta[1], +0.5f + delta[1], epsilon) >= 0) return;
 
         if ((delta[2] < 0) && compare(pos[2] + delta[2], -0.5f + delta[2], epsilon) <= 0) return;
         if ((delta[2] > 0) && compare(pos[2] + delta[2], +0.5f + delta[2], epsilon) >= 0) return;

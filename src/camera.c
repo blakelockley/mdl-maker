@@ -57,7 +57,7 @@ void update_camera_position() {
 
     if (camera.view == CAMERA_VIEW_FORWARD) {
         camera.pos[0] = -sinf(camera.scroll) * camera.zoom;
-        camera.pos[1] = 0.5f;
+        camera.pos[1] = 0.0f;
         camera.pos[2] = cosf(camera.scroll) * camera.zoom;
 
         vec3_copy(camera.dir, (vec3){0.0f, 0.0f, 0.0f});
