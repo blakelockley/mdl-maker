@@ -19,6 +19,8 @@ void calc_vertices(object_t* object);
 void calc_face_normal(vec3 normal, const vec3 a, const vec3 b, const vec3 c);
 
 void init_object(object_t* object) {
+    vec3_set(object->color, 0.25f, 0.45f, 1.0f);
+
     object->positions = (vec3*)malloc(sizeof(vec3) * 10);
     object->positions_cap = 10;
     object->positions_len = 0;
@@ -277,7 +279,7 @@ void draw_object(object_t* object) {
     load_uniforms(object->obj_shader);
 
     GLint color_loc = glGetUniformLocation(object->obj_shader, "color");
-    glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
+    glUniform3fv(color_loc, 1, (float*)object->color);
 
     if (show_lines) {
         glDisable(GL_CULL_FACE);

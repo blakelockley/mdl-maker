@@ -9,7 +9,7 @@ extern int width, height;
 
 void init_light() {
     vec3_set(light.pos, 0.0f, 1.0f, 0.0f);
-    vec3_set(light.color, 1.0f, 0.0f, 1.0f);
+    vec3_set(light.color, 1.0f, 1.0f, 1.0f);
 
     glGenVertexArrays(1, &light.vao);
     glBindVertexArray(light.vao);

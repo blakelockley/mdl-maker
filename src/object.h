@@ -11,6 +11,8 @@ struct _vertex_t {
 typedef struct _vertex_t vertex_t;
 
 struct _object_t {
+    vec3 color;
+
     vec3* positions;
     uint32_t positions_cap;
     uint32_t positions_len;
