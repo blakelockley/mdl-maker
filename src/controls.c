@@ -23,6 +23,7 @@ extern int width, height;
 extern char *filename;
 extern object_t object;
 extern camera_t camera;
+extern light_t light;
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -79,34 +80,6 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         selection_len = 0;
     }
 
-    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        vec3 vector;
-        vec3_scale(vector, camera.right, -(shift_pressed ? 0.01f : 0.1f));
-
-        move_selection(&object, vector);
-    }
-
-    if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        vec3 vector;
-        vec3_scale(vector, camera.right, (shift_pressed ? 0.01f : 0.1f));
-
-        move_selection(&object, vector);
-    }
-
-    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        vec3 vector;
-        vec3_scale(vector, camera.up, -(shift_pressed ? 0.01f : 0.1f));
-
-        move_selection(&object, vector);
-    }
-
-    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        vec3 vector;
-        vec3_scale(vector, camera.up, (shift_pressed ? 0.01f : 0.1f));
-
-        move_selection(&object, vector);
-    }
-
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS)
         shift_pressed = 1;
 
@@ -134,8 +107,14 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
 
         set_ray(xpos, ypos, w, h);
 
+        vec3 midpoint;
+        if (light_selected)
+            vec3_copy(midpoint, light.pos);
+        else if (selection_len > 0)
+            get_selection_midpoint(midpoint, &object);
+
         vec3 p0, n, q;
-        vec3_copy(p0, object.positions[selection_buffer[0]]);
+        vec3_copy(p0, midpoint);
         vec3_cross(n, camera.up, camera.right);
         vec3_sub(q, p0, camera.ray_start);
 
@@ -148,7 +127,7 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
         if (light_selected)
             set_light_position(ray);
         else if (selection_len > 0)
-            position_selection(&object, ray);
+            move_selection(&object, ray);
     }
 }
 

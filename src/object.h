@@ -47,9 +47,10 @@ void add_vertex(object_t* object, vertex_t vertex);
 // Selection methods
 void add_point_selection(object_t* object);
 void remove_selection(object_t* object);
-void move_selection(object_t* object, vec3 delta);
-void position_selection(object_t* object, vec3 origin);
+void move_selection(object_t* object, vec3 position);
 void add_face_selection(object_t* object);
+
+void get_selection_midpoint(vec3 midpoint, object_t* object);
 
 // Ray methods
 int find_intercept(object_t* object);

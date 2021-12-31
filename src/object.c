@@ -1,5 +1,6 @@
 #include "object.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "camera.h"
@@ -154,51 +155,35 @@ void remove_selection(object_t* object) {
     buffer_object(object);
 }
 
-void move_selection(object_t* object, vec3 delta) {
-    float epsilon = 0.001f;
-
-    for (int i = 0; i < selection_len; i++) {
-        int index = selection_buffer[i];
-
-        vec3 pos;
-        vec3_copy(pos, object->positions[index]);
-
-        // Check bounds
-        if ((delta[0] < 0) && compare(pos[0] + delta[0], -0.5f + delta[0], epsilon) <= 0)
-            return;
-        if ((delta[0] > 0) && compare(pos[0] + delta[0], +0.5f + delta[0], epsilon) >= 0)
-            return;
-
-        if ((delta[1] < 0) && compare(pos[1] + delta[1], -0.5f + delta[1], epsilon) <= 0) return;
-        if ((delta[1] > 0) && compare(pos[1] + delta[1], +0.5f + delta[1], epsilon) >= 0) return;
-
-        if ((delta[2] < 0) && compare(pos[2] + delta[2], -0.5f + delta[2], epsilon) <= 0) return;
-        if ((delta[2] > 0) && compare(pos[2] + delta[2], +0.5f + delta[2], epsilon) >= 0) return;
-    }
-
-    for (int i = 0; i < selection_len; i++) {
-        int index = selection_buffer[i];
-        vec3_add(object->positions[index], object->positions[index], delta);
-    }
-
-    buffer_object(object);
-}
-
-void position_selection(object_t* object, vec3 origin) {
-    vec3 midpoint;
+void get_selection_midpoint(vec3 midpoint, object_t* object) {
     vec3_zero(midpoint);
 
     for (int i = 0; i < selection_len; i++)
         vec3_add(midpoint, midpoint, object->positions[selection_buffer[i]]);
 
     vec3_scale(midpoint, midpoint, 1.0f / (float)selection_len);
+}
+
+void move_selection(object_t* object, vec3 position) {
+    vec3 midpoint;
+    get_selection_midpoint(midpoint, object);
 
     vec3 deltas[selection_len];
     for (int i = 0; i < selection_len; i++)
-        vec3_sub(deltas[i], midpoint, object->positions[selection_buffer[i]]);
+        vec3_sub(deltas[i], object->positions[selection_buffer[i]], midpoint);
+
+    vec3 new_positions[selection_len];
+    for (int i = 0; i < selection_len; i++)
+        vec3_add(new_positions[i], position, deltas[i]);
+
+    for (int i = 0; i < selection_len; i++) {
+        if (fabs(new_positions[i][0]) > 0.5f) return;
+        if (fabs(new_positions[i][1]) > 0.5f) return;
+        if (fabs(new_positions[i][2]) > 0.5f) return;
+    }
 
     for (int i = 0; i < selection_len; i++)
-        vec3_add(object->positions[selection_buffer[i]], origin, deltas[i]);
+        vec3_copy(object->positions[selection_buffer[i]], new_positions[i]);
 
     buffer_object(object);
 }
