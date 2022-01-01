@@ -128,17 +128,22 @@ void remove_selection(object_t* object) {
         object->positions_len--;
 
         // Mark no longer valid face indices with -1
-        for (int idx = 0; idx < object->indices_len; idx += 3) {
-            int remove_face = object->indices[idx] == index;
-            remove_face = remove_face || object->indices[idx + 1] == index;
-            remove_face = remove_face || object->indices[idx + 2] == index;
+        for (int j = 0; j < object->indices_len; j += 3) {
+            int remove_face = object->indices[j] == index;
+            remove_face = remove_face || object->indices[j + 1] == index;
+            remove_face = remove_face || object->indices[j + 2] == index;
 
-            if (!remove_face)
-                continue;
+            if (remove_face) {
+                object->indices[j] = -1;
+                object->indices[j + 1] = -1;
+                object->indices[j + 2] = -1;
+            }
+        }
 
-            object->indices[idx + 0] = -1;
-            object->indices[idx + 1] = -1;
-            object->indices[idx + 2] = -1;
+        // Decrement all face indices greater than the removed index
+        for (int j = 0; j < object->indices_len; j++) {
+            if (object->indices[j] != -1 && object->indices[j] > index)
+                object->indices[j]--;
         }
     }
 
