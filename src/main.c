@@ -10,10 +10,10 @@
 
 #define ENGINE_INCLUDES
 #include "axis.h"
+#include "bounds.h"
 #include "camera.h"
 #include "controls.h"
 #include "filemanager.h"
-#include "grid.h"
 #include "light.h"
 #include "object.h"
 #include "stage.h"
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     init_axis();
     init_camera();
     init_light();
-    init_grid();
+    init_bounds();
 
     init_object(&object);
     open_file(filename, &object);
@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 
         draw_axis();
         draw_light();
-        draw_grid();
+        draw_bounds();
         draw_object(&object);
 
         display_fps();
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
 
     free_axis();
     free_light();
-    free_grid();
+    free_bounds();
     free_text();
 
     glfwDestroyWindow(window);
