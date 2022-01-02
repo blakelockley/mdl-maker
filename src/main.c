@@ -14,6 +14,7 @@
 #include "camera.h"
 #include "controls.h"
 #include "filemanager.h"
+#include "grid.h"
 #include "light.h"
 #include "object.h"
 #include "stage.h"
@@ -82,6 +83,7 @@ int main(int argc, char **argv) {
     init_camera();
     init_light();
     init_bounds();
+    init_grid();
 
     init_object(&object);
     open_file(filename, &object);
@@ -98,6 +100,7 @@ int main(int argc, char **argv) {
         draw_axis();
         draw_light();
         draw_bounds();
+        draw_grid();
         draw_object(&object);
 
         display_fps();
@@ -114,6 +117,7 @@ int main(int argc, char **argv) {
     free_axis();
     free_light();
     free_bounds();
+    free_grid();
     free_text();
 
     glfwDestroyWindow(window);

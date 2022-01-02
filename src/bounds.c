@@ -18,17 +18,12 @@ void init_bounds() {
         {+0.5f, +0.5f, -0.5f},
         {+0.5f, +0.5f, +0.5f},
         {-0.5f, +0.5f, +0.5f},
-        {+0.0f, 0.0f, -0.5f},
-        {+0.0f, 0.0f, +0.5f},
-        {-0.5f, 0.0f, +0.0f},
-        {+0.5f, 0.0f, +0.0f},
     };  
 
     uint32_t indices[] = {
         0, 1, 1, 2, 2, 3, 3, 0,
         0, 4, 1, 5, 2, 6, 3, 7,
         4, 5, 5, 6, 6, 7, 7, 4,
-        8, 9, 10, 11
     };
     // clang-format on
 
@@ -69,10 +64,10 @@ void draw_bounds() {
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float *)projection);
 
     GLint color_loc = glGetUniformLocation(bounds.shader, "color");
-    glUniform3f(color_loc, 0.5f, 0.5f, 0.5f);
+    glUniform3f(color_loc, 0.75f, 0.45f, 0.15f);
 
     glBindVertexArray(bounds.vao);
-    glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, 0);
 }
 
 void free_bounds() {
