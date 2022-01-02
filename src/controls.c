@@ -5,6 +5,7 @@
 #include "array.h"
 #include "camera.h"
 #include "filemanager.h"
+#include "guide.h"
 #include "light.h"
 #include "linmath.h"
 #include "object.h"
@@ -24,6 +25,7 @@ extern char *filename;
 extern object_t object;
 extern camera_t camera;
 extern light_t light;
+extern guide_t guide;
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -73,6 +75,53 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         add_face_selection(&object);
 
     if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+        vec3 midpoint;
+        get_selection_midpoint(midpoint, &object);
+
+        set_guide(midpoint, (vec3){1.0f, 0.0f, 0.0f});
+    }
+
+    if (key == GLFW_KEY_Y && action == GLFW_PRESS) {
+        vec3 midpoint;
+        get_selection_midpoint(midpoint, &object);
+
+        set_guide(midpoint, (vec3){0.0f, 1.0f, 0.0f});
+    }
+
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+        vec3 midpoint;
+        get_selection_midpoint(midpoint, &object);
+
+        set_guide(midpoint, (vec3){0.0f, 0.0f, 1.0f});
+    }
+
+    if ((key == GLFW_KEY_RIGHT || key == GLFW_KEY_UP) && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        if (!guide.is_visible)
+            return;
+
+        vec3 midpoint, delta;
+        get_selection_midpoint(midpoint, &object);
+
+        vec3_scale(delta, guide.axis, 0.1f);
+        vec3_add(midpoint, midpoint, delta);
+
+        move_selection(&object, midpoint);
+    }
+
+    if ((key == GLFW_KEY_LEFT || key == GLFW_KEY_DOWN) && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        if (!guide.is_visible)
+            return;
+
+        vec3 midpoint, delta;
+        get_selection_midpoint(midpoint, &object);
+
+        vec3_scale(delta, guide.axis, -0.1f);
+        vec3_add(midpoint, midpoint, delta);
+
+        move_selection(&object, midpoint);
+    }
+
+    if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS) {
         if (selection_len == 0)
             return;
 
@@ -86,6 +135,8 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
         if (light_selected)
             set_light_position((vec3){0.0f, 1.0f, 0.0f});
+        else
+            guide.is_visible = 0;
 
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE)
         shift_pressed = 0;
@@ -167,6 +218,17 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-    update_scroll(xoffset * (shift_pressed ? 0.1f : 0.5f));
-    update_angle(yoffset * (shift_pressed ? 0.05f : 0.25f));
+    if (guide.is_visible) {
+        vec3 midpoint, delta;
+        get_selection_midpoint(midpoint, &object);
+
+        vec3_scale(delta, guide.axis, yoffset < 0.0f ? 0.01f : -0.01f);
+        vec3_add(midpoint, midpoint, delta);
+
+        move_selection(&object, midpoint);
+
+    } else {
+        update_scroll(xoffset * (shift_pressed ? 0.1f : 0.5f));
+        update_angle(yoffset * (shift_pressed ? 0.05f : 0.25f));
+    }
 }

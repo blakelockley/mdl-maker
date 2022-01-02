@@ -15,6 +15,7 @@
 #include "controls.h"
 #include "filemanager.h"
 #include "grid.h"
+#include "guide.h"
 #include "light.h"
 #include "object.h"
 #include "stage.h"
@@ -84,6 +85,7 @@ int main(int argc, char **argv) {
     init_light();
     init_bounds();
     init_grid();
+    init_guide();
 
     init_object(&object);
     open_file(filename, &object);
@@ -101,6 +103,7 @@ int main(int argc, char **argv) {
         draw_light();
         draw_bounds();
         draw_grid();
+        draw_guide();
         draw_object(&object);
 
         display_fps();
@@ -118,6 +121,7 @@ int main(int argc, char **argv) {
     free_light();
     free_bounds();
     free_grid();
+    free_guide();
     free_text();
 
     glfwDestroyWindow(window);
