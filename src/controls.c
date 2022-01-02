@@ -56,7 +56,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_EQUAL && (action == GLFW_PRESS || action == GLFW_REPEAT))
         update_zoom(-0.5f);
 
-    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+    if (key == GLFW_KEY_A && action == GLFW_PRESS && !mods) {
         if (!shift_pressed)
             selection_len = 0;
 
@@ -92,6 +92,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_S && action == GLFW_PRESS && mods == GLFW_MOD_SUPER)
         save_file(filename, &object);
+
+    if (key == GLFW_KEY_A && action == GLFW_PRESS && mods == GLFW_MOD_SUPER)
+        select_all(&object);
 }
 
 void character_callback(GLFWwindow *window, unsigned int codepoint) {

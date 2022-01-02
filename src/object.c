@@ -193,6 +193,12 @@ void move_selection(object_t* object, vec3 position) {
     buffer_object(object);
 }
 
+void select_all(object_t* object) {
+    selection_len = object->positions_len;
+    for (int i = 0; i < selection_len; i++)
+        selection_buffer[i] = i;
+}
+
 void add_face_selection(object_t* object) {
     if (selection_len != 3)
         return;

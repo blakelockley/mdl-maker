@@ -51,6 +51,7 @@ void move_selection(object_t* object, vec3 position);
 void add_face_selection(object_t* object);
 
 void get_selection_midpoint(vec3 midpoint, object_t* object);
+void select_all(object_t* object);
 
 // Ray methods
 int find_intercept(object_t* object);
