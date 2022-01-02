@@ -12,6 +12,7 @@ void init_camera() {
     camera.view = CAMERA_VIEW_FORWARD;
 
     camera.scroll = 0.0f;
+    camera.angle = 0.0f;
     camera.zoom = 2.0f;
     update_camera_position();
 
@@ -38,6 +39,20 @@ void update_scroll(double delta) {
     update_camera_position();
 }
 
+void set_angle(double angle) {
+    camera.angle = angle;
+    camera.angle = fmin(fmax(camera.angle, 0), M_PI_2 - 0.01);
+
+    update_camera_position();
+}
+
+void update_angle(double delta) {
+    camera.angle += delta;
+    camera.angle = fmin(fmax(camera.angle, 0), M_PI_2 - 0.01);
+
+    update_camera_position();
+}
+
 void set_zoom(double angle) {
     camera.zoom = angle;
     camera.zoom = fmin(fmax(camera.zoom, 0.5f), 10.0f);
@@ -57,12 +72,10 @@ void update_camera_position() {
 
     if (camera.view == CAMERA_VIEW_FORWARD) {
         camera.pos[0] = -sinf(camera.scroll) * camera.zoom;
-        camera.pos[1] = 0.0f;
+        camera.pos[1] = sinf(camera.angle);
         camera.pos[2] = cosf(camera.scroll) * camera.zoom;
 
         vec3_copy(camera.dir, (vec3){0.0f, 0.0f, 0.0f});
-        camera.dir[1] = camera.pos[1];
-
         vec3_set(camera.up, 0.0f, 1.0f, 0.0f);
 
         vec3 forward;

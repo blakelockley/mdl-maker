@@ -165,4 +165,5 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     update_scroll(xoffset * (shift_pressed ? 0.1f : 0.5f));
+    update_angle(yoffset * (shift_pressed ? 0.05f : 0.25f));
 }

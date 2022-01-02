@@ -11,7 +11,7 @@ enum camera_view_t {
 
 struct _camera_t {
     enum camera_view_t view;
-    float scroll, zoom;
+    float scroll, angle, zoom;
     vec3 pos, dir, right, up;
     vec3 ray_start, ray;
 };
@@ -24,6 +24,9 @@ void toggle_camera_view();
 
 void set_scroll(double angle);
 void update_scroll(double delta);
+
+void set_angle(double angle);
+void update_angle(double delta);
 
 void set_zoom(double angle);
 void update_zoom(double delta);
