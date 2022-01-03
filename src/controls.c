@@ -132,11 +132,12 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS)
         shift_pressed = 1;
 
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
         if (light_selected)
             set_light_position((vec3){0.0f, 1.0f, 0.0f});
         else
             guide.is_visible = 0;
+    }
 
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE)
         shift_pressed = 0;
@@ -229,6 +230,8 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 
     } else {
         update_scroll(xoffset * (shift_pressed ? 0.1f : 0.5f));
-        update_angle(yoffset * (shift_pressed ? 0.05f : 0.25f));
+
+        if (shift_pressed)
+            update_angle(yoffset * 0.25f);
     }
 }
