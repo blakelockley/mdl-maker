@@ -10,6 +10,7 @@ void update_camera_position();
 
 void init_camera() {
     camera.view = CAMERA_VIEW_FORWARD;
+    camera.projection = CAMERA_PROJECTION_PERSPECTIVE;
 
     camera.scroll = 0.0f;
     camera.angle = 0.0f;
@@ -27,6 +28,13 @@ void toggle_camera_view() {
         camera.view = CAMERA_VIEW_FORWARD;
 
     update_camera_position();
+}
+
+void toggle_camera_projection() {
+    if (camera.projection == CAMERA_PROJECTION_PERSPECTIVE)
+        camera.projection = CAMERA_PROJECTION_ORTHOGRAPHIC;
+    else
+        camera.projection = CAMERA_PROJECTION_PERSPECTIVE;
 }
 
 void set_scroll(double angle) {
@@ -104,12 +112,12 @@ void set_ray(double mouse_x, double mouse_y, int width, int height) {
     double normal_x = (2.0f * mouse_x) / width - 1.0f;
     double normal_y = 1.0f - (2.0f * mouse_y) / height;
 
-    vec4 ray_start = (vec4){normal_x, normal_y, -1.0f, 1.0f};
-    vec4 ray_end = (vec4){normal_x, normal_y, 0.0f, 1.0f};
+    vec4 ray_start = (vec4){(float)normal_x, (float)normal_y, -1.0f, 1.0f};
+    vec4 ray_end = (vec4){(float)normal_x, (float)normal_y, 0.0f, 1.0f};
 
     mat4x4 view, projection;
     mat4x4_look_at(view, camera.pos, camera.dir, camera.up);
-    mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
+    get_projection_matrix(projection);
 
     mat4x4_invert(view, view);
     mat4x4_invert(projection, projection);
@@ -132,4 +140,11 @@ void set_ray(double mouse_x, double mouse_y, int width, int height) {
 
     vec3_copy(camera.ray_start, ray_start);
     vec3_copy(camera.ray, ray_dir);
+}
+
+void get_projection_matrix(mat4x4 m) {
+    if (camera.projection == CAMERA_PROJECTION_PERSPECTIVE)
+        mat4x4_perspective(m, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
+    else
+        mat4x4_ortho(m, -1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
 }

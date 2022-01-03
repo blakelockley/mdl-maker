@@ -49,6 +49,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
         toggle_camera_view();
 
+    if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+        toggle_camera_projection();
+
     if (key == GLFW_KEY_1 && action == GLFW_PRESS)
         set_scroll(0.0f);
 

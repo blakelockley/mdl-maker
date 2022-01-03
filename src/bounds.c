@@ -52,7 +52,7 @@ void draw_bounds() {
     mat4x4 model, view, projection;
     mat4x4_identity(model);
     mat4x4_look_at(view, camera.pos, camera.dir, camera.up);
-    mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
+    get_projection_matrix(projection);
 
     GLint model_loc = glGetUniformLocation(bounds.shader, "model");
     glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float *)model);
