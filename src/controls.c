@@ -77,49 +77,62 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
         add_face_selection(&object);
 
-    if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 midpoint;
         get_selection_midpoint(midpoint, &object);
-
-        set_guide(midpoint, (vec3){1.0f, 0.0f, 0.0f});
-    }
-
-    if (key == GLFW_KEY_Y && action == GLFW_PRESS) {
-        vec3 midpoint;
-        get_selection_midpoint(midpoint, &object);
-
-        set_guide(midpoint, (vec3){0.0f, 1.0f, 0.0f});
-    }
-
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
-        vec3 midpoint;
-        get_selection_midpoint(midpoint, &object);
-
-        set_guide(midpoint, (vec3){0.0f, 0.0f, 1.0f});
-    }
-
-    if ((key == GLFW_KEY_RIGHT || key == GLFW_KEY_UP) && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        if (!guide.is_visible)
-            return;
-
-        vec3 midpoint, delta;
-        get_selection_midpoint(midpoint, &object);
-
-        vec3_scale(delta, guide.axis, 0.1f);
-        vec3_add(midpoint, midpoint, delta);
+        vec3_add(midpoint, midpoint, (vec3){0.0f, 0.01f, 0.0f});
 
         move_selection(&object, midpoint);
     }
 
-    if ((key == GLFW_KEY_LEFT || key == GLFW_KEY_DOWN) && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        if (!guide.is_visible)
-            return;
+    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        vec3 midpoint;
+        get_selection_midpoint(midpoint, &object);
+        vec3_add(midpoint, midpoint, (vec3){0.0f, -0.01f, 0.0f});
 
-        vec3 midpoint, delta;
+        move_selection(&object, midpoint);
+    }
+
+    if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        vec3 midpoint;
         get_selection_midpoint(midpoint, &object);
 
-        vec3_scale(delta, guide.axis, -0.1f);
-        vec3_add(midpoint, midpoint, delta);
+        vec3 dir;
+        if (fabs(camera.right[0]) >= fabs(camera.right[2])) {
+            if (camera.right[0] >= 0.0f)
+                vec3_set(dir, 0.01f, 0.0f, 0.0f);
+            else
+                vec3_set(dir, -0.01f, 0.0f, 0.0f);
+        } else {
+            if (camera.right[2] >= 0.0f)
+                vec3_set(dir, 0.0f, 0.0f, 0.01f);
+            else
+                vec3_set(dir, 0.0f, 0.0f, -0.01f);
+        }
+
+        vec3_add(midpoint, midpoint, dir);
+
+        move_selection(&object, midpoint);
+    }
+
+    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        vec3 midpoint;
+        get_selection_midpoint(midpoint, &object);
+
+        vec3 dir;
+        if (fabs(camera.right[0]) >= fabs(camera.right[2])) {
+            if (camera.right[0] >= 0.0f)
+                vec3_set(dir, -0.01f, 0.0f, 0.0f);
+            else
+                vec3_set(dir, 0.01f, 0.0f, 0.0f);
+        } else {
+            if (camera.right[2] >= 0.0f)
+                vec3_set(dir, 0.0f, 0.0f, -0.01f);
+            else
+                vec3_set(dir, 0.0f, 0.0f, 0.01f);
+        }
+
+        vec3_add(midpoint, midpoint, dir);
 
         move_selection(&object, midpoint);
     }
