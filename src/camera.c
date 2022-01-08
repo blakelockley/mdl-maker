@@ -143,8 +143,10 @@ void set_ray(double mouse_x, double mouse_y, int width, int height) {
 }
 
 void get_projection_matrix(mat4x4 m) {
+    float aspect = (float)width / (float)height;
+
     if (camera.projection == CAMERA_PROJECTION_PERSPECTIVE)
-        mat4x4_perspective(m, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
+        mat4x4_perspective(m, 45.0f, aspect, 0.1f, 100.0f);
     else
-        mat4x4_ortho(m, -1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
+        mat4x4_ortho(m, -aspect, aspect, -1.0f, 1.0f, 0.1f, 100.0f);
 }
