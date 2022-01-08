@@ -253,7 +253,7 @@ void draw_positions(object_t* object) {
     load_uniforms(object->pos_shader);
     GLint color_loc = glGetUniformLocation(object->pos_shader, "color");
 
-    glPointSize(20);
+    glPointSize(10);
     glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
 
     glBindVertexArray(object->pos_vao);
