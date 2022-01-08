@@ -9,4 +9,8 @@ int compare(float a, float b, float epsilon) {
     return 1;
 }
 
+int uint32_cmp(const void* a, const void* b) {
+    return *(uint32_t*)a - *(uint32_t*)b;
+}
+
 #endif  // COMPARE_H
