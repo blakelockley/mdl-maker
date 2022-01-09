@@ -163,6 +163,12 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_A && action == GLFW_PRESS && mods == GLFW_MOD_SUPER)
         select_all(&object);
+
+    if (key == GLFW_KEY_D && action == GLFW_PRESS)
+        duplicate_selection(&object);
+
+    if (key == GLFW_KEY_M && action == GLFW_PRESS)
+        mirror_selection(&object);
 }
 
 void character_callback(GLFWwindow *window, unsigned int codepoint) {

@@ -373,3 +373,21 @@ void calc_vertices(object_t* object) {
         add_vertex(object, vc);
     }
 }
+
+void duplicate_selection(object_t* object) {
+    for (int i = 0; i < selection_len; i++) {
+        add_position(object, object->positions[selection_buffer[i]]);
+        selection_buffer[i] = object->positions_len - 1;
+    }
+
+    buffer_object(object);
+}
+
+void mirror_selection(object_t* object) {
+    for (int i = 0; i < selection_len; i++) {
+        int index = selection_buffer[i];
+        vec3_mul(object->positions[index], object->positions[index], (vec3){-1.0f, 1.0f, 1.0f});
+    }
+
+    buffer_object(object);
+}
