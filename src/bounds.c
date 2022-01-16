@@ -73,4 +73,5 @@ void draw_bounds() {
 void free_bounds() {
     glDeleteVertexArrays(1, &bounds.vao);
     glDeleteBuffers(1, &bounds.vbo);
+    glDeleteBuffers(1, &bounds.ebo);
 }
