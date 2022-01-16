@@ -9,6 +9,7 @@
 #include "light.h"
 #include "linmath.h"
 #include "object.h"
+#include "selection.h"
 
 int shift_pressed = 0;
 
@@ -182,6 +183,9 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
         int w, h;
         glfwGetWindowSize(window, &w, &h);
 
+        set_selection_end(xpos, ypos, w, h);
+
+        return;
         set_ray(xpos, ypos, w, h);
 
         vec3 midpoint;
@@ -222,7 +226,11 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         if (light_selected)
             return;
 
+        set_selection_start(xpos, ypos, w, h);
+
+        return;
         int vertex = find_intercept(&object);
+
         if (shift_pressed) {
             if (vertex == -1)
                 return;

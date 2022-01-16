@@ -18,6 +18,7 @@
 #include "guide.h"
 #include "light.h"
 #include "object.h"
+#include "selection.h"
 #include "stage.h"
 #include "text.h"
 
@@ -86,6 +87,7 @@ int main(int argc, char **argv) {
     init_bounds();
     init_grid();
     init_guide();
+    init_selection();
 
     init_object(&object);
     open_file(filename, &object);
@@ -101,9 +103,10 @@ int main(int argc, char **argv) {
 
         draw_axis();
         draw_light();
-        draw_bounds();
+        // draw_bounds();
         draw_grid();
         draw_guide();
+        draw_selection();
         draw_object(&object);
 
         display_fps();
@@ -123,6 +126,7 @@ int main(int argc, char **argv) {
     free_grid();
     free_guide();
     free_text();
+    free_selection();
 
     glfwDestroyWindow(window);
     glfwTerminate();
