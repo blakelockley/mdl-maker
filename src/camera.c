@@ -86,11 +86,10 @@ void update_camera_position() {
         vec3_copy(camera.dir, (vec3){0.0f, 0.0f, 0.0f});
         vec3_set(camera.up, 0.0f, 1.0f, 0.0f);
 
-        vec3 forward;
-        vec3_sub(forward, camera.dir, camera.pos);
-        vec3_normalize(forward, forward);
+        vec3_sub(camera.forward, camera.dir, camera.pos);
+        vec3_normalize(camera.forward, camera.forward);
 
-        vec4_from_vec3(vector, forward, 0.0f);
+        vec4_from_vec3(vector, camera.forward, 0.0f);
 
     } else {
         camera.pos[0] = 0.0f;
@@ -100,6 +99,9 @@ void update_camera_position() {
         vec3_copy(camera.dir, (vec3){0.0f, -1.0f, 0.0f});
         vec3_set(camera.up, sinf(camera.scroll + M_PI), 0.0f, cosf(camera.scroll + M_PI));
         vec4_from_vec3(vector, camera.up, 0.0f);
+
+        vec3_sub(camera.forward, camera.dir, camera.pos);
+        vec3_normalize(camera.forward, camera.forward);
     }
 
     mat4x4 rotate;

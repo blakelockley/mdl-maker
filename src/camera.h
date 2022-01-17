@@ -20,7 +20,7 @@ struct _camera_t {
 
     float scroll, angle, zoom;
 
-    vec3 pos, dir, right, up;
+    vec3 pos, dir, right, up, forward;
     vec3 ray_start, ray;
 };
 

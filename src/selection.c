@@ -64,18 +64,49 @@ void free_selection() {
     glDeleteBuffers(1, &selection.ebo);
 }
 
-void buffer_selection() {
-    vec3 vertices[8];
+float calculate_back_plane_dist(vec3 plane_origin, vec3 plane_normal, vec3 ray_origin, vec3 ray_direction) {
+    vec3 diff;
+    vec3_sub(diff, plane_origin, ray_origin);
 
-    vec3 front_tl_ray, front_br_ray;
-    vec3_scale(front_tl_ray, selection.tl_dir, 0.1f);
-    vec3_scale(front_br_ray, selection.br_dir, 0.1f);
+    float t = vec3_dot(diff, plane_normal) / vec3_dot(ray_direction, plane_normal);
+    return t;
+}
+
+void buffer_selection() {
+    static float depth = 5.0f;
+
+    vec3 plane_origin, plane_normal;
+    vec3_scale(plane_origin, camera.forward, depth);
+    vec3_add(plane_origin, plane_origin, camera.pos);
+
+    vec3_scale(plane_normal, camera.forward, -1.0f);
+
+    float tl_dist = calculate_back_plane_dist(plane_origin, plane_normal, selection.tl_pos, selection.tl_dir);
+    float br_dist = calculate_back_plane_dist(plane_origin, plane_normal, selection.br_pos, selection.br_dir);
+
+    vec3 back_tl_ray, back_br_ray;
+    vec3_scale(back_tl_ray, selection.tl_dir, tl_dist);
+    vec3_scale(back_br_ray, selection.br_dir, br_dist);
+
+    vec3 back_tl, back_br;
+    vec3_add(back_tl, selection.tl_pos, back_tl_ray);
+    vec3_add(back_br, selection.br_pos, back_br_ray);
+
+    vec3 back_bl, back_tr;
+    vec3_copy(back_bl, back_tl);
+    back_bl[1] = back_br[1];
+
+    vec3_copy(back_tr, back_br);
+    back_tr[1] = back_tl[1];
+
+    vec3 front_ray;
+    vec3_scale(front_ray, plane_normal, depth);
 
     vec3 front_tl, front_br;
-    vec3_add(front_tl, selection.tl_pos, front_tl_ray);
-    vec3_add(front_br, selection.br_pos, front_br_ray);
+    vec3_add(front_tl, back_tl, front_ray);
+    vec3_add(front_br, back_br, front_ray);
 
-    // Front
+    vec3 vertices[8];
     vec3_copy(vertices[0], front_tl);
     vec3_copy(vertices[1], front_tl);
     vertices[1][1] = front_br[1];
@@ -84,21 +115,10 @@ void buffer_selection() {
     vec3_copy(vertices[3], front_br);
     vertices[3][1] = front_tl[1];
 
-    vec3 back_tl_ray, back_br_ray;
-    vec3_scale(back_tl_ray, selection.tl_dir, 5.0f);
-    vec3_scale(back_br_ray, selection.br_dir, 5.0f);
-
-    vec3 back_tl, back_br;
-    vec3_add(back_tl, selection.tl_pos, back_tl_ray);
-    vec3_add(back_br, selection.br_pos, back_br_ray);
-
     vec3_copy(vertices[4], back_tl);
-    vec3_copy(vertices[5], back_tl);
-    vertices[5][1] = back_br[1];
-
+    vec3_copy(vertices[5], back_bl);
     vec3_copy(vertices[6], back_br);
-    vec3_copy(vertices[7], back_br);
-    vertices[7][1] = back_tl[1];
+    vec3_copy(vertices[7], back_tr);
 
     glBindVertexArray(selection.vao);
 
