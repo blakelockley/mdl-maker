@@ -391,3 +391,30 @@ void mirror_selection(object_t* object) {
 
     buffer_object(object);
 }
+
+void project_vertices(object_t* object) {
+    mat4x4 model, view, projection, mvp;
+    mat4x4_identity(model);
+    mat4x4_look_at(view, camera.pos, camera.dir, camera.up);
+    get_projection_matrix(projection);
+
+    mat4x4_mul(mvp, view, model);
+    mat4x4_mul(mvp, projection, mvp);
+
+    selection_len = 0;
+
+    for (int i = 0; i < object->vertices_len; i++) {
+        vec4 tmp;
+        vec4_from_vec3(tmp, object->vertices[i].position, 1.0f);
+
+        vec3 pos;
+        mat4x4_mul_vec4(tmp, mvp, tmp);
+        tmp[2] /= tmp[3];
+
+        vec3_from_vec4(pos, tmp);
+
+        selection_buffer[selection_len++] = i;
+
+        printf("%f %f %f\n", pos[0], pos[1], pos[2]);
+    }
+}

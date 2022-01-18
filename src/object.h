@@ -58,5 +58,6 @@ void mirror_selection(object_t* object);
 
 // Ray methods
 int find_intercept(object_t* object);
+void project_vertices(object_t* object);
 
 #endif  // MODEL_H

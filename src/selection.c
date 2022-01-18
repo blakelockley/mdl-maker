@@ -1,10 +1,15 @@
 #include "selection.h"
 
+#include <stdio.h>
+
 #include "camera.h"
 #include "shader.h"
 
 selection_t selection;
 extern camera_t camera;
+
+extern int selection_len;
+extern int selection_buffer[];
 
 void init_selection() {
     // clang-format off
@@ -170,15 +175,62 @@ void set_selection_start(double mouse_x, double mouse_y, int width, int height) 
     vec3_copy(selection.br_pos, start);
     vec3_copy(selection.br_dir, dir);
 
+    double nx = (2.0f * mouse_x) / width - 1.0f;
+    double ny = 1.0f - (2.0f * mouse_y) / height;
+
+    selection.start_x = nx;
+    selection.start_y = ny;
+
     buffer_selection();
 }
 
-void set_selection_end(double mouse_x, double mouse_y, int width, int height) {
+void set_selection_end(double mouse_x, double mouse_y, int width, int height, object_t *object) {
     vec3 start, dir;
     calculate_ray(start, dir, mouse_x, mouse_y, width, height);
 
     vec3_copy(selection.br_pos, start);
     vec3_copy(selection.br_dir, dir);
+
+    double nx = (2.0f * mouse_x) / width - 1.0f;
+    double ny = 1.0f - (2.0f * mouse_y) / height;
+
+    mat4x4 model, view, projection, mvp;
+    mat4x4_identity(model);
+    mat4x4_look_at(view, camera.pos, camera.dir, camera.up);
+    get_projection_matrix(projection);
+
+    mat4x4_mul(mvp, view, model);
+    mat4x4_mul(mvp, projection, mvp);
+
+    double sx = selection.start_x;
+    double sy = selection.start_y;
+
+    double ex = nx;
+    double ey = ny;
+
+    selection_len = 0;
+    for (int i = 0; i < object->positions_len; i++) {
+        vec4 tmp;
+        vec4_from_vec3(tmp, object->positions[i], 1.0f);
+
+        mat4x4_mul_vec4(tmp, mvp, tmp);
+        tmp[2] /= tmp[3];
+
+        vec3 pos;
+        vec3_from_vec4(pos, tmp);
+
+        double bl_x = sx <= ex ? sx : ex;
+        double bl_y = sy <= ey ? sy : ey;
+
+        double tr_x = sx <= ex ? ex : sx;
+        double tr_y = sy <= ey ? ey : sy;
+
+        double x = pos[0];
+        double y = pos[1];
+
+        if (bl_x <= x && x <= tr_x && bl_y <= y && y <= tr_y)
+            selection_buffer[selection_len++] = i;
+    }
 
     buffer_selection();
 }

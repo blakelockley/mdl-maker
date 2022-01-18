@@ -183,7 +183,7 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
         int w, h;
         glfwGetWindowSize(window, &w, &h);
 
-        set_selection_end(xpos, ypos, w, h);
+        set_selection_end(xpos, ypos, w, h, &object);
 
         return;
         set_ray(xpos, ypos, w, h);
