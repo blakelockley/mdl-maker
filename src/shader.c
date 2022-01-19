@@ -52,6 +52,7 @@ GLuint load_shader(const char *vertex_shader_path, const char *fragment_shader_p
 
     glGetProgramiv(program, GL_LINK_STATUS, &result);
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);
+    glBindFragDataLocation(program, 0, "FragColor");
 
     if (info_log_length > 0) {
         info_buffer = (char *)malloc(info_log_length + 1);
