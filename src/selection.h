@@ -7,6 +7,7 @@
 
 struct _selection_t {
     int visible;
+    int existing_count;
 
     double ax, ay;
     double bx, by;
@@ -21,7 +22,7 @@ void init_selection();
 void draw_selection();
 void free_selection();
 
-void set_selection_start(double mouse_x, double mouse_y, int width, int height);
-void set_selection_end(double mouse_x, double mouse_y, int width, int height, object_t *object);
+void set_selection_start(double x, double y, int include_existing);
+void set_selection_end(double x, double y, object_t *object);
 
 #endif  // SELECTION_H

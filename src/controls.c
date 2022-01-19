@@ -11,11 +11,10 @@
 #include "object.h"
 #include "selection.h"
 
+extern int selection_len;
+extern int selection_buffer[];
+
 int shift_pressed = 0;
-
-int selection_len = 0;
-int selection_buffer[256];
-
 int light_selected = 0;
 
 int show_points = 1;
@@ -28,6 +27,11 @@ extern camera_t camera;
 extern light_t light;
 extern guide_t guide;
 extern selection_t selection;
+
+void normalize_mouse_pos(double *normal_x, double *normal_y, double mouse_x, double mouse_y, int width, int height) {
+    *normal_x = (2.0f * mouse_x) / width - 1.0f;
+    *normal_y = 1.0f - (2.0f * mouse_y) / height;
+}
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -184,7 +188,10 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
         int w, h;
         glfwGetWindowSize(window, &w, &h);
 
-        set_selection_end(xpos, ypos, w, h, &object);
+        double normal_x, normal_y;
+        normalize_mouse_pos(&normal_x, &normal_y, xpos, ypos, w, h);
+
+        set_selection_end(normal_x, normal_y, &object);
 
         return;
         set_ray(xpos, ypos, w, h);
@@ -218,18 +225,23 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         int w, h;
         glfwGetWindowSize(window, &w, &h);
 
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
 
-        set_ray(xpos, ypos, w, h);
+        double normal_x, normal_y;
+        normalize_mouse_pos(&normal_x, &normal_y, x, y, w, h);
+
+        int shift_pressed = mods & GLFW_MOD_SHIFT;
+        set_selection_start(normal_x, normal_y, shift_pressed);
+
+        return;
+
+        // set_ray(xpos, ypos, w, h);
 
         light_selected = check_light_intercept();
         if (light_selected)
             return;
 
-        set_selection_start(xpos, ypos, w, h);
-
-        return;
         int vertex = find_intercept(&object);
 
         if (shift_pressed) {

@@ -8,11 +8,12 @@
 selection_t selection;
 extern camera_t camera;
 
-extern int selection_len;
-extern int selection_buffer[];
+int selection_len = 0;
+int selection_buffer[256];
 
 void init_selection() {
     selection.visible = 0;
+    selection.existing_count = 0;
 
     glGenVertexArrays(1, &selection.vao);
     glBindVertexArray(selection.vao);
@@ -60,20 +61,19 @@ void buffer_selection() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 }
 
-void normalize_mouse_pos(double *normal_x, double *normal_y, double mouse_x, double mouse_y, int width, int height) {
-    *normal_x = (2.0f * mouse_x) / width - 1.0f;
-    *normal_y = 1.0f - (2.0f * mouse_y) / height;
-}
-
-void set_selection_start(double mouse_x, double mouse_y, int width, int height) {
-    normalize_mouse_pos(&selection.ax, &selection.ay, mouse_x, mouse_y, width, height);
+void set_selection_start(double x, double y, int include_existing) {
+    selection.ax = x;
+    selection.ay = y;
 
     selection.visible = 0;
+    selection.existing_count = include_existing ? selection_len : 0;
+
     buffer_selection();
 }
 
-void set_selection_end(double mouse_x, double mouse_y, int width, int height, object_t *object) {
-    normalize_mouse_pos(&selection.bx, &selection.by, mouse_x, mouse_y, width, height);
+void set_selection_end(double x, double y, object_t *object) {
+    selection.bx = x;
+    selection.by = y;
 
     double min_x = fmin(selection.ax, selection.bx);
     double min_y = fmin(selection.ay, selection.by);
@@ -91,7 +91,7 @@ void set_selection_end(double mouse_x, double mouse_y, int width, int height, ob
     mat4x4_mul(mvp, mvp, view);
     mat4x4_mul(mvp, mvp, model);
 
-    selection_len = 0;
+    selection_len = selection.existing_count;
     for (int i = 0; i < object->positions_len; i++) {
         vec4 pos;
         vec4_from_vec3(pos, object->positions[i], 1.0f);
