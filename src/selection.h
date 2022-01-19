@@ -6,15 +6,13 @@
 #include "object.h"
 
 struct _selection_t {
-    int show_selection;
+    int visible;
 
-    double start_x, start_y;
-
-    vec3 tl_pos, tl_dir;
-    vec3 br_pos, br_dir;
+    double ax, ay;
+    double bx, by;
 
     GLuint shader;
-    GLuint vao, vbo, ebo;
+    GLuint vao, vbo;
 };
 
 typedef struct _selection_t selection_t;

@@ -27,6 +27,7 @@ extern object_t object;
 extern camera_t camera;
 extern light_t light;
 extern guide_t guide;
+extern selection_t selection;
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -246,6 +247,9 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
                 selection_buffer[selection_len++] = vertex;
         }
     }
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+        selection.visible = 0;
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
