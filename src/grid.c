@@ -1,37 +1,41 @@
 #include "grid.h"
 
 #include "camera.h"
+#include "viewport.h"
 #include "shader.h"
+
+#include <stdio.h>
 
 grid_t grid;
 
 extern camera_t camera;
 extern int width, height;
 
+
 void init_grid() {
-    vec3 vertices[404];
+    vec3 vertices[84];
 
-    for (int i = 0; i < 50; i++) {
-        vec3_set(vertices[000 + (i * 2) + 0], (i - 50.0f) / 10.0f, -0.5f, -5.0f);
-        vec3_set(vertices[000 + (i * 2) + 1], (i - 50.0f) / 10.0f, -0.5f, +5.0f);
+    for (int i = 0; i < 10; i++) {
+        vec3_set(vertices[00 + (i * 2) + 0], -(float)(i + 1), 0.0f, -10.0f);
+        vec3_set(vertices[00 + (i * 2) + 1], -(float)(i + 1), 0.0f, +10.0f);
 
-        vec3_set(vertices[100 + (i * 2) + 0], (float)i / 10.0f + 0.1f, -0.5f, -5.0f);
-        vec3_set(vertices[100 + (i * 2) + 1], (float)i / 10.0f + 0.1f, -0.5f, +5.0f);
+        vec3_set(vertices[20 + (i * 2) + 0], +(float)(i + 1), 0.0f, -10.0f);
+        vec3_set(vertices[20 + (i * 2) + 1], +(float)(i + 1), 0.0f, +10.0f);
 
-        vec3_set(vertices[200 + (i * 2) + 0], -5.0f, -0.5f, (i - 50.0f) / 10.0f);
-        vec3_set(vertices[200 + (i * 2) + 1], +5.0f, -0.5f, (i - 50.0f) / 10.0f);
+        vec3_set(vertices[40 + (i * 2) + 0], -10.0f, 0.0f, -(float)(i + 1));
+        vec3_set(vertices[40 + (i * 2) + 1], +10.0f, 0.0f, -(float)(i + 1));
 
-        vec3_set(vertices[300 + (i * 2) + 0], -5.0f, -0.5f, (float)i / 10.0f + 0.1f);
-        vec3_set(vertices[300 + (i * 2) + 1], +5.0f, -0.5f, (float)i / 10.0f + 0.1f);
+        vec3_set(vertices[60 + (i * 2) + 0], -10.0f, 0.0f, +(float)(i + 1));
+        vec3_set(vertices[60 + (i * 2) + 1], +10.0f, 0.0f, +(float)(i + 1));
     }
 
     // x-axis
-    vec3_set(vertices[400], -5.0f, -0.5f, 0.0f);
-    vec3_set(vertices[401], +5.0f, -0.5f, 0.0f);
+    vec3_set(vertices[80], -10.0f, 0.0f, 0.0f);
+    vec3_set(vertices[81], +10.0f, 0.0f, 0.0f);
 
     // z-axis
-    vec3_set(vertices[402], 0.0f, -0.5f, -5.0f);
-    vec3_set(vertices[403], 0.0f, -0.5f, +5.0f);
+    vec3_set(vertices[82], 0.0f, 0.0f, -10.0f);
+    vec3_set(vertices[83], 0.0f, 0.0f, +10.0f);
 
     glGenVertexArrays(1, &grid.vao);
     glBindVertexArray(grid.vao);
@@ -53,7 +57,7 @@ void draw_grid() {
     mat4x4 model, view, projection;
     mat4x4_identity(model);
     get_view_matrix(view);
-    mat4x4_perspective(projection, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
+    get_projection_matrix(projection);
 
     GLint model_loc = glGetUniformLocation(grid.shader, "model");
     glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float *)model);
@@ -68,13 +72,13 @@ void draw_grid() {
     glBindVertexArray(grid.vao);
 
     glUniform3f(color_loc, 0.5f, 0.5f, 0.5f);
-    glDrawArrays(GL_LINES, 0, 400);
+    glDrawArrays(GL_LINES, 0, 80);
 
     glUniform3f(color_loc, 1.0f, 0.0f, 0.0f);
-    glDrawArrays(GL_LINES, 400, 2);
+    glDrawArrays(GL_LINES, 80, 2);
 
     glUniform3f(color_loc, 0.0f, 0.0f, 1.0f);
-    glDrawArrays(GL_LINES, 402, 2);
+    glDrawArrays(GL_LINES, 82, 2);
 }
 
 void free_grid() {
