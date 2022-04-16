@@ -9,6 +9,9 @@
 #include "stb_image.h"
 
 #define ENGINE_INCLUDES
+#include "camera.h"
+#include "grid.h"
+#include "controls.h"
 
 GLFWwindow *window;
 int width, height;
@@ -47,6 +50,9 @@ int main(int argc, char **argv) {
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+
     // OpenGL setup
 
     glEnable(GL_DEPTH_TEST);
@@ -57,18 +63,24 @@ int main(int argc, char **argv) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    init_camera();
+    init_grid();
 
     while (!glfwWindowShouldClose(window)) {
+        display_fps();
+        
         glfwGetFramebufferSize(window, &width, &height);
 
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        display_fps();
+        draw_grid();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    free_grid();
 
     glfwDestroyWindow(window);
     glfwTerminate();
