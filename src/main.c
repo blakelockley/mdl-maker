@@ -9,31 +9,13 @@
 #include "stb_image.h"
 
 #define ENGINE_INCLUDES
-#include "axis.h"
-#include "bounds.h"
-#include "camera.h"
-#include "controls.h"
-#include "filemanager.h"
-#include "grid.h"
-#include "guide.h"
-#include "light.h"
-#include "object.h"
-#include "selection.h"
-#include "stage.h"
-#include "text.h"
 
 GLFWwindow *window;
 int width, height;
 
 char *filename;
 
-extern int selection_len;
-extern camera_t camera;
-object_t object;
-
 void display_fps();
-
-char buffer[256];
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -65,12 +47,6 @@ int main(int argc, char **argv) {
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
-    glfwSetKeyCallback(window, key_callback);
-    glfwSetCharCallback(window, character_callback);
-    glfwSetCursorPosCallback(window, cursor_position_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-
     // OpenGL setup
 
     glEnable(GL_DEPTH_TEST);
@@ -81,19 +57,6 @@ int main(int argc, char **argv) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    init_axis();
-    init_camera();
-    init_light();
-    init_bounds();
-    init_grid();
-    init_guide();
-    init_selection();
-
-    init_object(&object);
-    open_file(filename, &object);
-    buffer_object(&object);
-
-    init_text();
 
     while (!glfwWindowShouldClose(window)) {
         glfwGetFramebufferSize(window, &width, &height);
@@ -101,32 +64,11 @@ int main(int argc, char **argv) {
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        draw_axis();
-        draw_light();
-        // draw_bounds();
-        draw_grid();
-        draw_guide();
-        draw_selection();
-        draw_object(&object);
-
         display_fps();
-
-        sprintf(buffer, "SELECTED:%d\n", selection_len);
-        render_text(buffer, 0, -32, width, height);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    free_object(&object);
-
-    free_axis();
-    free_light();
-    free_bounds();
-    free_grid();
-    free_guide();
-    free_text();
-    free_selection();
 
     glfwDestroyWindow(window);
     glfwTerminate();
@@ -135,7 +77,7 @@ int main(int argc, char **argv) {
 }
 
 void display_fps() {
-    static char fps_text[16];
+    static char fps_text[32];
     static double last_second = 0;
     static int frames = 0;
 
@@ -144,11 +86,11 @@ void display_fps() {
     frames++;
     if (current_time - last_second > 1.0) {
         double fps = frames / (current_time - last_second);
-        sprintf(fps_text, "FPS:%.2f", fps);
+
+        sprintf(fps_text, "mdl-maker (FPS: %.2f)", fps);
+        glfwSetWindowTitle(window, fps_text);
 
         frames = 0;
         last_second = current_time;
     }
-
-    render_text(fps_text, 0, 0, width, height);
 }
