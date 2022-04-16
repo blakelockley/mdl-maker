@@ -13,6 +13,7 @@
 #include "viewport.h"
 #include "grid.h"
 #include "controls.h"
+#include "select.h"
 
 GLFWwindow *window;
 
@@ -52,6 +53,8 @@ int main(int argc, char **argv) {
     glfwSwapInterval(1);
 
     glfwSetKeyCallback(window, key_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
     // OpenGL setup
@@ -65,6 +68,7 @@ int main(int argc, char **argv) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     init_camera();
+    init_select();
     init_grid();
 
     while (!glfwWindowShouldClose(window)) {
@@ -76,12 +80,14 @@ int main(int argc, char **argv) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         draw_grid();
+        draw_select();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     free_grid();
+    free_select();
 
     glfwDestroyWindow(window);
     glfwTerminate();

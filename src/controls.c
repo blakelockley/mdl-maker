@@ -4,6 +4,7 @@
 
 #include "linmath.h"
 #include "camera.h"
+#include "select.h"
 
 extern camera_t camera;
 
@@ -25,4 +26,34 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     scroll += xoffset;
     vec3_set(camera.pos, -sinf(scroll) * 2, camera.pos[1], cosf(scroll) * 2);
+}
+
+void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
+    int w, h;
+    glfwGetWindowSize(window, &w, &h);
+
+    double normal_x, normal_y;
+    normalize_mouse_pos(&normal_x, &normal_y, xpos, ypos, w, h);
+
+    int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+    if (state == GLFW_PRESS)
+        set_select_move(normal_x, normal_y);
+
+    if (state == GLFW_RELEASE)
+        set_select_end(normal_x, normal_y);
+}
+
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        int w, h;
+        glfwGetWindowSize(window, &w, &h);
+
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+
+        double normal_x, normal_y;
+        normalize_mouse_pos(&normal_x, &normal_y, x, y, w, h);
+
+        set_select_start(normal_x, normal_y);
+    }
 }
