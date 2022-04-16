@@ -10,13 +10,14 @@
 
 #define ENGINE_INCLUDES
 #include "camera.h"
+#include "viewport.h"
 #include "grid.h"
 #include "controls.h"
 
 GLFWwindow *window;
-int width, height;
 
 char *filename;
+extern viewport_t viewport;
 
 void display_fps();
 
@@ -69,7 +70,7 @@ int main(int argc, char **argv) {
     while (!glfwWindowShouldClose(window)) {
         display_fps();
         
-        glfwGetFramebufferSize(window, &width, &height);
+        glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
