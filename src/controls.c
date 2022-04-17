@@ -38,22 +38,22 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     if (state == GLFW_PRESS)
         set_select_move(normal_x, normal_y);
-
-    if (state == GLFW_RELEASE)
-        set_select_end(normal_x, normal_y);
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        int w, h;
-        glfwGetWindowSize(window, &w, &h);
+    int w, h;
+    glfwGetWindowSize(window, &w, &h);
 
-        double x, y;
-        glfwGetCursorPos(window, &x, &y);
-
-        double normal_x, normal_y;
-        normalize_mouse_pos(&normal_x, &normal_y, x, y, w, h);
-
-        set_select_start(normal_x, normal_y);
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+   
+    double normal_x, normal_y;
+    normalize_mouse_pos(&normal_x, &normal_y, x, y, w, h);
+    
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (action == GLFW_PRESS)
+            set_select_start(normal_x, normal_y);
+        else if (action == GLFW_RELEASE)
+            set_select_end(normal_x, normal_y);
     }
 }
