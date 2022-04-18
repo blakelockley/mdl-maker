@@ -24,7 +24,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     
     if (key == GLFW_KEY_A && action == GLFW_PRESS)
-        add_position((vec3){0.0f, 0.5f, 0.0f});
+        add_vetex((vec3){0.0f, 0.5f, 0.0f});
+    
+    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+        move_selection((vec3){0.1f, 0.0f, 0.0f});
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {

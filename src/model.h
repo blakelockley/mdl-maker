@@ -4,12 +4,24 @@
 #include "glfw.h"
 #include "linmath.h"
 
+struct _face_t 
+{
+    uint32_t len;
+    uint32_t* indices;
+};
+
+typedef struct _face_t face_t;
+
 struct _model_t {
     vec3 color;
 
-    vec3* positions;
-    uint32_t positions_cap;
-    uint32_t positions_len;
+    vec3* vertices;
+    uint32_t vertices_cap;
+    uint32_t vertices_len;
+
+    face_t** faces;
+    uint32_t faces_cap;
+    uint32_t faces_len;
 
     GLuint pos_shader;
     GLuint pos_vao, pos_vbo;
@@ -23,6 +35,6 @@ void free_model();
 
 void buffer_model();
 
-void add_position(vec3 position);
+void add_vertex(vec3 vertex);
 
 #endif  // MODEL_H

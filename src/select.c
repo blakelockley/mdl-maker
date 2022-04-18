@@ -87,9 +87,9 @@ void set_select_end(double x, double y) {
     mat4x4_mul(mvp, mvp, view);
 
     select.selection_len = 0;
-    for (int i = 0; i < model.positions_len; i++) {
+    for (int i = 0; i < model.vertices_len; i++) {
         vec4 pos;
-        vec4_from_vec3(pos, model.positions[i], 1.0f);
+        vec4_from_vec3(pos, model.vertices[i], 1.0f);
 
         mat4x4_mul_vec4(pos, mvp, pos);
         vec3_scale(pos, pos, 1.0f / pos[3]); // Perspective divide
@@ -103,6 +103,39 @@ void set_select_end(double x, double y) {
     
     buffer_select();  
 }
+
+void get_selection_midpoint(vec3 midpoint) {
+    vec3_zero(midpoint);
+
+    for (int i = 0; i < select.selection_len; i++)
+        vec3_add(midpoint, midpoint, model.vertices[select.selection_buffer[i]]);
+
+    vec3_scale(midpoint, midpoint, 1.0f / (float)select.selection_len);
+}
+
+void move_selection(vec3 delta) {
+    for (int i = 0; i < select.selection_len; i++) {
+        int index = select.selection_buffer[i];
+        vec3_add(model.vertices[index], model.vertices[index], delta);
+    }
+}
+
+void move_selection_to_position(vec3 position) {
+    vec3 midpoint;
+    get_selection_midpoint(midpoint);
+
+    vec3 deltas[select.selection_len];
+    for (int i = 0; i < select.selection_len; i++)
+        vec3_sub(deltas[i], model.vertices[select.selection_buffer[i]], midpoint);
+
+    vec3 new_vertices[select.selection_len];
+    for (int i = 0; i < select.selection_len; i++)
+        vec3_add(new_vertices[i], position, deltas[i]);
+
+    for (int i = 0; i < select.selection_len; i++)
+        vec3_copy(model.vertices[select.selection_buffer[i]], new_vertices[i]);
+}
+
 
 void buffer_select() {
     vec2 vertices[4];

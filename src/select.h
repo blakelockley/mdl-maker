@@ -28,4 +28,7 @@ void set_select_start(double x, double y);
 void set_select_move(double x, double y);
 void set_select_end(double x, double y);
 
+void move_selection(vec3 delta);
+void move_selection_to_position(vec3 position);
+
 #endif  // SELECT_H

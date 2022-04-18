@@ -14,28 +14,28 @@ extern select_t select;
 void init_model() {
     vec3_set(model.color, 0.25f, 0.45f, 1.0f);
 
-    model.positions = (vec3*)malloc(sizeof(vec3) * 10);
-    model.positions_cap = 10;
-    model.positions_len = 0;
+    model.vertices = (vec3*)malloc(sizeof(vec3) * 10);
+    model.vertices_cap = 10;
+    model.vertices_len = 0;
 
-    // Position VAO, used to display model positions as points
+    // Position VAO, used to display model vertices as points
 
     glGenVertexArrays(1, &model.pos_vao);
     glBindVertexArray(model.pos_vao);
 
-    // Positions
+    // vertices
     glGenBuffers(1, &model.pos_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, model.pos_vbo);
     glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);  // Positions
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);  // vertices
 
     model.pos_shader = load_shader("shaders/static.vert", "shaders/static.frag");
 }
 
 void free_model() {
-    free(model.positions);
+    free(model.vertices);
 
     glDeleteVertexArrays(1, &model.pos_vao);
     glDeleteBuffers(1, &model.pos_vbo);
@@ -43,20 +43,20 @@ void free_model() {
 
 // Update data methods
 
-void add_position(vec3 position) {
-    if (model.positions_len == model.positions_cap) {
-        model.positions_cap *= 2;
-        model.positions = (vec3*)realloc(model.positions, sizeof(vec3) * model.positions_cap);
+void add_vertex(vec3 vertex) {
+    if (model.vertices_len == model.vertices_cap) {
+        model.vertices_cap *= 2;
+        model.vertices = (vec3*)realloc(model.vertices, sizeof(vec3) * model.vertices_cap);
     }
 
-    vec3_copy(model.positions[model.positions_len++], position);
-
-    glBindVertexArray(model.pos_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, model.pos_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model.positions_len, model.positions, GL_DYNAMIC_DRAW);
+    vec3_copy(model.vertices[model.vertices_len++], vertex);
 }
 
 void draw_model() {
+    glBindVertexArray(model.pos_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, model.pos_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model.vertices_len, model.vertices, GL_DYNAMIC_DRAW);
+
     glUseProgram(model.pos_shader);
     
     mat4x4 _model, view, projection;
@@ -86,5 +86,5 @@ void draw_model() {
     }
 
     glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
-    glDrawArrays(GL_POINTS, 0, model.positions_len);
+    glDrawArrays(GL_POINTS, 0, model.vertices_len);
 }
