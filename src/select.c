@@ -1,15 +1,25 @@
 #include "select.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "camera.h"
 #include "shader.h"
+#include "model.h"
+#include "viewport.h"
 
 select_t select;
 extern camera_t camera;
+extern model_t model;
+
+void buffer_select();
 
 void init_select() {
     select.is_visible = 0;
+
+    select.selection_buffer = (int*)malloc(sizeof(int) * 10);
+    select.selection_len = 0;
+    select.selection_cap = 10;
 
     glGenVertexArrays(1, &select.vao);
     glBindVertexArray(select.vao);
@@ -43,20 +53,6 @@ void free_select() {
     glDeleteBuffers(1, &select.vbo);
 }
 
-void buffer_select() {
-    vec2 vertices[4];
-
-    vec2_set(vertices[0], select.ax, select.ay);
-    vec2_set(vertices[1], select.bx, select.ay);
-    vec2_set(vertices[2], select.bx, select.by);
-    vec2_set(vertices[3], select.ax, select.by);
-
-    glBindVertexArray(select.vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, select.vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-}
-
 void set_select_start(double x, double y) {
     select.is_visible = 0;
     select.ax = x;
@@ -75,5 +71,49 @@ void set_select_move(double x, double y) {
 
 void set_select_end(double x, double y) {
     select.is_visible = 0;
+
+    double min_x = fmin(select.ax, select.bx);
+    double min_y = fmin(select.ay, select.by);
+
+    double max_x = fmax(select.ax, select.bx);
+    double max_y = fmax(select.ay, select.by);
+    
+    mat4x4 view, projection, mvp;
+    get_view_matrix(view);
+    get_projection_matrix(projection);
+
+    mat4x4_identity(mvp);
+    mat4x4_mul(mvp, mvp, projection);
+    mat4x4_mul(mvp, mvp, view);
+
+    select.selection_len = 0;
+    for (int i = 0; i < model.positions_len; i++) {
+        vec4 pos;
+        vec4_from_vec3(pos, model.positions[i], 1.0f);
+
+        mat4x4_mul_vec4(pos, mvp, pos);
+        vec3_scale(pos, pos, 1.0f / pos[3]); // Perspective divide
+
+        double x = pos[0];
+        double y = pos[1];
+
+        if (min_x <= x && x <= max_x && min_y <= y && y <= max_y)
+            select.selection_buffer[select.selection_len++] = i;
+    }
+    
     buffer_select();  
+}
+
+void buffer_select() {
+    vec2 vertices[4];
+
+    vec2_set(vertices[0], select.ax, select.ay);
+    vec2_set(vertices[1], select.bx, select.ay);
+    vec2_set(vertices[2], select.bx, select.by);
+    vec2_set(vertices[3], select.ax, select.by);
+
+    glBindVertexArray(select.vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, select.vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 }

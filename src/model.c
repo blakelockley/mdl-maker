@@ -6,8 +6,10 @@
 #include "camera.h"
 #include "viewport.h"
 #include "shader.h"
+#include "select.h"
 
 model_t model;
+extern select_t select;
 
 void init_model() {
     vec3_set(model.color, 0.25f, 0.45f, 1.0f);
@@ -76,6 +78,12 @@ void draw_model() {
     glPointSize(10);
 
     glBindVertexArray(model.pos_vao);
+
+    glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
+    for (int i = 0; i < select.selection_len; i++) {
+        int index = select.selection_buffer[i];
+        glDrawArrays(GL_POINTS, index, 1);
+    }
 
     glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
     glDrawArrays(GL_POINTS, 0, model.positions_len);

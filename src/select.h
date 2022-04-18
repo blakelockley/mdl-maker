@@ -10,6 +10,10 @@ struct _select_t {
     double ax, ay;
     double bx, by;
 
+    int *selection_buffer;
+    int selection_len;
+    int selection_cap;
+    
     GLuint shader;
     GLuint vao, vbo;
 };

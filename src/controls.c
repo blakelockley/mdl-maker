@@ -5,6 +5,7 @@
 #include "linmath.h"
 #include "camera.h"
 #include "select.h"
+#include "model.h"
 
 extern camera_t camera;
 
@@ -21,6 +22,9 @@ void normalize_mouse_pos(double *normal_x, double *normal_y, double mouse_x, dou
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    
+    if (key == GLFW_KEY_A && action == GLFW_PRESS)
+        add_position((vec3){0.0f, 0.5f, 0.0f});
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
