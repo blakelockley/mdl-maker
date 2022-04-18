@@ -14,6 +14,7 @@
 #include "grid.h"
 #include "controls.h"
 #include "select.h"
+#include "model.h"
 
 GLFWwindow *window;
 
@@ -70,6 +71,7 @@ int main(int argc, char **argv) {
     init_camera();
     init_select();
     init_grid();
+    init_model();
 
     while (!glfwWindowShouldClose(window)) {
         display_fps();
@@ -81,6 +83,7 @@ int main(int argc, char **argv) {
 
         draw_grid();
         draw_select();
+        draw_model();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -88,6 +91,7 @@ int main(int argc, char **argv) {
 
     free_grid();
     free_select();
+    free_model();
 
     glfwDestroyWindow(window);
     glfwTerminate();
