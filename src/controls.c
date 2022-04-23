@@ -24,15 +24,56 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     
     if (key == GLFW_KEY_A && action == GLFW_PRESS)
-        add_vetex((vec3){0.0f, 0.5f, 0.0f});
+        add_vertex((vec3){0.0f, 0.5f, 0.0f});
     
-    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
-        move_selection((vec3){0.1f, 0.0f, 0.0f});
+    if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        vec3 offset;
+        if (fabs(camera.right[0]) >= fabs(camera.right[2])) {
+            if (camera.right[0] >= 0.0f)
+                vec3_set(offset, 0.01f, 0.0f, 0.0f);
+            else
+                vec3_set(offset, -0.01f, 0.0f, 0.0f);
+        } else {
+            if (camera.right[2] >= 0.0f)
+                vec3_set(offset, 0.0f, 0.0f, 0.01f);
+            else
+                vec3_set(offset, 0.0f, 0.0f, -0.01f);
+        }
+        move_selection(offset);
+    }
+    
+    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        vec3 offset;
+        if (fabs(camera.right[0]) >= fabs(camera.right[2])) {
+            if (camera.right[0] >= 0.0f)
+                vec3_set(offset, -0.01f, 0.0f, 0.0f);
+            else
+                vec3_set(offset, +0.01f, 0.0f, 0.0f);
+        } else {
+            if (camera.right[2] >= 0.0f)
+                vec3_set(offset, 0.0f, 0.0f, -0.01f);
+            else
+                vec3_set(offset, 0.0f, 0.0f, +0.01f);
+        }
+        move_selection(offset);
+    }
+
+    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        vec3 offset;
+        vec3_set(offset, 0.0f, +0.01f, 0.0f);
+        move_selection(offset);
+    }
+
+    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        vec3 offset;
+        vec3_set(offset, 0.0f, -0.01f, 0.0f);
+        move_selection(offset);
+    }
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     scroll += xoffset;
-    vec3_set(camera.pos, -sinf(scroll) * 2, camera.pos[1], cosf(scroll) * 2);
+    set_camera_position((vec3){ -sinf(scroll) * 2, camera.pos[1], cosf(scroll) * 2});
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {

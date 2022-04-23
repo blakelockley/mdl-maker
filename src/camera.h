@@ -12,6 +12,7 @@ struct _camera_t {
 typedef struct _camera_t camera_t;
 
 void init_camera();
+void set_camera_position(vec3 v);
 void get_view_matrix(mat4x4 m);
 
 #endif  // CAMERA_H
