@@ -19,7 +19,7 @@ struct _model_t {
     uint32_t vertices_cap;
     uint32_t vertices_len;
 
-    face_t** faces;
+    face_t* faces;
     uint32_t faces_cap;
     uint32_t faces_len;
 
@@ -36,5 +36,6 @@ void free_model();
 void buffer_model();
 
 void add_vertex(vec3 vertex);
+void add_face();
 
 #endif  // MODEL_H

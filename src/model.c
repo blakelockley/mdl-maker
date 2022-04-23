@@ -7,6 +7,7 @@
 #include "viewport.h"
 #include "shader.h"
 #include "select.h"
+#include "face_renderer.h"
 
 model_t model;
 extern select_t select;
@@ -17,6 +18,10 @@ void init_model() {
     model.vertices = (vec3*)malloc(sizeof(vec3) * 10);
     model.vertices_cap = 10;
     model.vertices_len = 0;
+
+    model.faces = (face_t*)malloc(sizeof(face_t) * 10);
+    model.faces_cap = 10;
+    model.faces_len = 0;
 
     // Position VAO, used to display model vertices as points
 
@@ -50,6 +55,25 @@ void add_vertex(vec3 vertex) {
     }
 
     vec3_copy(model.vertices[model.vertices_len++], vertex);
+}
+
+void add_face() {
+    if (select.selection_len < 3)
+        return;
+
+    if (model.faces_len == model.faces_cap) {
+        model.faces_cap *= 2;
+        model.faces = (face_t*)realloc(model.faces, sizeof(face_t) * model.faces_cap);
+    }
+
+    face_t face;
+    face.len = select.selection_len;
+    face.indices = (uint32_t*)malloc(sizeof(uint32_t) * face.len);
+
+    for (int i = 0; i < select.selection_len; i++)
+        face.indices[i] = select.selection_buffer[i];
+
+    model.faces[model.faces_len++] = face;
 }
 
 void draw_model() {
@@ -87,4 +111,6 @@ void draw_model() {
 
     glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
     glDrawArrays(GL_POINTS, 0, model.vertices_len);
+
+    render_model_faces(&model);
 }

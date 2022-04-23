@@ -26,6 +26,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_A && action == GLFW_PRESS)
         add_vertex((vec3){0.0f, 0.5f, 0.0f});
     
+    if (key == GLFW_KEY_F && action == GLFW_PRESS)
+        add_face();
+    
     if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 offset;
         if (fabs(camera.right[0]) >= fabs(camera.right[2])) {
