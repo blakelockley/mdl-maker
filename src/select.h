@@ -31,4 +31,7 @@ void set_select_end(double x, double y);
 void move_selection(vec3 delta);
 void move_selection_to_position(vec3 position);
 
+void clear_selection();
+void add_index_to_selection(uint32_t index);
+
 #endif  // SELECT_H

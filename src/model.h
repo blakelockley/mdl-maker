@@ -35,7 +35,7 @@ void free_model();
 
 void buffer_model();
 
-void add_vertex(vec3 vertex);
+uint32_t add_vertex(vec3 vertex);
 void add_face();
 
 #endif  // MODEL_H

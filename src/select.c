@@ -136,6 +136,13 @@ void move_selection_to_position(vec3 position) {
         vec3_copy(model.vertices[select.selection_buffer[i]], new_vertices[i]);
 }
 
+void clear_selection() {
+    select.selection_len = 0;
+}
+
+void add_index_to_selection(uint32_t index) {
+    select.selection_buffer[select.selection_len++] = index;
+}
 
 void buffer_select() {
     vec2 vertices[4];

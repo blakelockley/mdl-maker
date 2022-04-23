@@ -48,13 +48,15 @@ void free_model() {
 
 // Update data methods
 
-void add_vertex(vec3 vertex) {
+uint32_t add_vertex(vec3 vertex) {
     if (model.vertices_len == model.vertices_cap) {
         model.vertices_cap *= 2;
         model.vertices = (vec3*)realloc(model.vertices, sizeof(vec3) * model.vertices_cap);
     }
 
     vec3_copy(model.vertices[model.vertices_len++], vertex);
+
+    return model.vertices_len - 1;
 }
 
 void add_face() {
