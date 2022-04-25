@@ -42,7 +42,11 @@ void init_model() {
 }
 
 void free_model() {
+    for (int i = 0; i < model.faces_len; i++)
+        free(model.faces[i].indices);
+    
     free(model.vertices);
+    free(model.faces);
 
     glDeleteVertexArrays(1, &model.pos_vao);
     glDeleteBuffers(1, &model.pos_vbo);
@@ -61,32 +65,31 @@ uint32_t add_vertex(vec3 vertex) {
     return model.vertices_len - 1;
 }
 
-void add_face() {
-    if (select.selection_len < 3)
-        return;
+face_t *add_face() {
+    if (select.selection_len < 3 || select.selection_len > 1024)
+        return NULL;
 
     if (model.faces_len == model.faces_cap) {
         model.faces_cap *= 2;
         model.faces = (face_t*)realloc(model.faces, sizeof(face_t) * model.faces_cap);
     }
 
-    face_t face;
-    face.len = select.selection_len;
-    face.indices = (uint32_t*)malloc(sizeof(uint32_t) * face.len);
+    uint32_t len = select.selection_len;
 
-    for (int i = 0; i < select.selection_len; i++)
-        face.indices[i] = select.selection_buffer[i];
+    uint32_t indices[len];
+    for (int i = 0; i < len; i++)
+        indices[i] = select.selection_buffer[i];
 
     vec3 midpoint;
     vec3_zero(midpoint);
     
-    for (int i = 0; i < face.len; i++)
-        vec3_add(midpoint, midpoint, model.vertices[face.indices[i]]);
+    for (int i = 0; i < len; i++)
+        vec3_add(midpoint, midpoint, model.vertices[indices[i]]);
     
-    vec3_scale(midpoint, midpoint, 1.0f / (float)face.len);
+    vec3_scale(midpoint, midpoint, 1.0f / (float)len);
 
     vec3 normal;
-    calculate_normal(normal, model.vertices[face.indices[0]], model.vertices[face.indices[1]], model.vertices[face.indices[2]]);
+    calculate_normal(normal, model.vertices[indices[0]], model.vertices[indices[1]], model.vertices[indices[2]]);
 
     vec3 other;
     if (fabs(normal[2]) == 1.0f)
@@ -102,13 +105,10 @@ void add_face() {
     vec3_cross(y_axis, normal, x_axis);
     vec3_normalize(y_axis, y_axis);
 
-    float angles[face.len];
-    for (int i = 0; i < face.len; i++) {
-        vec3 v;
-        vec3_copy(v, model.vertices[face.indices[i]]);
-        
+    float angles[len];
+    for (int i = 0; i < len; i++) {
         vec3 vector; 
-        vec3_sub(vector, v, midpoint);
+        vec3_sub(vector, model.vertices[indices[i]], midpoint);
 
         float x = vec3_dot(x_axis, vector);
         float y = vec3_dot(y_axis, vector);
@@ -118,16 +118,16 @@ void add_face() {
     }
 
     float last_angle = -M_PI;
-    uint32_t sorted_indices[face.len];
+    uint32_t sorted_indices[len];
 
-    for (int i = 0; i < face.len; i++) {
+    for (int i = 0; i < len; i++) {
         float current_angle = M_PI; 
         
-        for (int j = 0; j < face.len; j++) {
+        for (int j = 0; j < len; j++) {
             float angle = angles[j];
             
             if (angle > last_angle && angle <= current_angle) {
-                sorted_indices[i] = face.indices[j];
+                sorted_indices[i] = indices[j];
                 current_angle = angle;
             }
         }
@@ -135,8 +135,16 @@ void add_face() {
         last_angle = current_angle;
     }
 
-    memcpy(face.indices, sorted_indices, sizeof(sorted_indices));
-    model.faces[model.faces_len++] = face;
+    face_t *face = &model.faces[model.faces_len++];
+    face->len = len;
+    
+    face->indices = (uint32_t*)malloc(sizeof(sorted_indices));
+    memcpy(face->indices, sorted_indices, sizeof(sorted_indices));
+
+    vec3_copy(face->midpoint, midpoint);
+    vec3_copy(face->normal, normal);
+
+    return face;
 }
 
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c) {

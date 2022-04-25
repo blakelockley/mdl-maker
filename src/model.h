@@ -8,6 +8,9 @@ struct _face_t
 {
     uint32_t len;
     uint32_t* indices;
+
+    vec3 midpoint;
+    vec3 normal;
 };
 
 typedef struct _face_t face_t;
@@ -36,6 +39,6 @@ void free_model();
 void buffer_model();
 
 uint32_t add_vertex(vec3 vertex);
-void add_face();
+face_t *add_face();
 
 #endif  // MODEL_H
