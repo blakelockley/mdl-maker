@@ -8,6 +8,7 @@
 #include "shader.h"
 #include "select.h"
 #include "face_renderer.h"
+#include "normal_renderer.h"
 
 model_t model;
 extern select_t select;
@@ -83,7 +84,7 @@ face_t *add_face() {
 
     vec3 midpoint;
     calculate_midpoint(midpoint, indices, len);
-
+        
     vec3 normal;
     calculate_normal(normal, model.vertices[indices[0]], model.vertices[indices[1]], model.vertices[indices[2]]);
 
@@ -212,4 +213,5 @@ void draw_model() {
     glDrawArrays(GL_POINTS, 0, model.vertices_len);
 
     render_model_faces(&model);
+    render_model_normals(&model);
 }

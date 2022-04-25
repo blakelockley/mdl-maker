@@ -16,6 +16,7 @@
 #include "select.h"
 #include "model.h"
 #include "face_renderer.h"
+#include "normal_renderer.h"
 
 GLFWwindow *window;
 
@@ -71,6 +72,7 @@ int main(int argc, char **argv) {
     init_grid();
     init_model();
     init_face_renderer();
+    init_normal_renderer();
 
     while (!glfwWindowShouldClose(window)) {
         display_fps();
