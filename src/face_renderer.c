@@ -31,7 +31,7 @@ void render_model_faces(model_t *model) {
     for (int i = 0; i < model->faces_len; i++) {
         for (int j = 2; j < model->faces[i].len; j++) {
             uint32_t *indices = model->faces[i].indices;
-            vec3_copy(vertices[vi++], model->vertices[indices[j - 2]]);
+            vec3_copy(vertices[vi++], model->vertices[indices[0]]);
             vec3_copy(vertices[vi++], model->vertices[indices[j - 1]]);
             vec3_copy(vertices[vi++], model->vertices[indices[j - 0]]);
         }
