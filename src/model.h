@@ -37,6 +37,7 @@ void draw_model();
 void free_model();
 
 void buffer_model();
+void update_faces();
 
 uint32_t add_vertex(vec3 vertex);
 face_t *add_face();

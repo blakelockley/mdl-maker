@@ -13,6 +13,7 @@ model_t model;
 extern select_t select;
 
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c);
+void calculate_midpoint(vec3 r, uint32_t *indices, uint32_t len);
 
 void init_model() {
     vec3_set(model.color, 0.25f, 0.45f, 1.0f);
@@ -81,12 +82,7 @@ face_t *add_face() {
         indices[i] = select.selection_buffer[i];
 
     vec3 midpoint;
-    vec3_zero(midpoint);
-    
-    for (int i = 0; i < len; i++)
-        vec3_add(midpoint, midpoint, model.vertices[indices[i]]);
-    
-    vec3_scale(midpoint, midpoint, 1.0f / (float)len);
+    calculate_midpoint(midpoint, indices, len);
 
     vec3 normal;
     calculate_normal(normal, model.vertices[indices[0]], model.vertices[indices[1]], model.vertices[indices[2]]);
@@ -147,6 +143,20 @@ face_t *add_face() {
     return face;
 }
 
+void update_faces() {
+    for (int i = 0; i < model.faces_len; i++) {
+            face_t *face = &model.faces[i];
+    
+        calculate_normal(face->normal,
+            model.vertices[face->indices[0]],
+            model.vertices[face->indices[1]],
+            model.vertices[face->indices[2]]
+        );
+
+        calculate_midpoint(face->midpoint, face->indices, face->len);
+    }
+}
+
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c) {
     vec3 ab, ac;
     vec3_sub(ab, b, a);
@@ -154,6 +164,15 @@ void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c) {
 
     vec3_cross(r, ab, ac);
     vec3_normalize(r, r);
+}
+
+void calculate_midpoint(vec3 r, uint32_t *indices, uint32_t len) {
+    vec3_zero(r);
+    
+    for (int i = 0; i < len; i++)
+        vec3_add(r, r, model.vertices[indices[i]]);
+    
+    vec3_scale(r, r, 1.0f / (float)len);
 }
 
 void draw_model() {

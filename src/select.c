@@ -118,6 +118,8 @@ void move_selection(vec3 delta) {
         int index = select.selection_buffer[i];
         vec3_add(model.vertices[index], model.vertices[index], delta);
     }
+
+    update_faces();
 }
 
 void move_selection_to_position(vec3 position) {
@@ -134,6 +136,8 @@ void move_selection_to_position(vec3 position) {
 
     for (int i = 0; i < select.selection_len; i++)
         vec3_copy(model.vertices[select.selection_buffer[i]], new_vertices[i]);
+    
+    update_faces();
 }
 
 void clear_selection() {
