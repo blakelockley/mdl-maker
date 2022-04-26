@@ -9,8 +9,7 @@
 grid_t grid;
 
 extern camera_t camera;
-extern int width, height;
-
+extern viewport_t viewport;
 
 void init_grid() {
     vec3 vertices[84];
@@ -57,7 +56,7 @@ void draw_grid() {
     mat4x4 model, view, projection;
     mat4x4_identity(model);
     get_view_matrix(&camera, view);
-    get_projection_matrix(projection);
+    get_projection_matrix(&viewport, projection);
 
     GLint model_loc = glGetUniformLocation(grid.shader, "model");
     glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float *)model);

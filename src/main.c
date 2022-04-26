@@ -21,8 +21,9 @@
 GLFWwindow *window;
 
 char *filename;
+
 camera_t camera;
-extern viewport_t viewport;
+viewport_t viewport;
 
 void display_fps();
 

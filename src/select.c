@@ -10,6 +10,8 @@
 
 select_t select;
 extern camera_t camera;
+extern viewport_t viewport;
+
 extern model_t model;
 
 void buffer_select();
@@ -80,7 +82,7 @@ void set_select_end(double x, double y) {
     
     mat4x4 view, projection, mvp;
     get_view_matrix(&camera, view);
-    get_projection_matrix(projection);
+    get_projection_matrix(&viewport, projection);
 
     mat4x4_identity(mvp);
     mat4x4_mul(mvp, mvp, projection);

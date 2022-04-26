@@ -4,6 +4,7 @@
 #include "viewport.h"
 
 extern camera_t camera;
+extern viewport_t viewport;
 normal_renderer_t normal_renderer;
 
 void init_normal_renderer() {
@@ -44,7 +45,7 @@ void render_model_normals(model_t *model) {
     mat4x4 _model, view, projection;
     mat4x4_identity(_model);
     get_view_matrix(&camera, view);
-    get_projection_matrix(projection);
+    get_projection_matrix(&viewport, projection);
     
     GLint model_loc = glGetUniformLocation(normal_renderer.shader, "model");
     glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)_model);
