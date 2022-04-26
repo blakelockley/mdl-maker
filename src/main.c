@@ -24,6 +24,7 @@ char *filename;
 
 camera_t camera;
 viewport_t viewport;
+grid_t grid;
 
 void display_fps();
 
@@ -70,9 +71,9 @@ int main(int argc, char **argv) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     init_camera(&camera);
+    init_grid(&grid);
     
     init_select();
-    init_grid();
     init_model();
     init_face_renderer();
     init_normal_renderer();
@@ -85,7 +86,8 @@ int main(int argc, char **argv) {
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        draw_grid();
+        render_grid(&grid);
+        
         draw_select();
         draw_model();
 
@@ -93,9 +95,11 @@ int main(int argc, char **argv) {
         glfwPollEvents();
     }
 
-    free_grid();
     free_select();
     free_model();
+
+    free_camera(&camera);
+    free_grid(&grid);
 
     glfwDestroyWindow(window);
     glfwTerminate();

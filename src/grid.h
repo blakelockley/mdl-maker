@@ -5,14 +5,15 @@
 #include "linmath.h"
 
 struct _grid_t {
+    GLuint vao, vbo; 
     GLuint shader;
-    GLuint vao, vbo;
 };
 
 typedef struct _grid_t grid_t;
 
-void init_grid();
-void draw_grid();
-void free_grid();
+void init_grid(grid_t *grid);
+void free_grid(grid_t *grid);
+
+void render_grid(grid_t *grid);
 
 #endif  // GRID_H
