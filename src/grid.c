@@ -56,7 +56,7 @@ void draw_grid() {
 
     mat4x4 model, view, projection;
     mat4x4_identity(model);
-    get_view_matrix(view);
+    get_view_matrix(&camera, view);
     get_projection_matrix(projection);
 
     GLint model_loc = glGetUniformLocation(grid.shader, "model");

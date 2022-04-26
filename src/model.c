@@ -12,6 +12,7 @@
 
 model_t model;
 extern select_t select;
+extern camera_t camera;
 
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c);
 void calculate_midpoint(vec3 r, uint32_t *indices, uint32_t len);
@@ -185,7 +186,7 @@ void draw_model() {
     
     mat4x4 _model, view, projection;
     mat4x4_identity(_model);
-    get_view_matrix(view);
+    get_view_matrix(&camera, view);
     get_projection_matrix(projection);
     
     GLint model_loc = glGetUniformLocation(model.pos_shader, "model");

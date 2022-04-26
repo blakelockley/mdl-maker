@@ -1,7 +1,5 @@
 #include "controls.h"
 
-#include <stdio.h>
-
 #include "linmath.h"
 #include "camera.h"
 #include "select.h"
@@ -9,10 +7,6 @@
 
 extern camera_t camera;
 
-float scroll = 0.0f;
-
-int show_points = 1;
-int show_lines = 0;
 
 void normalize_mouse_pos(double *normal_x, double *normal_y, double mouse_x, double mouse_y, int width, int height) {
     *normal_x = (2.0f * mouse_x) / width - 1.0f;
@@ -79,8 +73,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+    static float scroll = 0.0f;
     scroll += xoffset;
-    set_camera_position((vec3){ -sinf(scroll) * 2, camera.pos[1], cosf(scroll) * 2});
+    
+    set_camera_position(&camera, (vec3){ -sinf(scroll) * 2, camera.pos[1], cosf(scroll) * 2});
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {

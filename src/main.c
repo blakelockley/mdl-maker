@@ -21,6 +21,7 @@
 GLFWwindow *window;
 
 char *filename;
+camera_t camera;
 extern viewport_t viewport;
 
 void display_fps();
@@ -67,7 +68,8 @@ int main(int argc, char **argv) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    init_camera();
+    init_camera(&camera);
+    
     init_select();
     init_grid();
     init_model();

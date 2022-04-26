@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "viewport.h"
 
+extern camera_t camera;
 face_renderer_t face_renderer;
 
 void init_face_renderer() {
@@ -45,7 +46,7 @@ void render_model_faces(model_t *model) {
     
     mat4x4 _model, view, projection;
     mat4x4_identity(_model);
-    get_view_matrix(view);
+    get_view_matrix(&camera, view);
     get_projection_matrix(projection);
     
     GLint model_loc = glGetUniformLocation(face_renderer.shader, "model");

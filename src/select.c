@@ -79,7 +79,7 @@ void set_select_end(double x, double y) {
     double max_y = fmax(select.ay, select.by);
     
     mat4x4 view, projection, mvp;
-    get_view_matrix(view);
+    get_view_matrix(&camera, view);
     get_projection_matrix(projection);
 
     mat4x4_identity(mvp);
