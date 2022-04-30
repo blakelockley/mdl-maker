@@ -28,6 +28,7 @@ viewport_t viewport;
 camera_t camera;
 light_t light;
 grid_t grid;
+model_t model;
 
 void display_fps();
 
@@ -77,14 +78,14 @@ int main(int argc, char **argv) {
     init_light(&light);
     init_grid(&grid);
     init_selection(&selection);
+    init_model(&model);
     
-    init_model();
     init_face_renderer();
     init_normal_renderer();
     
-    add_vertex((vec3){0.25, 0.5, 0.0});
-    add_vertex((vec3){-0.25, 0.5, 0.0});
-    add_vertex((vec3){0.0, 0.35, 0.25});
+    add_vertex(&model, (vec3){0.25, 0.5, 0.0});
+    add_vertex(&model, (vec3){-0.25, 0.5, 0.0});
+    add_vertex(&model, (vec3){0.0, 0.35, 0.25});
 
     while (!glfwWindowShouldClose(window)) {
         display_fps();
@@ -96,15 +97,13 @@ int main(int argc, char **argv) {
 
         render_grid(&grid);
         render_selection(&selection);
-        
-        draw_model();
+        render_model(&model);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    free_model();
-
+    free_model(&model);
     free_grid(&grid);
     free_light(&light);
     free_camera(&camera);

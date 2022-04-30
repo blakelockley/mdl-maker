@@ -10,7 +10,6 @@
 
 extern camera_t camera;
 extern viewport_t viewport;
-
 extern model_t model;
 
 void update_selection(selection_t *selection);
@@ -132,7 +131,7 @@ void move_selection(selection_t *selection, vec3 delta) {
         vec3_add(model.vertices[index], model.vertices[index], delta);
     }
 
-    update_faces();
+    update_faces(&model);
 }
 
 void move_selection_to_position(selection_t *selection, vec3 position) {
@@ -150,7 +149,7 @@ void move_selection_to_position(selection_t *selection, vec3 position) {
     for (int i = 0; i < selection->len; i++)
         vec3_copy(model.vertices[selection->indices[i]], new_vertices[i]);
     
-    update_faces();
+    update_faces(&model);
 }
 
 void clear_selection(selection_t *selection) {

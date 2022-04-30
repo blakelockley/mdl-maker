@@ -32,17 +32,18 @@ struct _model_t {
 
 typedef struct _model_t model_t;
 
-void init_model();
-void draw_model();
-void free_model();
+void init_model(model_t *model);
+void free_model(model_t *model);
 
-void buffer_model();
-void update_faces();
+void render_model(model_t *model);
 
-uint32_t add_vertex(vec3 vertex);
-face_t *add_face();
+uint32_t add_vertex(model_t *model, vec3 vertex);
+face_t *add_face(model_t *model);
 
-void flip_face();
-void extend_face();
+void flip_face(model_t *model);
+void extend_face(model_t *model);
+
+// TODO: Remove from interface
+void update_faces(model_t *model);
 
 #endif  // MODEL_H

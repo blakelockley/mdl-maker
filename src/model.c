@@ -10,72 +10,71 @@
 #include "face_renderer.h"
 #include "normal_renderer.h"
 
-model_t model;
 extern selection_t selection;
 extern camera_t camera;
 extern viewport_t viewport;
 
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c);
-void calculate_midpoint(vec3 r, uint32_t *indices, uint32_t len);
+void calculate_midpoint(model_t *model, vec3 r, uint32_t *indices, uint32_t len);
 
-void init_model() {
-    vec3_set(model.color, 0.25f, 0.45f, 1.0f);
+void init_model(model_t *model) {
+    vec3_set(model->color, 0.25f, 0.45f, 1.0f);
 
-    model.vertices = (vec3*)malloc(sizeof(vec3) * 10);
-    model.vertices_cap = 10;
-    model.vertices_len = 0;
+    model->vertices = (vec3*)malloc(sizeof(vec3) * 10);
+    model->vertices_cap = 10;
+    model->vertices_len = 0;
 
-    model.faces = (face_t*)malloc(sizeof(face_t) * 10);
-    model.faces_cap = 10;
-    model.faces_len = 0;
+    model->faces = (face_t*)malloc(sizeof(face_t) * 10);
+    model->faces_cap = 10;
+    model->faces_len = 0;
 
     // Position VAO, used to display model vertices as points
 
-    glGenVertexArrays(1, &model.pos_vao);
-    glBindVertexArray(model.pos_vao);
+    glGenVertexArrays(1, &model->pos_vao);
+    glBindVertexArray(model->pos_vao);
 
     // vertices
-    glGenBuffers(1, &model.pos_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, model.pos_vbo);
+    glGenBuffers(1, &model->pos_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, model->pos_vbo);
     glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);  // vertices
 
-    model.pos_shader = load_shader("shaders/static.vert", "shaders/static.frag");
+    model->pos_shader = load_shader("shaders/static.vert", "shaders/static.frag");
 }
 
-void free_model() {
-    for (int i = 0; i < model.faces_len; i++)
-        free(model.faces[i].indices);
+void free_model(model_t *model) {
+    for (int i = 0; i < model->faces_len; i++)
+        free(model->faces[i].indices);
     
-    free(model.vertices);
-    free(model.faces);
+    free(model->vertices);
+    free(model->faces);
 
-    glDeleteVertexArrays(1, &model.pos_vao);
-    glDeleteBuffers(1, &model.pos_vbo);
+    glDeleteVertexArrays(1, &model->pos_vao);
+    glDeleteBuffers(1, &model->pos_vbo);
 }
 
 // Update data methods
 
-uint32_t add_vertex(vec3 vertex) {
-    if (model.vertices_len == model.vertices_cap) {
-        model.vertices_cap *= 2;
-        model.vertices = (vec3*)realloc(model.vertices, sizeof(vec3) * model.vertices_cap);
+uint32_t add_vertex(model_t *model, vec3 vertex) {
+    if (model->vertices_len == model->vertices_cap) {
+        model->vertices_cap *= 2;
+        model->vertices = (vec3*)realloc(model->vertices, sizeof(vec3) * model->vertices_cap);
     }
 
-    vec3_copy(model.vertices[model.vertices_len++], vertex);
+    vec3_copy(model->vertices[model->vertices_len++], vertex);
 
-    return model.vertices_len - 1;
+    return model->vertices_len - 1;
 }
 
-face_t *add_face() {
+face_t *add_face(model_t *model) {
     if (selection.len < 3 || selection.len > 1024)
         return NULL;
 
-    if (model.faces_len == model.faces_cap) {
-        model.faces_cap *= 2;
-        model.faces = (face_t*)realloc(model.faces, sizeof(face_t) * model.faces_cap);
+    if (model->faces_len == model->faces_cap) {
+        model->faces_cap *= 2;
+        model->faces = (face_t*)realloc(model->faces, sizeof(face_t) * model->faces_cap);
     }
 
     uint32_t len = selection.len;
@@ -85,10 +84,10 @@ face_t *add_face() {
         indices[i] = selection.indices[i];
 
     vec3 midpoint;
-    calculate_midpoint(midpoint, indices, len);
+    calculate_midpoint(model, midpoint, indices, len);
         
     vec3 normal;
-    calculate_normal(normal, model.vertices[indices[0]], model.vertices[indices[1]], model.vertices[indices[2]]);
+    calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
 
     vec3 other;
     if (fabs(normal[2]) == 1.0f)
@@ -107,7 +106,7 @@ face_t *add_face() {
     float angles[len];
     for (int i = 0; i < len; i++) {
         vec3 vector; 
-        vec3_sub(vector, model.vertices[indices[i]], midpoint);
+        vec3_sub(vector, model->vertices[indices[i]], midpoint);
 
         float x = vec3_dot(x_axis, vector);
         float y = vec3_dot(y_axis, vector);
@@ -134,7 +133,7 @@ face_t *add_face() {
         last_angle = current_angle;
     }
 
-    face_t *face = &model.faces[model.faces_len++];
+    face_t *face = &model->faces[model->faces_len++];
     face->len = len;
     
     face->indices = (uint32_t*)malloc(sizeof(sorted_indices));
@@ -143,29 +142,29 @@ face_t *add_face() {
     vec3_copy(face->midpoint, midpoint);
     
     // Re-calculate normal after sorting indices
-    calculate_normal(normal, model.vertices[face->indices[0]], model.vertices[face->indices[1]], model.vertices[face->indices[2]]);
+    calculate_normal(normal, model->vertices[face->indices[0]], model->vertices[face->indices[1]], model->vertices[face->indices[2]]);
     vec3_copy(face->normal, normal);
 
     return face;
 }
 
-void update_faces() {
-    for (int i = 0; i < model.faces_len; i++) {
-            face_t *face = &model.faces[i];
+void update_faces(model_t *model) {
+    for (int i = 0; i < model->faces_len; i++) {
+            face_t *face = &model->faces[i];
     
         calculate_normal(face->normal,
-            model.vertices[face->indices[0]],
-            model.vertices[face->indices[1]],
-            model.vertices[face->indices[2]]
+            model->vertices[face->indices[0]],
+            model->vertices[face->indices[1]],
+            model->vertices[face->indices[2]]
         );
 
-        calculate_midpoint(face->midpoint, face->indices, face->len);
+        calculate_midpoint(model, face->midpoint, face->indices, face->len);
     }
 }
 
-void flip_face() {
-    for (int i = 0; i < model.faces_len; i++) {
-        face_t *face = &model.faces[i];
+void flip_face(model_t *model) {
+    for (int i = 0; i < model->faces_len; i++) {
+        face_t *face = &model->faces[i];
         int included_indices = 0;
         
         for (int j = 0; j < selection.len; j++) {
@@ -190,16 +189,16 @@ void flip_face() {
         memcpy(face->indices, reverse_indices, sizeof(reverse_indices));
     }
 
-    update_faces();
+    update_faces(model);
 }
 
-void extend_face() {
+void extend_face(model_t *model) {
     if (selection.len != 2)
         return;
 
     vec3 a, b;
-    vec3_copy(a, model.vertices[selection.indices[0]]);
-    vec3_copy(b, model.vertices[selection.indices[1]]);
+    vec3_copy(a, model->vertices[selection.indices[0]]);
+    vec3_copy(b, model->vertices[selection.indices[1]]);
 
     vec3 ab;
     vec3_sub(ab, a, b);
@@ -215,16 +214,16 @@ void extend_face() {
         uint32_t vi = selection.indices[i];
         
         vec3 new_vertex;
-        vec3_copy(new_vertex, model.vertices[vi]);
+        vec3_copy(new_vertex, model->vertices[vi]);
         vec3_add(new_vertex, new_vertex, normal);
         
-        uint32_t new_vi = add_vertex(new_vertex);
+        uint32_t new_vi = add_vertex(model, new_vertex);
 
         new_incides[i] = new_vi;
         extend_selection(&selection, new_vi);
     }
 
-    add_face();
+    add_face(model);
 
     selection.len = 0;
     extend_selection(&selection, new_incides[0]);
@@ -240,41 +239,41 @@ void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c) {
     vec3_normalize(r, r);
 }
 
-void calculate_midpoint(vec3 r, uint32_t *indices, uint32_t len) {
+void calculate_midpoint(model_t *model, vec3 r, uint32_t *indices, uint32_t len) {
     vec3_zero(r);
     
     for (int i = 0; i < len; i++)
-        vec3_add(r, r, model.vertices[indices[i]]);
+        vec3_add(r, r, model->vertices[indices[i]]);
     
     vec3_scale(r, r, 1.0f / (float)len);
 }
 
-void draw_model() {
-    glBindVertexArray(model.pos_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, model.pos_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model.vertices_len, model.vertices, GL_DYNAMIC_DRAW);
+void render_model(model_t *model) {
+    glBindVertexArray(model->pos_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, model->pos_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
 
-    glUseProgram(model.pos_shader);
+    glUseProgram(model->pos_shader);
     
     mat4x4 _model, view, projection;
     mat4x4_identity(_model);
     get_view_matrix(&camera, view);
     get_projection_matrix(&viewport, projection);
     
-    GLint model_loc = glGetUniformLocation(model.pos_shader, "model");
+    GLint model_loc = glGetUniformLocation(model->pos_shader, "model");
     glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)_model);
 
-    GLint view_loc = glGetUniformLocation(model.pos_shader, "view");
+    GLint view_loc = glGetUniformLocation(model->pos_shader, "view");
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)view);
 
-    GLint projection_loc = glGetUniformLocation(model.pos_shader, "projection");
+    GLint projection_loc = glGetUniformLocation(model->pos_shader, "projection");
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
      
-    GLint color_loc = glGetUniformLocation(model.pos_shader, "color");
+    GLint color_loc = glGetUniformLocation(model->pos_shader, "color");
     
     glPointSize(10);
 
-    glBindVertexArray(model.pos_vao);
+    glBindVertexArray(model->pos_vao);
 
     glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
     for (int i = 0; i < selection.len; i++) {
@@ -283,8 +282,8 @@ void draw_model() {
     }
 
     glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
-    glDrawArrays(GL_POINTS, 0, model.vertices_len);
+    glDrawArrays(GL_POINTS, 0, model->vertices_len);
 
-    render_model_faces(&model);
-    render_model_normals(&model);
+    render_model_faces(model);
+    render_model_normals(model);
 }

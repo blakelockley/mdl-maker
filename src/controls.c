@@ -6,6 +6,7 @@
 
 extern camera_t camera;
 extern selection_t selection;
+extern model_t model;
 
 void normalize_mouse_pos(double *normal_x, double *normal_y, double mouse_x, double mouse_y, int width, int height) {
     *normal_x = (2.0f * mouse_x) / width - 1.0f;
@@ -20,21 +21,21 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     
     if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-        uint32_t index = add_vertex((vec3){0.0f, 0.5f, 0.0f});
+        uint32_t index = add_vertex(&model, (vec3){0.0f, 0.5f, 0.0f});
         
         clear_selection(&selection);
         extend_selection(&selection, index);
     }
     
     if (key == GLFW_KEY_E && action == GLFW_PRESS) {
-        extend_face();
+        extend_face(&model);
     }
     
     if (key == GLFW_KEY_F && action == GLFW_PRESS) {
         if (shift_pressed)
-            flip_face();
+            flip_face(&model);
         else
-            add_face();
+            add_face(&model);
     }
     
     if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
