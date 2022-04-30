@@ -68,8 +68,8 @@ uint32_t add_vertex(model_t *model, vec3 vertex) {
     return model->vertices_len - 1;
 }
 
-face_t *add_face(model_t *model) {
-    if (selection.len < 3 || selection.len > 1024)
+face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
+    if (len < 3 || len > 1024)
         return NULL;
 
     if (model->faces_len == model->faces_cap) {
@@ -77,14 +77,13 @@ face_t *add_face(model_t *model) {
         model->faces = (face_t*)realloc(model->faces, sizeof(face_t) * model->faces_cap);
     }
 
-    uint32_t len = selection.len;
-
-    uint32_t indices[len];
-    for (int i = 0; i < len; i++)
-        indices[i] = selection.indices[i];
+    face_t *face = &model->faces[model->faces_len++];
+    face->len = len;
+    face->indices = (uint32_t*)malloc(sizeof(uint32_t) * len);
 
     vec3 midpoint;
     calculate_midpoint(model, midpoint, indices, len);
+    vec3_copy(face->midpoint, midpoint);
         
     vec3 normal;
     calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
@@ -116,30 +115,20 @@ face_t *add_face(model_t *model) {
     }
 
     float last_angle = -M_PI;
-    uint32_t sorted_indices[len];
-
     for (int i = 0; i < len; i++) {
-        float current_angle = M_PI; 
         
+        float current_angle = M_PI; 
         for (int j = 0; j < len; j++) {
             float angle = angles[j];
             
             if (angle > last_angle && angle <= current_angle) {
-                sorted_indices[i] = indices[j];
+                face->indices[i] = indices[j];
                 current_angle = angle;
             }
         }
 
         last_angle = current_angle;
     }
-
-    face_t *face = &model->faces[model->faces_len++];
-    face->len = len;
-    
-    face->indices = (uint32_t*)malloc(sizeof(sorted_indices));
-    memcpy(face->indices, sorted_indices, sizeof(sorted_indices));
-
-    vec3_copy(face->midpoint, midpoint);
     
     // Re-calculate normal after sorting indices
     calculate_normal(normal, model->vertices[face->indices[0]], model->vertices[face->indices[1]], model->vertices[face->indices[2]]);
@@ -162,56 +151,25 @@ void update_faces(model_t *model) {
     }
 }
 
-void flip_face(model_t *model) {
-    for (int i = 0; i < model->faces_len; i++) {
-        face_t *face = &model->faces[i];
-        int included_indices = 0;
-        
-        for (int j = 0; j < selection.len; j++) {
-            uint32_t index = selection.indices[j];
-            
-            for (int k = 0; k < face->len; k++) {
-                if (face->indices[k] == index) {
-                    included_indices++;
-                    break;
-                }
-            }
-        }
-
-        if (included_indices != selection.len)
-            continue;
-
-        uint32_t reverse_indices[face->len];
-        for (int k = 0; k < face->len; k++) {
-            reverse_indices[k] = face->indices[face->len - k - 1];
-        }
-
-        memcpy(face->indices, reverse_indices, sizeof(reverse_indices));
-    }
-
-    update_faces(model);
-}
-
-void extend_face(model_t *model) {
-    if (selection.len != 2)
-        return;
+face_t *extend_edge(model_t *model, uint32_t *indices, uint32_t len){
+    if (len != 2)
+        return NULL;
 
     vec3 a, b;
-    vec3_copy(a, model->vertices[selection.indices[0]]);
-    vec3_copy(b, model->vertices[selection.indices[1]]);
+    vec3_copy(a, model->vertices[indices[0]]);
+    vec3_copy(b, model->vertices[indices[1]]);
 
     vec3 ab;
-    vec3_sub(ab, a, b);
+    vec3_sub(ab, b, a);
 
     vec3 normal;
     vec3_cross(normal, ab, camera.up);
     vec3_normalize(normal, normal);
     vec3_scale(normal, normal, 0.1f);
 
-    uint32_t new_incides[2];
-
+    uint32_t new_incides[4];
     for (int i = 0; i < 2; i++) {
-        uint32_t vi = selection.indices[i];
+        uint32_t vi = indices[i];
         
         vec3 new_vertex;
         vec3_copy(new_vertex, model->vertices[vi]);
@@ -219,16 +177,55 @@ void extend_face(model_t *model) {
         
         uint32_t new_vi = add_vertex(model, new_vertex);
 
-        new_incides[i] = new_vi;
-        extend_selection(&selection, new_vi);
+        new_incides[i] = indices[i];
+        new_incides[2 + i] = new_vi;
     }
 
-    add_face(model);
+    face_t *face = add_face(model, new_incides, 4);
 
-    selection.len = 0;
-    extend_selection(&selection, new_incides[0]);
-    extend_selection(&selection, new_incides[1]);
+    clear_selection(&selection);
+    extend_selection(&selection, new_incides[2]);
+    extend_selection(&selection, new_incides[3]);
+
+    return face;
 }
+
+face_t *get_face(model_t *model, uint32_t *indices, uint32_t len) {
+    for (int i = 0; i < model->faces_len; i++) {
+        face_t *face = &model->faces[i];
+
+        if (face->len != len)
+            continue;
+        
+        int included_indices = 0;
+        for (int j = 0; j < len; j++) {
+            for (int k = 0; k < face->len; k++) {
+                if (face->indices[k] == indices[j]) {
+                    included_indices++;
+                    break;
+                }
+            }
+        }
+
+        if (included_indices == len)
+            return face;
+    }
+
+    return NULL;
+}
+
+void flip_face(model_t *model, face_t *face) {
+    if (!face)
+        return;
+
+    uint32_t reverse_indices[face->len];
+    for (int k = 0; k < face->len; k++)
+        reverse_indices[k] = face->indices[face->len - k - 1];
+
+    memcpy(face->indices, reverse_indices, sizeof(reverse_indices));
+    update_faces(model);
+}
+
 
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c) {
     vec3 ab, ac;

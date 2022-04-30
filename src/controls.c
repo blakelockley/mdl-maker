@@ -4,6 +4,8 @@
 #include "selection.h"
 #include "model.h"
 
+#include <stdio.h>
+
 extern camera_t camera;
 extern selection_t selection;
 extern model_t model;
@@ -27,15 +29,16 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         extend_selection(&selection, index);
     }
     
-    if (key == GLFW_KEY_E && action == GLFW_PRESS) {
-        extend_face(&model);
-    }
+    if (key == GLFW_KEY_E && action == GLFW_PRESS)
+        extend_edge(&model, selection.indices, selection.len);
     
     if (key == GLFW_KEY_F && action == GLFW_PRESS) {
-        if (shift_pressed)
-            flip_face(&model);
-        else
-            add_face(&model);
+        if (shift_pressed) {
+            face_t *face = get_face(&model, selection.indices, selection.len);
+            flip_face(&model, face);
+        } else {
+            add_face(&model, selection.indices, selection.len);
+        }
     }
     
     if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
