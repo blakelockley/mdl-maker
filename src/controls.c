@@ -41,6 +41,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         }
     }
     
+    if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+        remove_vertices(&model, selection.indices, selection.len);
+    }
+    
     if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 offset;
 

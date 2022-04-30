@@ -17,7 +17,7 @@ extern viewport_t viewport;
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c);
 void calculate_midpoint(model_t *model, vec3 r, uint32_t *indices, uint32_t len);
 
-void update_faces(model_t *model);
+void update_model(model_t *model);
 
 void init_model(model_t *model) {
     vec3_set(model->color, 0.25f, 0.45f, 1.0f);
@@ -74,7 +74,55 @@ void move_vertices(model_t *model, uint32_t *indices, uint32_t len, vec3 delta) 
     for (int i = 0; i < len; i++)
         vec3_add(model->vertices[indices[i]], model->vertices[indices[i]], delta);
 
-    update_faces(model);
+    update_model(model);
+}
+
+void remove_vertex(model_t *model, uint32_t index) {
+    model->vertices_len -= 1;
+    for (int i = index; i < model->vertices_len; i++)
+        vec3_copy(model->vertices[i], model->vertices[i + 1]);
+
+    for (int i = 0; i < model->faces_len; i++) {
+        face_t *face = &model->faces[i];
+        
+        for (int j = 0; j < face->len; j++) {
+            if (face->indices[j] == index) {
+                face->len = 0;
+                free(face->indices);
+                break;
+            }
+
+            if (face->indices[j] > index)
+                face->indices[j]--;
+        }
+    }
+
+    int removed_faces = 0;
+    for (int i = 0; i < model->faces_len; i++) {
+        face_t *face = &model->faces[i];
+
+        if (face->len == 0) {
+            removed_faces++;
+            for (int j = i; j < model->faces_len - 1; j++)
+                model->faces[j] = model->faces[j + 1];
+        }
+    }
+
+    model->faces_len -= removed_faces;
+}
+
+int reverse_cmp (const void * a, const void * b) {
+   return ( *(uint32_t*)b - *(uint32_t*)a );
+}
+
+void remove_vertices(model_t *model, uint32_t *indices, uint32_t len) {
+    qsort(indices, len, sizeof(uint32_t), reverse_cmp);
+    
+    for (int i = 0; i < len; i++)
+        remove_vertex(model, indices[i]);
+
+    update_model(model);
+    clear_selection(&selection);
 }
 
 face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
@@ -146,7 +194,7 @@ face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
     return face;
 }
 
-void update_faces(model_t *model) {
+void update_model(model_t *model) {
     for (int i = 0; i < model->faces_len; i++) {
             face_t *face = &model->faces[i];
     
@@ -232,7 +280,7 @@ void flip_face(model_t *model, face_t *face) {
         reverse_indices[k] = face->indices[face->len - k - 1];
 
     memcpy(face->indices, reverse_indices, sizeof(reverse_indices));
-    update_faces(model);
+    update_model(model);
 }
 
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c) {

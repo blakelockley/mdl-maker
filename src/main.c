@@ -82,10 +82,21 @@ int main(int argc, char **argv) {
     
     init_face_renderer();
     init_normal_renderer();
+
+    // TODO: Remove WIP from git history
     
-    add_vertex(&model, (vec3){0.25, 0.5, 0.0});
-    add_vertex(&model, (vec3){-0.25, 0.5, 0.0});
-    add_vertex(&model, (vec3){0.0, 0.35, 0.25});
+    add_vertex(&model, (vec3){-0.3 + -0.25, 0.5, 0.0});
+    add_vertex(&model, (vec3){-0.3 + 0.25, 0.5, 0.0});
+    add_vertex(&model, (vec3){-0.3 + -0.25, 0.3, 0.0});
+    add_vertex(&model, (vec3){-0.3 + 0.25, 0.3, 0.0});
+    
+    add_vertex(&model, (vec3){+0.3 + -0.25, 0.5, 0.0});
+    add_vertex(&model, (vec3){+0.3 + 0.25, 0.5, 0.0});
+    add_vertex(&model, (vec3){+0.3 + -0.25, 0.3, 0.0});
+    add_vertex(&model, (vec3){+0.3 + 0.25, 0.3, 0.0});
+
+    add_face(&model, (uint32_t[]){ 0, 1, 2, 3 }, 4);
+    add_face(&model, (uint32_t[]){ 4, 5, 6, 7 }, 4);
 
     while (!glfwWindowShouldClose(window)) {
         display_fps();

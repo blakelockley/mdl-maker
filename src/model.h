@@ -39,6 +39,7 @@ void render_model(model_t *model);
 
 uint32_t add_vertex(model_t *model, vec3 vertex);
 void move_vertices(model_t *model, uint32_t *indices, uint32_t len, vec3 delta);
+void remove_vertices(model_t *model, uint32_t *indices, uint32_t len);
 
 face_t *add_face(model_t *model, uint32_t *indices, uint32_t len);
 face_t *extend_edge(model_t *model, uint32_t *indices, uint32_t len);
