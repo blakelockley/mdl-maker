@@ -1,10 +1,11 @@
 #include "controls.h"
 #include "linmath.h"
 #include "camera.h"
-#include "select.h"
+#include "selection.h"
 #include "model.h"
 
 extern camera_t camera;
+extern selection_t selection;
 
 void normalize_mouse_pos(double *normal_x, double *normal_y, double mouse_x, double mouse_y, int width, int height) {
     *normal_x = (2.0f * mouse_x) / width - 1.0f;
@@ -21,8 +22,8 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_A && action == GLFW_PRESS) {
         uint32_t index = add_vertex((vec3){0.0f, 0.5f, 0.0f});
         
-        clear_selection();
-        add_index_to_selection(index);
+        clear_selection(&selection);
+        extend_selection(&selection, index);
     }
     
     if (key == GLFW_KEY_E && action == GLFW_PRESS) {
@@ -48,7 +49,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         else if (camera_direction == DIRECTION_POS_X)
             vec3_set(offset, 0.0f, 0.0f, +0.01f);
 
-        move_selection(offset);
+        move_selection(&selection, offset);
     }
     
     if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
@@ -63,7 +64,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         else if (camera_direction == DIRECTION_POS_X)
             vec3_set(offset, 0.0f, 0.0f, -0.01f);
         
-        move_selection(offset);
+        move_selection(&selection, offset);
     }
 
     if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
@@ -82,7 +83,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
             vec3_set(offset, 0.0f, +0.01f, 0.0f);
         }
         
-        move_selection(offset);
+        move_selection(&selection, offset);
     }
 
     if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
@@ -101,7 +102,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
             vec3_set(offset, 0.0f, -0.01f, 0.0f);
         }
 
-        move_selection(offset);
+        move_selection(&selection, offset);
     }
 }
 
@@ -121,7 +122,7 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
 
     int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     if (state == GLFW_PRESS)
-        set_select_move(normal_x, normal_y);
+        handle_selection_move(&selection, normal_x, normal_y);
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
@@ -136,8 +137,8 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS)
-            set_select_start(normal_x, normal_y);
+            handle_selection_start(&selection, normal_x, normal_y);
         else if (action == GLFW_RELEASE)
-            set_select_end(normal_x, normal_y);
+            handle_selection_end(&selection, normal_x, normal_y);
     }
 }

@@ -13,7 +13,7 @@
 #include "viewport.h"
 #include "grid.h"
 #include "controls.h"
-#include "select.h"
+#include "selection.h"
 #include "model.h"
 #include "face_renderer.h"
 #include "normal_renderer.h"
@@ -23,6 +23,7 @@ GLFWwindow *window;
 
 char *filename;
 
+selection_t selection;
 viewport_t viewport;
 camera_t camera;
 light_t light;
@@ -75,8 +76,8 @@ int main(int argc, char **argv) {
     init_camera(&camera);
     init_light(&light);
     init_grid(&grid);
+    init_selection(&selection);
     
-    init_select();
     init_model();
     init_face_renderer();
     init_normal_renderer();
@@ -94,20 +95,20 @@ int main(int argc, char **argv) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         render_grid(&grid);
+        render_selection(&selection);
         
-        draw_select();
         draw_model();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    free_select();
     free_model();
 
     free_grid(&grid);
     free_light(&light);
     free_camera(&camera);
+    free_selection(&selection);
 
     glfwDestroyWindow(window);
     glfwTerminate();

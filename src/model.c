@@ -6,12 +6,12 @@
 #include "camera.h"
 #include "viewport.h"
 #include "shader.h"
-#include "select.h"
+#include "selection.h"
 #include "face_renderer.h"
 #include "normal_renderer.h"
 
 model_t model;
-extern select_t select;
+extern selection_t selection;
 extern camera_t camera;
 extern viewport_t viewport;
 
@@ -70,7 +70,7 @@ uint32_t add_vertex(vec3 vertex) {
 }
 
 face_t *add_face() {
-    if (select.selection_len < 3 || select.selection_len > 1024)
+    if (selection.len < 3 || selection.len > 1024)
         return NULL;
 
     if (model.faces_len == model.faces_cap) {
@@ -78,11 +78,11 @@ face_t *add_face() {
         model.faces = (face_t*)realloc(model.faces, sizeof(face_t) * model.faces_cap);
     }
 
-    uint32_t len = select.selection_len;
+    uint32_t len = selection.len;
 
     uint32_t indices[len];
     for (int i = 0; i < len; i++)
-        indices[i] = select.selection_buffer[i];
+        indices[i] = selection.indices[i];
 
     vec3 midpoint;
     calculate_midpoint(midpoint, indices, len);
@@ -168,8 +168,8 @@ void flip_face() {
         face_t *face = &model.faces[i];
         int included_indices = 0;
         
-        for (int j = 0; j < select.selection_len; j++) {
-            uint32_t index = select.selection_buffer[j];
+        for (int j = 0; j < selection.len; j++) {
+            uint32_t index = selection.indices[j];
             
             for (int k = 0; k < face->len; k++) {
                 if (face->indices[k] == index) {
@@ -179,7 +179,7 @@ void flip_face() {
             }
         }
 
-        if (included_indices != select.selection_len)
+        if (included_indices != selection.len)
             continue;
 
         uint32_t reverse_indices[face->len];
@@ -194,12 +194,12 @@ void flip_face() {
 }
 
 void extend_face() {
-    if (select.selection_len != 2)
+    if (selection.len != 2)
         return;
 
     vec3 a, b;
-    vec3_copy(a, model.vertices[select.selection_buffer[0]]);
-    vec3_copy(b, model.vertices[select.selection_buffer[1]]);
+    vec3_copy(a, model.vertices[selection.indices[0]]);
+    vec3_copy(b, model.vertices[selection.indices[1]]);
 
     vec3 ab;
     vec3_sub(ab, a, b);
@@ -212,7 +212,7 @@ void extend_face() {
     uint32_t new_incides[2];
 
     for (int i = 0; i < 2; i++) {
-        uint32_t vi = select.selection_buffer[i];
+        uint32_t vi = selection.indices[i];
         
         vec3 new_vertex;
         vec3_copy(new_vertex, model.vertices[vi]);
@@ -221,14 +221,14 @@ void extend_face() {
         uint32_t new_vi = add_vertex(new_vertex);
 
         new_incides[i] = new_vi;
-        add_index_to_selection(new_vi);
+        extend_selection(&selection, new_vi);
     }
 
     add_face();
 
-    select.selection_len = 0;
-    add_index_to_selection(new_incides[0]);
-    add_index_to_selection(new_incides[1]);
+    selection.len = 0;
+    extend_selection(&selection, new_incides[0]);
+    extend_selection(&selection, new_incides[1]);
 }
 
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c) {
@@ -277,8 +277,8 @@ void draw_model() {
     glBindVertexArray(model.pos_vao);
 
     glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
-    for (int i = 0; i < select.selection_len; i++) {
-        int index = select.selection_buffer[i];
+    for (int i = 0; i < selection.len; i++) {
+        int index = selection.indices[i];
         glDrawArrays(GL_POINTS, index, 1);
     }
 
