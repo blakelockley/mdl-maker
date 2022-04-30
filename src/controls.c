@@ -24,8 +24,13 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         add_index_to_selection(index);
     }
     
-    if (key == GLFW_KEY_F && action == GLFW_PRESS)
-        add_face();
+    if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+        if (mods & GLFW_MOD_SHIFT)
+            flip_face();
+        
+        else
+            add_face();
+    }
     
     if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 offset;

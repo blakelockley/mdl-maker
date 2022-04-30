@@ -42,4 +42,6 @@ void update_faces();
 uint32_t add_vertex(vec3 vertex);
 face_t *add_face();
 
+void flip_face();
+
 #endif  // MODEL_H

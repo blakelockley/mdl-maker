@@ -141,6 +141,9 @@ face_t *add_face() {
     memcpy(face->indices, sorted_indices, sizeof(sorted_indices));
 
     vec3_copy(face->midpoint, midpoint);
+    
+    // Re-calculate normal after sorting indices
+    calculate_normal(normal, model.vertices[face->indices[0]], model.vertices[face->indices[1]], model.vertices[face->indices[2]]);
     vec3_copy(face->normal, normal);
 
     return face;
@@ -158,6 +161,36 @@ void update_faces() {
 
         calculate_midpoint(face->midpoint, face->indices, face->len);
     }
+}
+
+void flip_face() {
+    for (int i = 0; i < model.faces_len; i++) {
+        face_t *face = &model.faces[i];
+        int included_indices = 0;
+        
+        for (int j = 0; j < select.selection_len; j++) {
+            uint32_t index = select.selection_buffer[j];
+            
+            for (int k = 0; k < face->len; k++) {
+                if (face->indices[k] == index) {
+                    included_indices++;
+                    break;
+                }
+            }
+        }
+
+        if (included_indices != select.selection_len)
+            continue;
+
+        uint32_t reverse_indices[face->len];
+        for (int k = 0; k < face->len; k++) {
+            reverse_indices[k] = face->indices[face->len - k - 1];
+        }
+
+        memcpy(face->indices, reverse_indices, sizeof(reverse_indices));
+    }
+
+    update_faces();
 }
 
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c) {
