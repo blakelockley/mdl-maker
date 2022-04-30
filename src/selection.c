@@ -71,7 +71,7 @@ void handle_selection_move(selection_t *selection, double x, double y) {
     update_selection(selection);  
 }
 
-void handle_selection_end(selection_t *selection, double x, double y) {
+void handle_selection_end(selection_t *selection, double x, double y, int extend_selection) {
     selection->is_visible = 0;
 
     double min_x = fmin(selection->ax, selection->bx);
@@ -88,8 +88,10 @@ void handle_selection_end(selection_t *selection, double x, double y) {
     mat4x4_mul(mvp, mvp, projection);
     mat4x4_mul(mvp, mvp, view);
 
-    selection->len = 0;
-    for (int i = 0; i < model.vertices_len; i++) {
+    if (!extend_selection)
+        selection->len = 0;
+
+    for (int i = 0; i < model.vertices_len; i++) {        
         vec4 pos;
         vec4_from_vec3(pos, model.vertices[i], 1.0f);
 
@@ -99,7 +101,16 @@ void handle_selection_end(selection_t *selection, double x, double y) {
         double x = pos[0];
         double y = pos[1];
 
-        if (min_x <= x && x <= max_x && min_y <= y && y <= max_y)
+        // Check if vertex is in selction bounds
+        if (!(min_x <= x && x <= max_x && min_y <= y && y <= max_y))
+            continue;
+
+        // Check if vertex index is already in selection indices
+        int already_exists = 0;
+        for (int j = 0; j < selection->len && !already_exists; j++)
+            already_exists = (selection->indices[j] == i);
+
+        if (!already_exists)
             selection->indices[selection->len++] = i;
     }
     

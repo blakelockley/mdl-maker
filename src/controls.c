@@ -126,6 +126,8 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
+    int shift_pressed = (mods & GLFW_MOD_SHIFT);
+
     int w, h;
     glfwGetWindowSize(window, &w, &h);
 
@@ -139,6 +141,6 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         if (action == GLFW_PRESS)
             handle_selection_start(&selection, normal_x, normal_y);
         else if (action == GLFW_RELEASE)
-            handle_selection_end(&selection, normal_x, normal_y);
+            handle_selection_end(&selection, normal_x, normal_y, shift_pressed);
     }
 }
