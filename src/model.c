@@ -193,6 +193,44 @@ void flip_face() {
     update_faces();
 }
 
+void extend_face() {
+    if (select.selection_len != 2)
+        return;
+
+    vec3 a, b;
+    vec3_copy(a, model.vertices[select.selection_buffer[0]]);
+    vec3_copy(b, model.vertices[select.selection_buffer[1]]);
+
+    vec3 ab;
+    vec3_sub(ab, a, b);
+
+    vec3 normal;
+    vec3_cross(normal, ab, camera.up);
+    vec3_normalize(normal, normal);
+    vec3_scale(normal, normal, 0.1f);
+
+    uint32_t new_incides[2];
+
+    for (int i = 0; i < 2; i++) {
+        uint32_t vi = select.selection_buffer[i];
+        
+        vec3 new_vertex;
+        vec3_copy(new_vertex, model.vertices[vi]);
+        vec3_add(new_vertex, new_vertex, normal);
+        
+        uint32_t new_vi = add_vertex(new_vertex);
+
+        new_incides[i] = new_vi;
+        add_index_to_selection(new_vi);
+    }
+
+    add_face();
+
+    select.selection_len = 0;
+    add_index_to_selection(new_incides[0]);
+    add_index_to_selection(new_incides[1]);
+}
+
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c) {
     vec3 ab, ac;
     vec3_sub(ab, b, a);
