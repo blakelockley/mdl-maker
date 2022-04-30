@@ -17,13 +17,15 @@
 #include "model.h"
 #include "face_renderer.h"
 #include "normal_renderer.h"
+#include "light.h"
 
 GLFWwindow *window;
 
 char *filename;
 
-camera_t camera;
 viewport_t viewport;
+camera_t camera;
+light_t light;
 grid_t grid;
 
 void display_fps();
@@ -71,12 +73,17 @@ int main(int argc, char **argv) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     init_camera(&camera);
+    init_light(&light);
     init_grid(&grid);
     
     init_select();
     init_model();
     init_face_renderer();
     init_normal_renderer();
+    
+    add_vertex((vec3){0.25, 0.5, 0.0});
+    add_vertex((vec3){-0.25, 0.5, 0.0});
+    add_vertex((vec3){0.0, 0.35, 0.25});
 
     while (!glfwWindowShouldClose(window)) {
         display_fps();
@@ -98,8 +105,9 @@ int main(int argc, char **argv) {
     free_select();
     free_model();
 
-    free_camera(&camera);
     free_grid(&grid);
+    free_light(&light);
+    free_camera(&camera);
 
     glfwDestroyWindow(window);
     glfwTerminate();
