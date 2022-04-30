@@ -1,5 +1,4 @@
 #include "controls.h"
-
 #include "linmath.h"
 #include "camera.h"
 #include "select.h"
@@ -7,13 +6,15 @@
 
 extern camera_t camera;
 
-
 void normalize_mouse_pos(double *normal_x, double *normal_y, double mouse_x, double mouse_y, int width, int height) {
     *normal_x = (2.0f * mouse_x) / width - 1.0f;
     *normal_y = 1.0f - (2.0f * mouse_y) / height;
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+    int shift_pressed = (mods & GLFW_MOD_SHIFT);
+    int camera_direction = get_camera_direction(&camera);
+
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     
@@ -25,54 +26,77 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     }
     
     if (key == GLFW_KEY_F && action == GLFW_PRESS) {
-        if (mods & GLFW_MOD_SHIFT)
+        if (shift_pressed)
             flip_face();
-        
         else
             add_face();
     }
     
     if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 offset;
-        if (fabs(camera.right[0]) >= fabs(camera.right[2])) {
-            if (camera.right[0] >= 0.0f)
-                vec3_set(offset, 0.01f, 0.0f, 0.0f);
-            else
-                vec3_set(offset, -0.01f, 0.0f, 0.0f);
-        } else {
-            if (camera.right[2] >= 0.0f)
-                vec3_set(offset, 0.0f, 0.0f, 0.01f);
-            else
-                vec3_set(offset, 0.0f, 0.0f, -0.01f);
-        }
+
+        if (camera_direction == DIRECTION_NEG_Z)
+            vec3_set(offset, +0.01f, 0.0f, 0.0f);
+        else if (camera_direction == DIRECTION_POS_Z)
+            vec3_set(offset, -0.01f, 0.0f, 0.0f);
+        else if (camera_direction == DIRECTION_NEG_X)
+            vec3_set(offset, 0.0f, 0.0f, -0.01f);
+        else if (camera_direction == DIRECTION_POS_X)
+            vec3_set(offset, 0.0f, 0.0f, +0.01f);
+
         move_selection(offset);
     }
     
     if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 offset;
-        if (fabs(camera.right[0]) >= fabs(camera.right[2])) {
-            if (camera.right[0] >= 0.0f)
-                vec3_set(offset, -0.01f, 0.0f, 0.0f);
-            else
-                vec3_set(offset, +0.01f, 0.0f, 0.0f);
-        } else {
-            if (camera.right[2] >= 0.0f)
-                vec3_set(offset, 0.0f, 0.0f, -0.01f);
-            else
-                vec3_set(offset, 0.0f, 0.0f, +0.01f);
-        }
+
+        if (camera_direction == DIRECTION_NEG_Z)
+            vec3_set(offset, -0.01f, 0.0f, 0.0f);
+        else if (camera_direction == DIRECTION_POS_Z)
+            vec3_set(offset, +0.01f, 0.0f, 0.0f);
+        else if (camera_direction == DIRECTION_NEG_X)
+            vec3_set(offset, 0.0f, 0.0f, +0.01f);
+        else if (camera_direction == DIRECTION_POS_X)
+            vec3_set(offset, 0.0f, 0.0f, -0.01f);
+        
         move_selection(offset);
     }
 
     if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 offset;
-        vec3_set(offset, 0.0f, +0.01f, 0.0f);
+
+        if (shift_pressed) {
+            if (camera_direction == DIRECTION_POS_X)
+                vec3_set(offset, +0.01f, 0.0f, 0.0f);
+            else if (camera_direction == DIRECTION_NEG_X)
+                vec3_set(offset, -0.01f, 0.0f, 0.0f);
+            else if (camera_direction == DIRECTION_POS_Z)
+                vec3_set(offset, 0.0f, 0.0f, +0.01f);
+            else if (camera_direction == DIRECTION_NEG_Z)
+                vec3_set(offset, 0.0f, 0.0f, -0.01f);
+        } else {
+            vec3_set(offset, 0.0f, +0.01f, 0.0f);
+        }
+        
         move_selection(offset);
     }
 
     if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 offset;
-        vec3_set(offset, 0.0f, -0.01f, 0.0f);
+
+        if (shift_pressed) {
+            if (camera_direction == DIRECTION_POS_X)
+                vec3_set(offset, -0.01f, 0.0f, 0.0f);
+            else if (camera_direction == DIRECTION_NEG_X)
+                vec3_set(offset, +0.01f, 0.0f, 0.0f);
+            else if (camera_direction == DIRECTION_POS_Z)
+                vec3_set(offset, 0.0f, 0.0f, -0.01f);
+            else if (camera_direction == DIRECTION_NEG_Z)
+                vec3_set(offset, 0.0f, 0.0f, +0.01f);
+        } else {
+            vec3_set(offset, 0.0f, -0.01f, 0.0f);
+        }
+
         move_selection(offset);
     }
 }
