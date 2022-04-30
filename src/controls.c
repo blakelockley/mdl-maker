@@ -53,7 +53,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         else if (camera_direction == DIRECTION_POS_X)
             vec3_set(offset, 0.0f, 0.0f, +0.01f);
 
-        move_selection(&selection, offset);
+        move_vertices(&model, selection.indices, selection.len, offset);
     }
     
     if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
@@ -68,7 +68,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         else if (camera_direction == DIRECTION_POS_X)
             vec3_set(offset, 0.0f, 0.0f, -0.01f);
         
-        move_selection(&selection, offset);
+        move_vertices(&model, selection.indices, selection.len, offset);
     }
 
     if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
@@ -87,7 +87,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
             vec3_set(offset, 0.0f, +0.01f, 0.0f);
         }
         
-        move_selection(&selection, offset);
+        move_vertices(&model, selection.indices, selection.len, offset);
     }
 
     if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
@@ -106,7 +106,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
             vec3_set(offset, 0.0f, -0.01f, 0.0f);
         }
 
-        move_selection(&selection, offset);
+        move_vertices(&model, selection.indices, selection.len, offset);
     }
 }
 

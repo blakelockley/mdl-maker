@@ -17,6 +17,8 @@ extern viewport_t viewport;
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c);
 void calculate_midpoint(model_t *model, vec3 r, uint32_t *indices, uint32_t len);
 
+void update_faces(model_t *model);
+
 void init_model(model_t *model) {
     vec3_set(model->color, 0.25f, 0.45f, 1.0f);
 
@@ -66,6 +68,13 @@ uint32_t add_vertex(model_t *model, vec3 vertex) {
     vec3_copy(model->vertices[model->vertices_len++], vertex);
 
     return model->vertices_len - 1;
+}
+
+void move_vertices(model_t *model, uint32_t *indices, uint32_t len, vec3 delta) {
+    for (int i = 0; i < len; i++)
+        vec3_add(model->vertices[indices[i]], model->vertices[indices[i]], delta);
+
+    update_faces(model);
 }
 
 face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
@@ -225,7 +234,6 @@ void flip_face(model_t *model, face_t *face) {
     memcpy(face->indices, reverse_indices, sizeof(reverse_indices));
     update_faces(model);
 }
-
 
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c) {
     vec3 ab, ac;

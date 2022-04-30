@@ -125,33 +125,6 @@ void get_selection_midpoint(selection_t *selection, vec3 midpoint) {
     vec3_scale(midpoint, midpoint, 1.0f / (float)selection->len);
 }
 
-void move_selection(selection_t *selection, vec3 delta) {
-    for (int i = 0; i < selection->len; i++) {
-        int index = selection->indices[i];
-        vec3_add(model.vertices[index], model.vertices[index], delta);
-    }
-
-    update_faces(&model);
-}
-
-void move_selection_to_position(selection_t *selection, vec3 position) {
-    vec3 midpoint;
-    get_selection_midpoint(selection, midpoint);
-
-    vec3 deltas[selection->len];
-    for (int i = 0; i < selection->len; i++)
-        vec3_sub(deltas[i], model.vertices[selection->indices[i]], midpoint);
-
-    vec3 new_vertices[selection->len];
-    for (int i = 0; i < selection->len; i++)
-        vec3_add(new_vertices[i], position, deltas[i]);
-
-    for (int i = 0; i < selection->len; i++)
-        vec3_copy(model.vertices[selection->indices[i]], new_vertices[i]);
-    
-    update_faces(&model);
-}
-
 void clear_selection(selection_t *selection) {
     selection->len = 0;
 }

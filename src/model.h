@@ -38,14 +38,12 @@ void free_model(model_t *model);
 void render_model(model_t *model);
 
 uint32_t add_vertex(model_t *model, vec3 vertex);
+void move_vertices(model_t *model, uint32_t *indices, uint32_t len, vec3 delta);
 
 face_t *add_face(model_t *model, uint32_t *indices, uint32_t len);
 face_t *extend_edge(model_t *model, uint32_t *indices, uint32_t len);
 
 face_t *get_face(model_t *model, uint32_t *indices, uint32_t len);
 void flip_face(model_t *model, face_t *face);
-
-// TODO: Remove from interface
-void update_faces(model_t *model);
 
 #endif  // MODEL_H

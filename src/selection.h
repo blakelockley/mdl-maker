@@ -24,14 +24,11 @@ void free_selection(selection_t *select);
 
 void render_selection(selection_t *select);
 
+void clear_selection(selection_t *select);
+void extend_selection(selection_t *select, uint32_t index);
+
 void handle_selection_start(selection_t *select, double x, double y);
 void handle_selection_move(selection_t *select, double x, double y);
 void handle_selection_end(selection_t *select, double x, double y, int extend_selection);
-
-// TODO: Move to model
-void move_selection(selection_t *select, vec3 delta);
-
-void clear_selection(selection_t *select);
-void extend_selection(selection_t *select, uint32_t index);
 
 #endif  // SELECT_H
