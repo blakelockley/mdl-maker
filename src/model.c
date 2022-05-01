@@ -19,6 +19,9 @@ void calculate_midpoint(model_t *model, vec3 r, uint32_t *indices, uint32_t len)
 
 void update_model(model_t *model);
 
+void print_vertices(model_t *model);
+void print_faces(model_t *model);
+
 void init_model(model_t *model) {
     vec3_set(model->color, 0.25f, 0.45f, 1.0f);
 
@@ -345,4 +348,30 @@ void render_model(model_t *model) {
 
     render_model_faces(model->face_renderer, model);
     render_model_normals(model);
+}
+
+// Debug print methods
+
+void print_vertices(model_t *model) {
+    for (int i = 0; i < model->vertices_len; i++) {
+        vec3 v;
+        vec3_copy(v, model->vertices[i]);
+         
+        printf("%02d: (%+.2f, %+.2f, %+.2f)\n", i, v[0], v[1], v[2]);
+    }
+}
+
+void print_faces(model_t *model) {
+    for (int i = 0; i < model->faces_len; i++) {
+        face_t *face = &model->faces[i];
+
+        printf("Face #%02d\n", i);
+        printf("-> len:     %02d\n", face->len);
+        printf("-> indices: ");
+        
+        for (int j = 0; j < face->len; j++)
+            printf("%01d, ", face->indices[j]);
+        
+        printf("\n");
+    }
 }
