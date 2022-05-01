@@ -4,6 +4,9 @@
 #include "glfw.h"
 #include "linmath.h"
 
+struct _face_renderer_t;
+typedef struct _face_renderer_t face_renderer_t;
+
 struct _face_t 
 {
     uint32_t len;
@@ -25,6 +28,8 @@ struct _model_t {
     face_t* faces;
     uint32_t faces_cap;
     uint32_t faces_len;
+
+    face_renderer_t *face_renderer;
 
     GLuint pos_shader;
     GLuint pos_vao, pos_vbo;

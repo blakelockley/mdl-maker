@@ -44,6 +44,9 @@ void init_model(model_t *model) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);  // vertices
 
     model->pos_shader = load_shader("shaders/static.vert", "shaders/static.frag");
+
+    model->face_renderer = (face_renderer_t *)malloc(sizeof(face_renderer_t));
+    init_face_renderer(model->face_renderer);
 }
 
 void free_model(model_t *model) {
@@ -55,6 +58,9 @@ void free_model(model_t *model) {
 
     glDeleteVertexArrays(1, &model->pos_vao);
     glDeleteBuffers(1, &model->pos_vbo);
+
+    free_face_renderer(model->face_renderer);
+    free(model->face_renderer);
 }
 
 // Update data methods
@@ -337,6 +343,6 @@ void render_model(model_t *model) {
     glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
     glDrawArrays(GL_POINTS, 0, model->vertices_len);
 
-    render_model_faces(model);
+    render_model_faces(model->face_renderer, model);
     render_model_normals(model);
 }

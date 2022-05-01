@@ -15,7 +15,6 @@
 #include "controls.h"
 #include "selection.h"
 #include "model.h"
-#include "face_renderer.h"
 #include "normal_renderer.h"
 #include "light.h"
 
@@ -80,7 +79,6 @@ int main(int argc, char **argv) {
     init_selection(&selection);
     init_model(&model);
     
-    init_face_renderer();
     init_normal_renderer();
 
     // TODO: Remove WIP from git history

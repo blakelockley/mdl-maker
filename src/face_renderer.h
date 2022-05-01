@@ -7,12 +7,15 @@
 struct _face_renderer_t
 {
     GLuint shader;
-    GLuint vao, vbo;
+    GLuint vao, vbo[2];
 };
 
 typedef struct _face_renderer_t face_renderer_t;
 
-void init_face_renderer();
-void render_model_faces(model_t *model);
+
+void init_face_renderer(face_renderer_t *renderer);
+void free_face_renderer(face_renderer_t *renderer);
+
+void render_model_faces(face_renderer_t *renderer, model_t *model);
 
 #endif  // FACE_RENDERER_H
