@@ -100,9 +100,6 @@ void remove_vertex(model_t *model, uint32_t index) {
                 free(face->indices);
                 break;
             }
-
-            if (face->indices[j] > index)
-                face->indices[j]--;
         }
     }
 
@@ -114,10 +111,20 @@ void remove_vertex(model_t *model, uint32_t index) {
             removed_faces++;
             for (int j = i; j < model->faces_len - 1; j++)
                 model->faces[j] = model->faces[j + 1];
+
+            continue;
         }
     }
-
+    
     model->faces_len -= removed_faces;
+
+    for (int i = 0; i < model->faces_len; i++) {
+        face_t *face = &model->faces[i];
+        
+        for (int j = 0; j < face->len; j++)
+            if (face->indices[j] > index)
+                face->indices[j]--;
+    }
 }
 
 int reverse_cmp (const void * a, const void * b) {
