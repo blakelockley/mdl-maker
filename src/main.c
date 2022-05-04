@@ -17,10 +17,13 @@
 #include "model.h"
 #include "normal_renderer.h"
 #include "light.h"
+#include "fps.h"
 
 GLFWwindow *window;
 
 char *filename;
+char buffer[128];
+int show_fps = 0;
 
 selection_t selection;
 viewport_t viewport;
@@ -29,7 +32,6 @@ light_t light;
 grid_t grid;
 model_t model;
 
-void display_fps();
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -97,7 +99,11 @@ int main(int argc, char **argv) {
     add_face(&model, (uint32_t[]){ 4, 5, 6, 7 }, 4);
 
     while (!glfwWindowShouldClose(window)) {
-        display_fps();
+        sprintf(buffer, "mdl-maker - %s", filename);
+        if (show_fps)
+            sprintf(buffer, "%s [fps %.2f]", buffer, calculate_fps());
+
+        glfwSetWindowTitle(window, buffer);
         
         glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
@@ -122,23 +128,4 @@ int main(int argc, char **argv) {
     glfwTerminate();
 
     return EXIT_SUCCESS;
-}
-
-void display_fps() {
-    static char fps_text[32];
-    static double last_second = 0;
-    static int frames = 0;
-
-    double current_time = glfwGetTime();
-
-    frames++;
-    if (current_time - last_second > 1.0) {
-        double fps = frames / (current_time - last_second);
-
-        sprintf(fps_text, "mdl-maker (FPS: %.2f)", fps);
-        glfwSetWindowTitle(window, fps_text);
-
-        frames = 0;
-        last_second = current_time;
-    }
 }

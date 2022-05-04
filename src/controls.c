@@ -6,6 +6,8 @@
 
 #include <stdio.h>
 
+extern int show_fps;
+
 extern camera_t camera;
 extern selection_t selection;
 extern model_t model;
@@ -21,6 +23,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+    if (key == GLFW_KEY_SLASH && action == GLFW_PRESS && shift_pressed)
+        show_fps = !show_fps;
     
     if (key == GLFW_KEY_A && action == GLFW_PRESS) {
         uint32_t index = add_vertex(&model, (vec3){0.0f, 0.5f, 0.0f});
