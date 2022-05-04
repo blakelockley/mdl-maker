@@ -145,6 +145,21 @@ face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
     if (len < 3 || len > 1024)
         return NULL;
 
+    vec3 normal;
+    calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
+
+    for (int i = 1; i < len; i++) {
+        vec3 vector;
+        vec3_sub(vector, model->vertices[indices[0]], model->vertices[indices[i]]);
+        vec3_normalize(vector, vector);
+
+        float dot = vec3_dot(vector, normal);
+        if (fabs(dot) > 0.0001f) {
+            printf("[ERROR] Cannot create face from non-planar vertices\n");
+            return NULL;
+        }
+    }
+
     if (model->faces_len == model->faces_cap) {
         model->faces_cap *= 2;
         model->faces = (face_t*)realloc(model->faces, sizeof(face_t) * model->faces_cap);
@@ -158,9 +173,6 @@ face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
     calculate_midpoint(model, midpoint, indices, len);
     vec3_copy(face->midpoint, midpoint);
         
-    vec3 normal;
-    calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
-
     vec3 other;
     if (fabs(normal[2]) == 1.0f)
         vec3_set(other, 0.0f, 1.0f, 0.0f);
