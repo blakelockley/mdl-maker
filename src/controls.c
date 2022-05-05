@@ -35,7 +35,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     }
     
     if (key == GLFW_KEY_E && action == GLFW_PRESS)
-        extend_edge(&model, selection.indices, selection.len);
+        extend_face(&model, selection.indices, selection.len);
     
     if (key == GLFW_KEY_F && action == GLFW_PRESS) {
         if (shift_pressed) {

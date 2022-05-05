@@ -48,6 +48,7 @@ void remove_vertices(model_t *model, uint32_t *indices, uint32_t len);
 
 face_t *add_face(model_t *model, uint32_t *indices, uint32_t len);
 face_t *extend_edge(model_t *model, uint32_t *indices, uint32_t len);
+face_t *extend_face(model_t *model, uint32_t *indices, uint32_t len);
 
 face_t *get_face(model_t *model, uint32_t *indices, uint32_t len);
 void flip_face(model_t *model, face_t *face);

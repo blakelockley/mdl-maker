@@ -14,6 +14,9 @@ extern selection_t selection;
 extern camera_t camera;
 extern viewport_t viewport;
 
+int check_coplanar_vertices(model_t *model, uint32_t *indices, uint32_t len);
+void sort_by_angle(model_t *model, uint32_t *indices, uint32_t len);
+
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c);
 void calculate_midpoint(model_t *model, vec3 r, uint32_t *indices, uint32_t len);
 
@@ -145,20 +148,10 @@ face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
     if (len < 3 || len > 1024)
         return NULL;
 
-    vec3 normal;
-    calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
+    if (!check_coplanar_vertices(model, indices, len))
+        return NULL;
 
-    for (int i = 1; i < len; i++) {
-        vec3 vector;
-        vec3_sub(vector, model->vertices[indices[0]], model->vertices[indices[i]]);
-        vec3_normalize(vector, vector);
-
-        float dot = vec3_dot(vector, normal);
-        if (fabs(dot) > 0.0001f) {
-            printf("[ERROR] Cannot create face from non-planar vertices\n");
-            return NULL;
-        }
-    }
+    sort_by_angle(model, indices, len);
 
     if (model->faces_len == model->faces_cap) {
         model->faces_cap *= 2;
@@ -168,56 +161,10 @@ face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
     face_t *face = &model->faces[model->faces_len++];
     face->len = len;
     face->indices = (uint32_t*)malloc(sizeof(uint32_t) * len);
+    memcpy(face->indices, indices, sizeof(uint32_t) * len);
 
-    vec3 midpoint;
-    calculate_midpoint(model, midpoint, indices, len);
-    vec3_copy(face->midpoint, midpoint);
-        
-    vec3 other;
-    if (fabs(normal[2]) == 1.0f)
-        vec3_set(other, 0.0f, 1.0f, 0.0f);
-    else
-        vec3_set(other, 0.0f, 0.0f, 1.0f);
-
-    vec3 x_axis;
-    vec3_cross(x_axis, other, normal);
-    vec3_normalize(x_axis, x_axis);
-
-    vec3 y_axis;
-    vec3_cross(y_axis, normal, x_axis);
-    vec3_normalize(y_axis, y_axis);
-
-    float angles[len];
-    for (int i = 0; i < len; i++) {
-        vec3 vector; 
-        vec3_sub(vector, model->vertices[indices[i]], midpoint);
-
-        float x = vec3_dot(x_axis, vector);
-        float y = vec3_dot(y_axis, vector);
-
-        float theta = atan2(x, y);
-        angles[i] = theta;
-    }
-
-    float last_angle = -M_PI;
-    for (int i = 0; i < len; i++) {
-        
-        float current_angle = M_PI; 
-        for (int j = 0; j < len; j++) {
-            float angle = angles[j];
-            
-            if (angle > last_angle && angle <= current_angle) {
-                face->indices[i] = indices[j];
-                current_angle = angle;
-            }
-        }
-
-        last_angle = current_angle;
-    }
-    
-    // Re-calculate normal after sorting indices
-    calculate_normal(normal, model->vertices[face->indices[0]], model->vertices[face->indices[1]], model->vertices[face->indices[2]]);
-    vec3_copy(face->normal, normal);
+    calculate_midpoint(model, face->midpoint, indices, len);
+    calculate_normal(face->normal, model->vertices[face->indices[0]], model->vertices[face->indices[1]], model->vertices[face->indices[2]]);
 
     return face;
 }
@@ -252,7 +199,7 @@ face_t *extend_edge(model_t *model, uint32_t *indices, uint32_t len){
     vec3_normalize(normal, normal);
     vec3_scale(normal, normal, 0.1f);
 
-    uint32_t new_incides[4];
+    uint32_t new_indices[4];
     for (int i = 0; i < 2; i++) {
         uint32_t vi = indices[i];
         
@@ -262,17 +209,57 @@ face_t *extend_edge(model_t *model, uint32_t *indices, uint32_t len){
         
         uint32_t new_vi = add_vertex(model, new_vertex);
 
-        new_incides[i] = indices[i];
-        new_incides[2 + i] = new_vi;
+        new_indices[i] = indices[i];
+        new_indices[2 + i] = new_vi;
     }
 
-    face_t *face = add_face(model, new_incides, 4);
+    face_t *face = add_face(model, new_indices, 4);
 
     clear_selection(&selection);
-    extend_selection(&selection, new_incides[2]);
-    extend_selection(&selection, new_incides[3]);
+    extend_selection(&selection, new_indices[2]);
+    extend_selection(&selection, new_indices[3]);
 
     return face;
+}
+
+face_t *extend_face(model_t *model, uint32_t *indices, uint32_t len) {
+    if (len < 3 || len > 1024)
+        return NULL;
+
+    if (!check_coplanar_vertices(model, indices, len))
+        return NULL;
+
+    vec3 normal;
+    calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
+    vec3_scale(normal, normal, 0.5f);
+
+    sort_by_angle(model, indices, len);
+
+    uint32_t new_indices[len];
+    for (int i = 0; i < len; i++) {
+        vec3 v;
+        vec3_copy(v, model->vertices[indices[i]]);
+        vec3_add(v, v, normal);
+
+        uint32_t vi = add_vertex(model, v);
+        new_indices[i] = vi;
+    }
+
+    uint32_t face_indices[4];
+    for (int i = 0; i < len; i++) {
+        face_indices[0] = indices[i];
+        face_indices[1] = new_indices[i];
+        face_indices[2] = indices[(i + 1) % len];
+        face_indices[3] = new_indices[(i + 1) % len];
+
+        add_face(model, face_indices, 4);
+    }
+
+    clear_selection(&selection);
+    for (int i = 0; i < len; i++)
+        extend_selection(&selection, new_indices[i]);
+
+    return NULL;
 }
 
 face_t *get_face(model_t *model, uint32_t *indices, uint32_t len) {
@@ -393,4 +380,81 @@ void print_faces(model_t *model) {
         
         printf("\n");
     }
+}
+
+int check_coplanar_vertices(model_t *model, uint32_t *indices, uint32_t len) {
+    vec3 normal;
+    calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
+
+    for (int i = 1; i < len; i++) {
+        vec3 vector;
+        vec3_sub(vector, model->vertices[indices[0]], model->vertices[indices[i]]);
+        vec3_normalize(vector, vector);
+
+        float dot = vec3_dot(vector, normal);
+        if (fabs(dot) > 0.0001f) {
+            printf("[ERROR] Cannot create face from non-planar vertices\n");
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+void sort_by_angle(model_t *model, uint32_t *indices, uint32_t len) {
+    if (len < 3)
+        return;
+
+    vec3 normal;
+    calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
+    
+    vec3 midpoint;
+    calculate_midpoint(model, midpoint, indices, len);
+        
+    vec3 other;
+    if (fabs(normal[2]) == 1.0f)
+        vec3_set(other, 0.0f, 1.0f, 0.0f);
+    else
+        vec3_set(other, 0.0f, 0.0f, 1.0f);
+
+    vec3 x_axis;
+    vec3_cross(x_axis, other, normal);
+    vec3_normalize(x_axis, x_axis);
+
+    vec3 y_axis;
+    vec3_cross(y_axis, normal, x_axis);
+    vec3_normalize(y_axis, y_axis);
+
+    uint32_t sorted_indices[len];
+
+    float angles[len];
+    for (int i = 0; i < len; i++) {
+        vec3 vector; 
+        vec3_sub(vector, model->vertices[indices[i]], midpoint);
+
+        float x = vec3_dot(x_axis, vector);
+        float y = vec3_dot(y_axis, vector);
+
+        float theta = atan2(x, y);
+        angles[i] = theta;
+    }
+
+    float last_angle = -M_PI;
+    for (int i = 0; i < len; i++) {
+        
+        float current_angle = M_PI; 
+        for (int j = 0; j < len; j++) {
+            float angle = angles[j];
+            
+            if (angle > last_angle && angle <= current_angle) {
+                sorted_indices[i] = indices[j];
+                current_angle = angle;
+            }
+        }
+
+        last_angle = current_angle;
+    }
+
+    for (int i = 0; i < len; i++)
+        indices[i] = sorted_indices[i];
 }
