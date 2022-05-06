@@ -15,7 +15,7 @@ extern camera_t camera;
 extern viewport_t viewport;
 
 int check_coplanar_vertices(model_t *model, uint32_t *indices, uint32_t len);
-void sort_by_angle(model_t *model, uint32_t *indices, uint32_t len);
+void sort_by_angle(model_t *model, vec3 midpoint, vec3 normal, uint32_t *indices, uint32_t len);
 
 void calculate_normal(vec3 r, vec3 a, vec3 b, vec3 c);
 void calculate_midpoint(model_t *model, vec3 r, uint32_t *indices, uint32_t len);
@@ -151,7 +151,20 @@ face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
     if (!check_coplanar_vertices(model, indices, len))
         return NULL;
 
-    sort_by_angle(model, indices, len);
+    vec3 midpoint;
+    calculate_midpoint(model, midpoint, indices, len);
+
+    vec3 normal;
+    calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
+
+    vec3 camera_to_face;
+    vec3_sub(camera_to_face, midpoint, camera.pos);
+
+    float dot = vec3_dot(camera_to_face, normal);
+    if (dot >= 0.0f)
+        vec3_scale(normal, normal, -1.0f);
+
+    sort_by_angle(model, midpoint, normal, indices, len);
 
     if (model->faces_len == model->faces_cap) {
         model->faces_cap *= 2;
@@ -160,11 +173,12 @@ face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
 
     face_t *face = &model->faces[model->faces_len++];
     face->len = len;
+    
     face->indices = (uint32_t*)malloc(sizeof(uint32_t) * len);
     memcpy(face->indices, indices, sizeof(uint32_t) * len);
-
-    calculate_midpoint(model, face->midpoint, indices, len);
-    calculate_normal(face->normal, model->vertices[face->indices[0]], model->vertices[face->indices[1]], model->vertices[face->indices[2]]);
+    
+    vec3_copy(face->midpoint, midpoint);
+    vec3_copy(face->normal, normal);
 
     return face;
 }
@@ -231,9 +245,21 @@ face_t *extend_face(model_t *model, uint32_t *indices, uint32_t len) {
 
     vec3 normal;
     calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
-    vec3_scale(normal, normal, 0.5f);
 
-    sort_by_angle(model, indices, len);
+    vec3 midpoint;
+    calculate_midpoint(model, midpoint, indices, len);
+
+    vec3 camera_to_face;
+    vec3_sub(camera_to_face, midpoint, camera.pos);
+
+    float dot = vec3_dot(camera_to_face, normal);
+    if (dot < 0.0f)
+        vec3_scale(normal, normal, -1.0f);
+
+    sort_by_angle(model, midpoint, normal, indices, len);
+    
+    vec3_scale(normal, normal, 0.5f);
+    vec3_add(midpoint, midpoint, normal);
 
     uint32_t new_indices[len];
     for (int i = 0; i < len; i++) {
@@ -252,7 +278,14 @@ face_t *extend_face(model_t *model, uint32_t *indices, uint32_t len) {
         face_indices[2] = indices[(i + 1) % len];
         face_indices[3] = new_indices[(i + 1) % len];
 
-        add_face(model, face_indices, 4);
+        face_t *face = add_face(model, face_indices, 4);
+
+        vec3 midpoint_to_face;
+        vec3_sub(midpoint_to_face, face->midpoint, midpoint);
+
+        float dot = vec3_dot(midpoint_to_face, face->normal);
+        if (dot < 0.0f)
+            flip_face(model, face);
     }
 
     clear_selection(&selection);
@@ -401,21 +434,16 @@ int check_coplanar_vertices(model_t *model, uint32_t *indices, uint32_t len) {
     return 1;
 }
 
-void sort_by_angle(model_t *model, uint32_t *indices, uint32_t len) {
+void sort_by_angle(model_t *model, vec3 midpoint, vec3 normal, uint32_t *indices, uint32_t len) {
     if (len < 3)
         return;
-
-    vec3 normal;
-    calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
-    
-    vec3 midpoint;
-    calculate_midpoint(model, midpoint, indices, len);
         
     vec3 other;
-    if (fabs(normal[2]) == 1.0f)
-        vec3_set(other, 0.0f, 1.0f, 0.0f);
-    else
-        vec3_set(other, 0.0f, 0.0f, 1.0f);
+    vec3_set(other, 0.0f, 1.0f, 0.0f);
+
+    float dot = vec3_dot(other, normal);
+    if (fabs(fabs(dot) - 1.0f) < 0.0001f)
+        vec3_set(other, 0.0f, 0.0f, -1.0f);
 
     vec3 x_axis;
     vec3_cross(x_axis, other, normal);
@@ -435,7 +463,7 @@ void sort_by_angle(model_t *model, uint32_t *indices, uint32_t len) {
         float x = vec3_dot(x_axis, vector);
         float y = vec3_dot(y_axis, vector);
 
-        float theta = atan2(x, y);
+        float theta = atan2(y, x);
         angles[i] = theta;
     }
 
