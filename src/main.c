@@ -15,7 +15,6 @@
 #include "controls.h"
 #include "selection.h"
 #include "model.h"
-#include "normal_renderer.h"
 #include "light.h"
 #include "fps.h"
 
@@ -81,7 +80,10 @@ int main(int argc, char **argv) {
     init_selection(&selection);
     init_model(&model);
     
-    init_normal_renderer();
+    add_vertex(&model, (vec3){0.0f, 0.5 -0.25, -0.25});
+    add_vertex(&model, (vec3){0.0f, 0.5 +0.25, -0.25});
+    add_vertex(&model, (vec3){0.0f, 0.5 -0.25, +0.25});
+    add_vertex(&model, (vec3){0.0f, 0.5 +0.25, +0.25});
 
     while (!glfwWindowShouldClose(window)) {
         sprintf(buffer, "mdl-maker - %s", filename);

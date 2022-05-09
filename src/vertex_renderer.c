@@ -1,20 +1,24 @@
-#include "normal_renderer.h"
+#include "vertex_renderer.h"
 #include "shader.h"
 #include "camera.h"
 #include "viewport.h"
+#include "light.h"
+#include "selection.h"
 
 extern camera_t camera;
 extern viewport_t viewport;
+extern light_t light;
+extern selection_t selection;
 
-void init_normal_renderer(normal_renderer_t *renderer) {
+void init_vertex_renderer(vertex_renderer_t *renderer) {
     renderer->shader = load_shader("shaders/static.vert", "shaders/static.frag");
 
     glGenVertexArrays(1, &renderer->vao);
     glBindVertexArray(renderer->vao);
 
-    glGenBuffers(1, renderer->vbo);
-
-    // Vertices
+    glGenBuffers(2, renderer->vbo);
+    
+    // Positions
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
 
@@ -22,29 +26,15 @@ void init_normal_renderer(normal_renderer_t *renderer) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);
 }
 
-void free_normal_renderer(normal_renderer_t *renderer) {
+void free_vertex_renderer(vertex_renderer_t *renderer) {
     glDeleteVertexArrays(1, &renderer->vao);
     glDeleteBuffers(1, renderer->vbo);
 }
 
-
-void render_model_normals(normal_renderer_t *renderer, model_t *model) {
-    vec3 vertices[model->faces_len * 2];
-    
-    for (int i = 0; i < model->faces_len; i++) {
-        face_t *face = &model->faces[i];
-
-        vec3 local_normal;
-        vec3_scale(local_normal, face->normal, 0.1f);
-        vec3_add(local_normal, face->midpoint, local_normal);
-
-        vec3_copy(vertices[(i * 2) + 0], face->midpoint);
-        vec3_copy(vertices[(i * 2) + 1], local_normal);
-    }
-    
+void render_model_vertices(vertex_renderer_t *renderer, model_t *model) {    
     glBindVertexArray(renderer->vao);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
 
     glUseProgram(renderer->shader);
     
@@ -64,6 +54,13 @@ void render_model_normals(normal_renderer_t *renderer, model_t *model) {
      
     GLint color_loc = glGetUniformLocation(renderer->shader, "color");
     
+    glBindVertexArray(renderer->vao);
+    glPointSize(10);
+
+    glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
+    for (int i = 0; i < selection.len; i++)
+        glDrawArrays(GL_POINTS, selection.indices[i], 1);
+
     glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
-    glDrawArrays(GL_LINES, 0, model->faces_len * 2);
+    glDrawArrays(GL_POINTS, 0, model->vertices_len);
 }

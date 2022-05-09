@@ -5,8 +5,8 @@
 
 #include "camera.h"
 #include "viewport.h"
-#include "shader.h"
 #include "selection.h"
+#include "vertex_renderer.h"
 #include "face_renderer.h"
 #include "normal_renderer.h"
 
@@ -36,23 +36,14 @@ void init_model(model_t *model) {
     model->faces_cap = 10;
     model->faces_len = 0;
 
-    // Position VAO, used to display model vertices as points
-
-    glGenVertexArrays(1, &model->pos_vao);
-    glBindVertexArray(model->pos_vao);
-
-    // vertices
-    glGenBuffers(1, &model->pos_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, model->pos_vbo);
-    glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);  // vertices
-
-    model->pos_shader = load_shader("shaders/static.vert", "shaders/static.frag");
-
     model->face_renderer = (face_renderer_t *)malloc(sizeof(face_renderer_t));
     init_face_renderer(model->face_renderer);
+
+    model->vertex_renderer = (vertex_renderer_t *)malloc(sizeof(vertex_renderer_t));
+    init_vertex_renderer(model->vertex_renderer);
+
+    model->normal_renderer = (normal_renderer_t *)malloc(sizeof(normal_renderer_t));
+    init_normal_renderer(model->normal_renderer);
 }
 
 void free_model(model_t *model) {
@@ -62,11 +53,14 @@ void free_model(model_t *model) {
     free(model->vertices);
     free(model->faces);
 
-    glDeleteVertexArrays(1, &model->pos_vao);
-    glDeleteBuffers(1, &model->pos_vbo);
-
     free_face_renderer(model->face_renderer);
     free(model->face_renderer);
+
+    free_vertex_renderer(model->vertex_renderer);
+    free(model->vertex_renderer);
+
+    free_normal_renderer(model->normal_renderer);
+    free(model->normal_renderer);
 }
 
 // Update data methods
@@ -350,43 +344,9 @@ void calculate_midpoint(model_t *model, vec3 r, uint32_t *indices, uint32_t len)
 }
 
 void render_model(model_t *model) {
-    glBindVertexArray(model->pos_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, model->pos_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
-
-    glUseProgram(model->pos_shader);
-    
-    mat4x4 _model, view, projection;
-    mat4x4_identity(_model);
-    get_view_matrix(&camera, view);
-    get_projection_matrix(&viewport, projection);
-    
-    GLint model_loc = glGetUniformLocation(model->pos_shader, "model");
-    glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)_model);
-
-    GLint view_loc = glGetUniformLocation(model->pos_shader, "view");
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)view);
-
-    GLint projection_loc = glGetUniformLocation(model->pos_shader, "projection");
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
-     
-    GLint color_loc = glGetUniformLocation(model->pos_shader, "color");
-    
-    glPointSize(10);
-
-    glBindVertexArray(model->pos_vao);
-
-    glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
-    for (int i = 0; i < selection.len; i++) {
-        int index = selection.indices[i];
-        glDrawArrays(GL_POINTS, index, 1);
-    }
-
-    glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
-    glDrawArrays(GL_POINTS, 0, model->vertices_len);
-
     render_model_faces(model->face_renderer, model);
-    render_model_normals(model);
+    render_model_vertices(model->vertex_renderer, model);
+    render_model_normals(model->normal_renderer, model);
 }
 
 // Debug print methods
