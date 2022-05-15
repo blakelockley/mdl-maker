@@ -13,6 +13,9 @@ typedef struct _vertex_renderer_t vertex_renderer_t;
 struct _normal_renderer_t;
 typedef struct _normal_renderer_t normal_renderer_t;
 
+struct _wireframe_renderer_t;
+typedef struct _wireframe_renderer_t wireframe_renderer_t;
+
 struct _face_t 
 {
     uint32_t len;
@@ -38,6 +41,7 @@ struct _model_t {
     face_renderer_t *face_renderer;
     vertex_renderer_t *vertex_renderer;
     normal_renderer_t *normal_renderer;
+    wireframe_renderer_t *wireframe_renderer;
 };
 
 typedef struct _model_t model_t;

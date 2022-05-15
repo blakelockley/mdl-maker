@@ -9,6 +9,7 @@
 #include "vertex_renderer.h"
 #include "face_renderer.h"
 #include "normal_renderer.h"
+#include "wireframe_renderer.h"
 
 extern selection_t selection;
 extern camera_t camera;
@@ -44,6 +45,9 @@ void init_model(model_t *model) {
 
     model->normal_renderer = (normal_renderer_t *)malloc(sizeof(normal_renderer_t));
     init_normal_renderer(model->normal_renderer);
+
+    model->wireframe_renderer = (wireframe_renderer_t *)malloc(sizeof(wireframe_renderer_t));
+    init_wireframe_renderer(model->wireframe_renderer);
 }
 
 void free_model(model_t *model) {
@@ -344,9 +348,11 @@ void calculate_midpoint(model_t *model, vec3 r, uint32_t *indices, uint32_t len)
 }
 
 void render_model(model_t *model) {
-    render_model_faces(model->face_renderer, model);
     render_model_vertices(model->vertex_renderer, model);
     render_model_normals(model->normal_renderer, model);
+    
+    render_model_wireframe(model->wireframe_renderer, model);
+    // render_model_faces(model->face_renderer, model);
 }
 
 // Debug print methods
