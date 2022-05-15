@@ -19,7 +19,6 @@ void normalize_mouse_pos(double *normal_x, double *normal_y, double mouse_x, dou
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     int shift_pressed = (mods & GLFW_MOD_SHIFT);
-    int camera_direction = get_camera_direction(&camera);
 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -51,69 +50,37 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     }
     
     if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        vec3 heading;
+        get_camera_heading(&camera, heading);
+        
         vec3 offset;
-
-        if (camera_direction == DIRECTION_NEG_Z)
-            vec3_set(offset, +0.01f, 0.0f, 0.0f);
-        else if (camera_direction == DIRECTION_POS_Z)
-            vec3_set(offset, -0.01f, 0.0f, 0.0f);
-        else if (camera_direction == DIRECTION_NEG_X)
-            vec3_set(offset, 0.0f, 0.0f, -0.01f);
-        else if (camera_direction == DIRECTION_POS_X)
-            vec3_set(offset, 0.0f, 0.0f, +0.01f);
+        vec3_cross(offset, heading, (vec3){0.0f, 1.0f, 0.0f});
+        vec3_scale(offset, offset, +0.01f);
 
         move_vertices(&model, selection.indices, selection.len, offset);
     }
     
     if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        vec3 offset;
-
-        if (camera_direction == DIRECTION_NEG_Z)
-            vec3_set(offset, -0.01f, 0.0f, 0.0f);
-        else if (camera_direction == DIRECTION_POS_Z)
-            vec3_set(offset, +0.01f, 0.0f, 0.0f);
-        else if (camera_direction == DIRECTION_NEG_X)
-            vec3_set(offset, 0.0f, 0.0f, +0.01f);
-        else if (camera_direction == DIRECTION_POS_X)
-            vec3_set(offset, 0.0f, 0.0f, -0.01f);
+        vec3 heading;
+        get_camera_heading(&camera, heading);
         
+        vec3 offset;
+        vec3_cross(offset, heading, (vec3){0.0f, 1.0f, 0.0f});
+        vec3_scale(offset, offset, -0.01f);
+
         move_vertices(&model, selection.indices, selection.len, offset);
     }
 
     if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 offset;
-
-        if (shift_pressed) {
-            if (camera_direction == DIRECTION_POS_X)
-                vec3_set(offset, +0.01f, 0.0f, 0.0f);
-            else if (camera_direction == DIRECTION_NEG_X)
-                vec3_set(offset, -0.01f, 0.0f, 0.0f);
-            else if (camera_direction == DIRECTION_POS_Z)
-                vec3_set(offset, 0.0f, 0.0f, +0.01f);
-            else if (camera_direction == DIRECTION_NEG_Z)
-                vec3_set(offset, 0.0f, 0.0f, -0.01f);
-        } else {
-            vec3_set(offset, 0.0f, +0.01f, 0.0f);
-        }
+        vec3_set(offset, 0.0f, +0.01f, 0.0f);
         
         move_vertices(&model, selection.indices, selection.len, offset);
     }
 
     if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         vec3 offset;
-
-        if (shift_pressed) {
-            if (camera_direction == DIRECTION_POS_X)
-                vec3_set(offset, -0.01f, 0.0f, 0.0f);
-            else if (camera_direction == DIRECTION_NEG_X)
-                vec3_set(offset, +0.01f, 0.0f, 0.0f);
-            else if (camera_direction == DIRECTION_POS_Z)
-                vec3_set(offset, 0.0f, 0.0f, -0.01f);
-            else if (camera_direction == DIRECTION_NEG_Z)
-                vec3_set(offset, 0.0f, 0.0f, +0.01f);
-        } else {
-            vec3_set(offset, 0.0f, -0.01f, 0.0f);
-        }
+        vec3_set(offset, 0.0f, -0.01f, 0.0f);
 
         move_vertices(&model, selection.indices, selection.len, offset);
     }

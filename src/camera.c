@@ -1,7 +1,7 @@
 #include "camera.h"
 #include "linmath.h"
 
-#include <math.h> 
+#include <math.h>
 
 void init_camera(camera_t *camera) {
     vec3_set(camera->center, 0.0, 0.0, 0.0);
@@ -21,9 +21,6 @@ void set_camera_position(camera_t *camera, vec3 pos) {
 
     vec3_sub(camera->dir, camera->center, camera->pos);
     vec3_normalize(camera->dir, camera->dir);
-
-    vec3_cross(camera->right, camera->dir, camera->up);
-    vec3_normalize(camera->right, camera->right);
 }
 
 // Getters
@@ -32,21 +29,12 @@ void get_view_matrix(camera_t *camera, mat4x4 m) {
     mat4x4_look_at(m, camera->pos, camera->center, camera->up);
 }
 
-int get_camera_direction(camera_t *camera) {
+void get_camera_heading(camera_t *camera, vec3 r) {
     float x = camera->dir[0];
     float z = camera->dir[2];
-    
-    if (fabs(x) >= fabs(z)) {
-        if (x >= 0)
-            return DIRECTION_POS_X;
-        else
-            return DIRECTION_NEG_X;
-    } else {
-        if (z >= 0)
-            return DIRECTION_POS_Z;
-        else
-            return DIRECTION_NEG_Z;
-    }
 
-    return -1;
+    if (fabs(x) >= fabs(z))
+        vec3_set(r, x / fabs(x), 0.0f, 0.0f);
+    else
+        vec3_set(r, 0.0f, 0.0f, z / fabs(z));
 }
