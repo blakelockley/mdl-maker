@@ -48,6 +48,8 @@ void init_model(model_t *model) {
 
     model->wireframe_renderer = (wireframe_renderer_t *)malloc(sizeof(wireframe_renderer_t));
     init_wireframe_renderer(model->wireframe_renderer);
+
+    model->render_mode = RENDER_MODE_VERTICES | RENDER_MODE_FACES;
 }
 
 void free_model(model_t *model) {
@@ -65,6 +67,20 @@ void free_model(model_t *model) {
 
     free_normal_renderer(model->normal_renderer);
     free(model->normal_renderer);
+}
+
+void render_model(model_t *model) {
+    if (model->render_mode & RENDER_MODE_VERTICES)
+        render_model_vertices(model->vertex_renderer, model);
+    
+    if (model->render_mode & RENDER_MODE_FACES)
+        render_model_faces(model->face_renderer, model);
+    
+    if (model->render_mode & RENDER_MODE_NORMALS)
+        render_model_normals(model->normal_renderer, model);
+    
+    if (model->render_mode & RENDER_MODE_WIREFRAME)
+        render_model_wireframe(model->wireframe_renderer, model);
 }
 
 // Update data methods
@@ -347,14 +363,6 @@ void calculate_midpoint(model_t *model, vec3 r, uint32_t *indices, uint32_t len)
     vec3_scale(r, r, 1.0f / (float)len);
 }
 
-void render_model(model_t *model) {
-    render_model_vertices(model->vertex_renderer, model);
-    render_model_normals(model->normal_renderer, model);
-    
-    render_model_wireframe(model->wireframe_renderer, model);
-    // render_model_faces(model->face_renderer, model);
-}
-
 // Debug print methods
 
 void print_vertices(model_t *model) {
@@ -451,4 +459,14 @@ void sort_by_angle(model_t *model, vec3 midpoint, vec3 normal, uint32_t *indices
 
     for (int i = 0; i < len; i++)
         indices[i] = sorted_indices[i];
+}
+
+// Render mode
+
+void set_render_mode(model_t *model, uint8_t mode) {
+    model->render_mode = mode;
+}
+
+void toggle_render_mode(model_t *model, uint8_t mode) {
+    model->render_mode ^= mode;
 }

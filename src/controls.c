@@ -44,6 +44,18 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
             add_face(&model, selection.indices, selection.len);
         }
     }
+
+    if (key == GLFW_KEY_M && action == GLFW_PRESS)
+        set_render_mode(&model, RENDER_MODE_FACES);
+
+    if (key == GLFW_KEY_N && action == GLFW_PRESS)
+        toggle_render_mode(&model, RENDER_MODE_NORMALS);
+
+    if (key == GLFW_KEY_V && action == GLFW_PRESS)
+        toggle_render_mode(&model, RENDER_MODE_VERTICES);
+
+    if (key == GLFW_KEY_W && action == GLFW_PRESS)
+        set_render_mode(&model, RENDER_MODE_WIREFRAME);
     
     if (key == GLFW_KEY_X && action == GLFW_PRESS) {
         remove_vertices(&model, selection.indices, selection.len);

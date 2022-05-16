@@ -4,6 +4,11 @@
 #include "glfw.h"
 #include "linmath.h"
 
+#define RENDER_MODE_VERTICES  0b0001
+#define RENDER_MODE_FACES     0b0010
+#define RENDER_MODE_NORMALS   0b0100
+#define RENDER_MODE_WIREFRAME 0b1000
+
 struct _face_renderer_t;
 typedef struct _face_renderer_t face_renderer_t;
 
@@ -42,6 +47,8 @@ struct _model_t {
     vertex_renderer_t *vertex_renderer;
     normal_renderer_t *normal_renderer;
     wireframe_renderer_t *wireframe_renderer;
+
+    uint8_t render_mode;
 };
 
 typedef struct _model_t model_t;
@@ -61,5 +68,8 @@ face_t *extend_face(model_t *model, uint32_t *indices, uint32_t len);
 
 face_t *get_face(model_t *model, uint32_t *indices, uint32_t len);
 void flip_face(model_t *model, face_t *face);
+
+void set_render_mode(model_t *model, uint8_t mode);
+void toggle_render_mode(model_t *model, uint8_t mode);
 
 #endif  // MODEL_H

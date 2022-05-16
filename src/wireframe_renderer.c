@@ -76,7 +76,7 @@ void render_model_wireframe(wireframe_renderer_t *renderer, model_t *model) {
     glUniform3fv(light_color_loc, 1, (float*)light.color);
      
     GLint color_loc = glGetUniformLocation(renderer->shader, "color");
-    glUniform3f(color_loc, 0.1f, 0.2f, 1.0f);
+    glUniform3f(color_loc, 0.95f, 0.95f, 0.95f);
     
     glDrawArrays(GL_LINES, 0, total_vertices);
 }
