@@ -84,17 +84,25 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     }
 
     if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        vec3 offset;
-        vec3_set(offset, 0.0f, +0.01f, 0.0f);
-        
-        move_vertices(&model, selection.indices, selection.len, offset);
+        if (shift_pressed) {
+            scale_vertices(&model, selection.indices, selection.len, 1.01f);
+        } else {
+            vec3 offset;
+            vec3_set(offset, 0.0f, +0.01f, 0.0f);
+            
+            move_vertices(&model, selection.indices, selection.len, offset);
+        }
     }
 
     if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        vec3 offset;
-        vec3_set(offset, 0.0f, -0.01f, 0.0f);
+        if (shift_pressed) {
+            scale_vertices(&model, selection.indices, selection.len, 0.99f);
+        } else {
+            vec3 offset;
+            vec3_set(offset, 0.0f, -0.01f, 0.0f);
 
-        move_vertices(&model, selection.indices, selection.len, offset);
+            move_vertices(&model, selection.indices, selection.len, offset);
+        }
     }
 }
 

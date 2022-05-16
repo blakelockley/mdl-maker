@@ -103,6 +103,18 @@ void move_vertices(model_t *model, uint32_t *indices, uint32_t len, vec3 delta) 
     update_model(model);
 }
 
+void scale_vertices(model_t *model, uint32_t *indices, uint32_t len, float factor) {
+    vec3 midpoint;
+    calculate_midpoint(model, midpoint, indices, len);
+
+    for (int i = 0; i < len; i++) {
+        vec3 vector;
+        vec3_sub(vector, model->vertices[indices[i]], midpoint);
+        vec3_scale(vector, vector, factor);
+        vec3_add(model->vertices[indices[i]], midpoint, vector);
+    }
+}
+
 void remove_vertex(model_t *model, uint32_t index) {
     model->vertices_len -= 1;
     for (int i = index; i < model->vertices_len; i++)
