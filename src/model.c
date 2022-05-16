@@ -115,6 +115,17 @@ void scale_vertices(model_t *model, uint32_t *indices, uint32_t len, float facto
     }
 }
 
+void duplicate_vertices(model_t *model, uint32_t *indices, uint32_t len) {
+    uint32_t new_indices[len];
+
+    for (int i = 0; i < len; i++)
+        new_indices[i] = add_vertex(model, model->vertices[indices[i]]);
+
+    clear_selection(&selection);
+    for (int i = 0; i < len; i++)
+        extend_selection(&selection, new_indices[i]);
+}
+
 void remove_vertex(model_t *model, uint32_t index) {
     model->vertices_len -= 1;
     for (int i = index; i < model->vertices_len; i++)

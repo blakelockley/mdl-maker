@@ -36,6 +36,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_E && action == GLFW_PRESS)
         extend_face(&model, selection.indices, selection.len);
     
+    if (key == GLFW_KEY_D && action == GLFW_PRESS)
+        duplicate_vertices(&model, selection.indices, selection.len);
+    
     if (key == GLFW_KEY_F && action == GLFW_PRESS) {
         if (shift_pressed) {
             face_t *face = get_face(&model, selection.indices, selection.len);
@@ -62,25 +65,33 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     }
     
     if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        vec3 heading;
-        get_camera_heading(&camera, heading);
-        
-        vec3 offset;
-        vec3_cross(offset, heading, (vec3){0.0f, 1.0f, 0.0f});
-        vec3_scale(offset, offset, +0.01f);
+        if (shift_pressed) {
+            scale_vertices(&model, selection.indices, selection.len, 1.01f);
+        } else {
+            vec3 heading;
+            get_camera_heading(&camera, heading);
+            
+            vec3 offset;
+            vec3_cross(offset, heading, (vec3){0.0f, 1.0f, 0.0f});
+            vec3_scale(offset, offset, +0.01f);
 
-        move_vertices(&model, selection.indices, selection.len, offset);
+            move_vertices(&model, selection.indices, selection.len, offset);
+        }
     }
     
     if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        vec3 heading;
-        get_camera_heading(&camera, heading);
-        
-        vec3 offset;
-        vec3_cross(offset, heading, (vec3){0.0f, 1.0f, 0.0f});
-        vec3_scale(offset, offset, -0.01f);
+        if (shift_pressed) {
+            scale_vertices(&model, selection.indices, selection.len, 0.99f);
+        } else {
+            vec3 heading;
+            get_camera_heading(&camera, heading);
+            
+            vec3 offset;
+            vec3_cross(offset, heading, (vec3){0.0f, 1.0f, 0.0f});
+            vec3_scale(offset, offset, -0.01f);
 
-        move_vertices(&model, selection.indices, selection.len, offset);
+            move_vertices(&model, selection.indices, selection.len, offset);
+        }
     }
 
     if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
