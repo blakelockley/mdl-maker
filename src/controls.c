@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "selection.h"
 #include "model.h"
+#include "file.h"
 
 #include <stdio.h>
 
@@ -11,6 +12,8 @@ extern int show_fps;
 extern camera_t camera;
 extern selection_t selection;
 extern model_t model;
+
+extern char *filename;
 
 void normalize_mouse_pos(double *normal_x, double *normal_y, double mouse_x, double mouse_y, int width, int height) {
     *normal_x = (2.0f * mouse_x) / width - 1.0f;
@@ -53,6 +56,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_N && action == GLFW_PRESS)
         toggle_render_mode(&model, RENDER_MODE_NORMALS);
+
+    if (key == GLFW_KEY_S && action == GLFW_PRESS && (mods & GLFW_MOD_SUPER))
+        save_file(filename, &model);
 
     if (key == GLFW_KEY_V && action == GLFW_PRESS)
         toggle_render_mode(&model, RENDER_MODE_VERTICES);

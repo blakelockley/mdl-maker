@@ -17,6 +17,7 @@
 #include "model.h"
 #include "light.h"
 #include "fps.h"
+#include "file.h"
 
 GLFWwindow *window;
 
@@ -78,14 +79,9 @@ int main(int argc, char **argv) {
     init_light(&light);
     init_grid(&grid);
     init_selection(&selection);
-    init_model(&model);
     
-    add_vertex(&model, (vec3){-0.25, 0.5 -0.25, 0.0f});
-    add_vertex(&model, (vec3){+0.25, 0.5 -0.25, 0.0f});
-    add_vertex(&model, (vec3){-0.25, 0.5 +0.25, 0.0f});
-    add_vertex(&model, (vec3){+0.25, 0.5 +0.25, 0.0f});
-
-    add_face(&model, (uint32_t[]){0,1,2,3}, 4);
+    init_model(&model);
+    open_file(filename, &model);
 
     while (!glfwWindowShouldClose(window)) {
         sprintf(buffer, "mdl-maker - %s", filename);
