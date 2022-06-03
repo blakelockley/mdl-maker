@@ -74,4 +74,6 @@ void flip_face(model_t *model, face_t *face);
 void set_render_mode(model_t *model, uint8_t mode);
 void toggle_render_mode(model_t *model, uint8_t mode);
 
+void load_face(model_t *model, uint32_t *indices, uint32_t len);
+
 #endif  // MODEL_H

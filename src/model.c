@@ -185,8 +185,10 @@ face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
     if (len < 3 || len > 1024)
         return NULL;
 
-    if (!check_coplanar_vertices(model, indices, len))
+    if (!check_coplanar_vertices(model, indices, len)) {
+        printf("[ERROR]: Face vertices are not coplanar.\n");
         return NULL;
+    }
 
     vec3 midpoint;
     calculate_midpoint(model, midpoint, indices, len);
@@ -423,7 +425,6 @@ int check_coplanar_vertices(model_t *model, uint32_t *indices, uint32_t len) {
 
         float dot = vec3_dot(vector, normal);
         if (fabs(dot) > 0.0001f) {
-            printf("[ERROR] Cannot create face from non-planar vertices\n");
             return 0;
         }
     }
@@ -492,4 +493,23 @@ void set_render_mode(model_t *model, uint8_t mode) {
 
 void toggle_render_mode(model_t *model, uint8_t mode) {
     model->render_mode ^= mode;
+}
+
+// Model loading
+
+// Add face without user-relative checks.
+void load_face(model_t *model, uint32_t *indices, uint32_t len) {
+    if (model->faces_len == model->faces_cap) {
+        model->faces_cap *= 2;
+        model->faces = (face_t*)realloc(model->faces, sizeof(face_t) * model->faces_cap);
+    }
+
+    face_t *face = &model->faces[model->faces_len++];
+    face->len = len;
+    
+    face->indices = (uint32_t*)malloc(sizeof(uint32_t) * len);
+    memcpy(face->indices, indices, sizeof(uint32_t) * len);
+    
+    calculate_midpoint(model, face->midpoint, indices, len);
+    calculate_normal(face->normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
 }

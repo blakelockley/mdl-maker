@@ -13,12 +13,12 @@ typedef enum _section_t section_t;
 void open_file(char *filename, model_t *model) {
     FILE *file = fopen(filename, "rb");
     if (!file) {
-        printf("Error: Could not open file %s\n", filename);
+        printf("[ERROR]: Could not open file \"%s\".\n", filename);
         return;
     }
 
-    size_t buffer_len = 1024;
-    char *buffer = malloc(sizeof(char) * buffer_len);
+    size_t buffer_size = 1024;
+    char *buffer = malloc(buffer_size);
 
     uint8_t section;
     uint32_t len;
@@ -30,8 +30,10 @@ void open_file(char *filename, model_t *model) {
             fread(buffer, sizeof(uint32_t), 1, file);
             len = *(uint32_t *)&buffer[0];
 
-            if (len * sizeof(vec3) > buffer_len)
-                buffer = realloc(buffer, len * sizeof(vec3));
+            if (len * sizeof(vec3) > buffer_size) {
+                buffer_size = len * sizeof(vec3);
+                buffer = realloc(buffer, buffer_size);
+            }
 
             fread(buffer, sizeof(vec3), len, file);
             for (int i = 0; i < len; i++)
@@ -42,15 +44,17 @@ void open_file(char *filename, model_t *model) {
             fread(buffer, sizeof(uint32_t), 1, file);
             len = *(uint32_t *)&buffer[0];
 
-            if (len * sizeof(uint32_t) > buffer_len)
-                buffer = realloc(buffer, len * sizeof(uint32_t));
+            if (len * sizeof(uint32_t) > buffer_size) {
+                buffer_size = len * sizeof(uint32_t);
+                buffer = realloc(buffer, buffer_size);
+            }
 
             fread(buffer, sizeof(uint32_t), len, file);
             for (int i = 0; i < len;) {
                 uint32_t len = *(uint32_t *)&buffer[i * sizeof(uint32_t)];
                 uint32_t *indices = (uint32_t *)&buffer[(i + 1) * sizeof(uint32_t)];
                 
-                add_face(model, indices, len);
+                load_face(model, indices, len);
                 i += (1 + len);
             }
         }
