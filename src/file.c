@@ -6,6 +6,7 @@
 enum _section_t {
     SECTION_VERTICES = 0,
     SECTION_FACES = 1,
+    SECTION_PALETTE = 2,
 };
 
 typedef enum _section_t section_t;
@@ -18,47 +19,81 @@ void open_file(char *filename, model_t *model) {
     }
 
     size_t buffer_size = 1024;
-    char *buffer = malloc(buffer_size);
+    uint8_t *buffer = malloc(buffer_size);
 
     uint8_t section;
     uint32_t len;
 
-    while (fread(buffer, sizeof(uint8_t), 1, file) == 1) {
-        section = (uint8_t)buffer[0];
+    // Vertices
 
-        if (section == SECTION_VERTICES) {
-            fread(buffer, sizeof(uint32_t), 1, file);
-            len = *(uint32_t *)&buffer[0];
+    fread(buffer, sizeof(uint8_t), 1, file);
+    section = (uint8_t)buffer[0];
 
-            if (len * sizeof(vec3) > buffer_size) {
-                buffer_size = len * sizeof(vec3);
-                buffer = realloc(buffer, buffer_size);
-            }
-
-            fread(buffer, sizeof(vec3), len, file);
-            for (int i = 0; i < len; i++)
-                add_vertex(model, *(vec3 *)&buffer[i * sizeof(vec3)]);
-        }
-
-        if (section == SECTION_FACES) {
-            fread(buffer, sizeof(uint32_t), 1, file);
-            len = *(uint32_t *)&buffer[0];
-
-            if (len * sizeof(uint32_t) > buffer_size) {
-                buffer_size = len * sizeof(uint32_t);
-                buffer = realloc(buffer, buffer_size);
-            }
-
-            fread(buffer, sizeof(uint32_t), len, file);
-            for (int i = 0; i < len;) {
-                uint32_t len = *(uint32_t *)&buffer[i * sizeof(uint32_t)];
-                uint32_t *indices = (uint32_t *)&buffer[(i + 1) * sizeof(uint32_t)];
-                
-                load_face(model, indices, len);
-                i += (1 + len);
-            }
-        }
+    if (section != SECTION_VERTICES) {
+        printf("[ERROR]: Expected section \"%d\", got \"%d\".\n", SECTION_VERTICES, section);
+        return;
     }
+     
+    fread(buffer, sizeof(uint32_t), 1, file);
+    len = *(uint32_t *)&buffer[0];
+
+    if (len * sizeof(vec3) > buffer_size) {
+        buffer_size = len * sizeof(vec3);
+        buffer = realloc(buffer, buffer_size);
+    }
+
+    fread(buffer, sizeof(vec3), len, file);
+    load_vertices(model, (vec3 *)buffer, len);
+
+    // Faces
+
+    fread(buffer, sizeof(uint8_t), 1, file);
+    section = (uint8_t)buffer[0];
+
+    if (section != SECTION_FACES) {
+        printf("[ERROR]: Expected section \"%d\", got \"%d\".\n", SECTION_FACES, section);
+        return;
+    }
+
+    fread(buffer, sizeof(uint32_t), 1, file);
+    len = *(uint32_t *)&buffer[0]; // Number of faces in model. NOTE: faces are not uniformly sized
+
+    for (int i = 0; i < len; i++) {
+        fread(buffer, sizeof(uint32_t), 1, file);
+        uint32_t face_len = *(uint32_t *)&buffer[0];
+
+        if (face_len * sizeof(uint32_t) > buffer_size) {
+            buffer_size = face_len * sizeof(uint32_t);
+            buffer = realloc(buffer, buffer_size);
+        }
+    
+        fread(buffer, sizeof(uint32_t), face_len, file);
+        face_t *face = load_face(model, (uint32_t *)buffer, face_len);
+
+        fread(buffer, sizeof(uint8_t), 1, file);
+        face->color_index = *(uint8_t *)&buffer[0];
+    }
+
+    // Palette
+
+    fread(buffer, sizeof(uint8_t), 1, file);
+    section = (uint8_t)buffer[0];
+
+    if (section != SECTION_PALETTE) {
+        printf("[ERROR]: Expected section \"%d\", got \"%d\".\n", SECTION_PALETTE, section);
+        return;
+    }
+
+    fread(buffer, sizeof(uint8_t), 1, file);
+    len = *(uint8_t *)&buffer[0];
+
+    if (len * sizeof(vec3) > buffer_size) {
+        buffer_size = len * sizeof(vec3);
+        buffer = realloc(buffer, buffer_size);
+    }
+
+    fread(buffer, sizeof(vec3), len, file);
+    load_palette(model, (vec3 *)buffer, len);
 
     fclose(file);
 }
@@ -81,18 +116,25 @@ void save_file(char *filename, model_t *model) {
 
     section = SECTION_FACES;
     fwrite(&section, sizeof(uint8_t), 1, file);
-
-    uint32_t total_len = 0; 
-    for (int i = 0; i < model->faces_len; i++)
-        total_len += (model->faces[i].len + 1); // +1 for the length of the face
-    
-    fwrite(&total_len, sizeof(uint32_t), 1, file);
+    fwrite(&model->faces_len, sizeof(uint32_t), 1, file);
 
     for (int i = 0; i < model->faces_len; i++) {
         face_t *face = &model->faces[i];
+        
+        // Indices
         fwrite(&face->len, sizeof(uint32_t), 1, file);
         fwrite(face->indices, sizeof(uint32_t), face->len, file);
+        
+        // Color index
+        fwrite(&face->color_index, sizeof(uint8_t), 1, file);
     }
+
+    section = SECTION_PALETTE;
+    fwrite(&section, sizeof(uint8_t), 1, file);
+    fwrite(&model->palette_len, sizeof(uint8_t), 1, file);
+
+    for (int i = 0; i < model->palette_len; i++)
+        fwrite(model->palette[i], sizeof(float), 3, file);
 
     fclose(file);
 }

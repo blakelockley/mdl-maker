@@ -7,7 +7,7 @@
 struct _face_renderer_t
 {
     GLuint shader;
-    GLuint vao, vbo[2];
+    GLuint vao, vbo[3];
 };
 
 typedef struct _face_renderer_t face_renderer_t;

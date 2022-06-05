@@ -14,7 +14,7 @@ void init_face_renderer(face_renderer_t *renderer) {
     glGenVertexArrays(1, &renderer->vao);
     glBindVertexArray(renderer->vao);
 
-    glGenBuffers(2, renderer->vbo);
+    glGenBuffers(3, renderer->vbo);
     
     // Positions
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
@@ -29,6 +29,13 @@ void init_face_renderer(face_renderer_t *renderer) {
 
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);
+    
+    // Colors
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[2]);
+    glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);
 }
 
 void free_face_renderer(face_renderer_t *renderer) {
@@ -43,6 +50,7 @@ void render_model_faces(face_renderer_t *renderer, model_t *model) {
 
     vec3 positions[total_vertices];
     vec3 normals[total_vertices];
+    vec3 colors[total_vertices];
     
     uint32_t vi = 0; // vertices index
     for (int i = 0; i < model->faces_len; i++) {
@@ -51,14 +59,17 @@ void render_model_faces(face_renderer_t *renderer, model_t *model) {
 
             vec3_copy(positions[vi], model->vertices[indices[0]]);
             vec3_copy(normals[vi], model->faces[i].normal);
+            vec3_copy(colors[vi], model->palette[model->faces[i].color_index]);
             vi++;
             
             vec3_copy(positions[vi], model->vertices[indices[j - 1]]);
             vec3_copy(normals[vi], model->faces[i].normal);
+            vec3_copy(colors[vi], model->palette[model->faces[i].color_index]);
             vi++;
             
             vec3_copy(positions[vi], model->vertices[indices[j - 0]]);
             vec3_copy(normals[vi], model->faces[i].normal);
+            vec3_copy(colors[vi], model->palette[model->faces[i].color_index]);
             vi++;
         }
     }
@@ -70,6 +81,9 @@ void render_model_faces(face_renderer_t *renderer, model_t *model) {
 
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[2]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_DYNAMIC_DRAW);
 
     glUseProgram(renderer->shader);
     
