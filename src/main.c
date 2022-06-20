@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "glfw.h"
 #include "linmath.h"
@@ -18,6 +19,7 @@
 #include "light.h"
 #include "fps.h"
 #include "file.h"
+#include "text.h"
 
 GLFWwindow *window;
 
@@ -75,10 +77,15 @@ int main(int argc, char **argv) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // Engine setup
+
+    srand(time(NULL));
+
     init_camera(&camera);
     init_light(&light);
     init_grid(&grid);
     init_selection(&selection);
+    init_text();
     
     init_model(&model);
     open_file(filename, &model);
@@ -98,6 +105,8 @@ int main(int argc, char **argv) {
         render_grid(&grid);
         render_selection(&selection);
         render_model(&model);
+
+        render_text("Hello, World!", (vec2){100.0f, 100.f}, (vec3){1.0f, 1.0f, 1.0f});
 
         glfwSwapBuffers(window);
         glfwPollEvents();
