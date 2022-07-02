@@ -60,4 +60,7 @@ void render_quad(vec2 topLeft, vec2 bottomRight, vec3 color) {
     glBindVertexArray(0);
 }
 
-// TODO: Clean up
+void free_quad() {
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo);
+}

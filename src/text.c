@@ -10,46 +10,45 @@ static GLuint shader;
 
 extern viewport_t viewport;
 
-int init_text() {
+void init_text() {
     FT_Library ft;
     if (FT_Init_FreeType(&ft)) {
         fprintf(stderr, "[ERROR] Could not init FreeType Library\n");
-        return -1;
+        return;
     }
 
     FT_Face face;
-    if (FT_New_Face(ft, "assets/Kanit-Regular.ttf", 0, &face)) {
+    if (FT_New_Face(ft, "assets/OpenSans-Regular.ttf", 0, &face)) {
         fprintf(stderr, "[ERROR] Failed to load font\n");
-        return -1;
+        return;
     }
-
-
 
     FT_Set_Pixel_Sizes(face, 0, 48);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction
   
-    for (unsigned char c = 0; c < 128; c++) {
-    
-        if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+    for (unsigned char ch = 0; ch < 128; ch++) {
+        if (FT_Load_Char(face, ch, FT_LOAD_RENDER)) {
             fprintf(stderr, "[ERROR] Failed to load Glyph\n");
             continue;
         }
         
-        unsigned int tex_id;
-        glGenTextures(1, &tex_id);
-        glBindTexture(GL_TEXTURE_2D, tex_id);
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RED,
-            face->glyph->bitmap.width,
-            face->glyph->bitmap.rows,
-            0,
-            GL_RED,
-            GL_UNSIGNED_BYTE,
-            face->glyph->bitmap.buffer
-        );
+        unsigned int tex_id = -1;
+        if (face->glyph->bitmap.width) {
+            glGenTextures(1, &tex_id);
+            glBindTexture(GL_TEXTURE_2D, tex_id);
+            glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RED,
+                face->glyph->bitmap.width,
+                face->glyph->bitmap.rows,
+                0,
+                GL_RED,
+                GL_UNSIGNED_BYTE,
+                face->glyph->bitmap.buffer
+            );
+        }
         
         // Set texture options
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -63,8 +62,7 @@ int init_text() {
         vec2_set(glyph.bearing, face->glyph->bitmap_left, face->glyph->bitmap_top);
         glyph.advance = face->glyph->advance.x;
 
-        glyphs[c] = glyph;
-
+        glyphs[ch] = glyph;
     }
     
     FT_Done_Face(face);
@@ -84,8 +82,6 @@ int init_text() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindVertexArray(0);  
-
-    return 0;
 }
 
 void render_text(char *text, vec2 pos, vec3 color) {
@@ -108,13 +104,18 @@ void render_text(char *text, vec2 pos, vec3 color) {
 
     int i = 0;
     while (text[i]) {
-        glyph_t ch = glyphs[(unsigned int) text[i++]];
+        unsigned int ch = (unsigned int) text[i++];
         
-        float w = ch.size[0];
-        float h = ch.size[1];
+        if (!(0 <= ch && ch <= 128))
+            continue;
 
-        float xpos = pos[0] + ch.bearing[0];
-        float ypos = viewport.height - pos[1] - (line_height - baseline) - (h - ch.bearing[1]);
+        glyph_t glyph = glyphs[ch];
+        
+        float w = glyph.size[0];
+        float h = glyph.size[1];
+
+        float xpos = pos[0] + glyph.bearing[0];
+        float ypos = viewport.height - pos[1] - (line_height - baseline) - (h - glyph.bearing[1]);
 
         float vertices[6][4] = {
             { xpos,     ypos + h,   0.0f, 0.0f },            
@@ -125,20 +126,26 @@ void render_text(char *text, vec2 pos, vec3 color) {
             { xpos + w, ypos,       1.0f, 1.0f },
             { xpos + w, ypos + h,   1.0f, 0.0f }           
         };
+        
+        pos[0] += glyph.advance / 64.0f;
 
-        glBindTexture(GL_TEXTURE_2D, ch.tex_id);
+        if (!w) // If no width, dont render texture
+            continue;
+
+        glBindTexture(GL_TEXTURE_2D, glyph.tex_id);
         
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        pos[0] += ch.advance / 64.0f;
     }
 
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-// TODO: Clean up
+void free_text() {
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo);
+}

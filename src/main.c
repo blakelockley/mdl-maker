@@ -110,10 +110,7 @@ int main(int argc, char **argv) {
         render_model(&model);
 
         render_quad((vec2){0.0f, 0.0f}, (vec2){800.0f, 48.0f}, (vec3){1.0f, 1.0f, 1.0f});
-        render_text("ABCDEFGHIJKLMNOPQRSTUVWXYZ", (vec2){0.0f, 0.0f}, (vec3){1.0f, 0.52f, 0.53f});
-
-        render_quad((vec2){0.0f, 48.0f}, (vec2){800.0f, 96.0f}, (vec3){0.0f, 0.0f, 0.5f});
-        render_text("abcdefghijklmnopqrstuvwxyz", (vec2){0.0f, 48.0f}, (vec3){1.0f, 1.0f, 0});
+        render_text("Hello, World! Tj", (vec2){0.0f, 0.0f}, (vec3){0.0f, 0.0, 0.0f});
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -124,6 +121,8 @@ int main(int argc, char **argv) {
     free_light(&light);
     free_camera(&camera);
     free_selection(&selection);
+    free_quad();
+    free_text();
 
     glfwDestroyWindow(window);
     glfwTerminate();

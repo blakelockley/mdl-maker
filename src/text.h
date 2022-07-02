@@ -15,7 +15,9 @@ struct _glyph_t {
 
 typedef struct _glyph_t glyph_t;
 
-int init_text();
+void init_text();
+void free_text();
+
 void render_text(char *text, vec2 pos, vec3 color);
 
 #endif  // TEXT_H
