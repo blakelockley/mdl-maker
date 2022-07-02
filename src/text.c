@@ -5,8 +5,8 @@
 
 glyph_t glyphs[128];
 
-GLuint vao, vbo; 
-GLuint shader;
+static GLuint vao, vbo; 
+static GLuint shader;
 
 extern viewport_t viewport;
 
@@ -22,6 +22,8 @@ int init_text() {
         fprintf(stderr, "[ERROR] Failed to load font\n");
         return -1;
     }
+
+
 
     FT_Set_Pixel_Sizes(face, 0, 48);
 
@@ -80,6 +82,7 @@ int init_text() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
     glBindVertexArray(0);  
 
     return 0;
@@ -89,7 +92,7 @@ void render_text(char *text, vec2 pos, vec3 color) {
     glUseProgram(shader);
 
     GLint color_loc = glGetUniformLocation(shader, "textColor");
-    glUniformMatrix3fv(color_loc, 1, GL_FALSE, (float *)color);
+    glUniform3fv(color_loc, 1, (float *)color);
 
     mat4x4 projection;
     mat4x4_ortho(projection, 0.0f, viewport.width, 0.0f, viewport.height, -1.0f, 1.0f);
@@ -100,15 +103,18 @@ void render_text(char *text, vec2 pos, vec3 color) {
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
+    float line_height = 48;
+    float baseline = line_height / 4;
+
     int i = 0;
     while (text[i]) {
         glyph_t ch = glyphs[(unsigned int) text[i++]];
-
-        float xpos = pos[0] + ch.bearing[0];
-        float ypos = pos[1] - (ch.size[1] - ch.bearing[1]);
-
+        
         float w = ch.size[0];
         float h = ch.size[1];
+
+        float xpos = pos[0] + ch.bearing[0];
+        float ypos = viewport.height - pos[1] - (line_height - baseline) - (h - ch.bearing[1]);
 
         float vertices[6][4] = {
             { xpos,     ypos + h,   0.0f, 0.0f },            

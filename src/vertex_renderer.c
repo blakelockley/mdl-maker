@@ -57,10 +57,10 @@ void render_model_vertices(vertex_renderer_t *renderer, model_t *model) {
     glBindVertexArray(renderer->vao);
     glPointSize(10);
 
+    glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
+    glDrawArrays(GL_POINTS, 0, model->vertices_len);
+    
     glUniform3f(color_loc, 0.0f, 1.0f, 0.0f);
     for (int i = 0; i < selection.len; i++)
         glDrawArrays(GL_POINTS, selection.indices[i], 1);
-
-    glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
-    glDrawArrays(GL_POINTS, 0, model->vertices_len);
 }

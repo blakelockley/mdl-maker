@@ -20,6 +20,7 @@
 #include "fps.h"
 #include "file.h"
 #include "text.h"
+#include "quad.h"
 
 GLFWwindow *window;
 
@@ -73,6 +74,7 @@ int main(int argc, char **argv) {
     // OpenGL setup
 
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -86,6 +88,7 @@ int main(int argc, char **argv) {
     init_grid(&grid);
     init_selection(&selection);
     init_text();
+    init_quad();
     
     init_model(&model);
     open_file(filename, &model);
@@ -106,7 +109,11 @@ int main(int argc, char **argv) {
         render_selection(&selection);
         render_model(&model);
 
-        render_text("Hello, World!", (vec2){100.0f, 100.f}, (vec3){1.0f, 1.0f, 1.0f});
+        render_quad((vec2){0.0f, 0.0f}, (vec2){800.0f, 48.0f}, (vec3){1.0f, 1.0f, 1.0f});
+        render_text("ABCDEFGHIJKLMNOPQRSTUVWXYZ", (vec2){0.0f, 0.0f}, (vec3){1.0f, 0.52f, 0.53f});
+
+        render_quad((vec2){0.0f, 48.0f}, (vec2){800.0f, 96.0f}, (vec3){0.0f, 0.0f, 0.5f});
+        render_text("abcdefghijklmnopqrstuvwxyz", (vec2){0.0f, 48.0f}, (vec3){1.0f, 1.0f, 0});
 
         glfwSwapBuffers(window);
         glfwPollEvents();
