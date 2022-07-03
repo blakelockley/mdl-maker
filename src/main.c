@@ -19,8 +19,9 @@
 #include "light.h"
 #include "fps.h"
 #include "file.h"
-#include "text.h"
 #include "quad.h"
+#include "text.h"
+#include "textbox.h"
 
 GLFWwindow *window;
 
@@ -56,6 +57,7 @@ int main(int argc, char **argv) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_SAMPLES, 4);
 
     window = glfwCreateWindow(800, 600, "mdl-maker", NULL, NULL);
     if (!window) {
@@ -105,12 +107,24 @@ int main(int argc, char **argv) {
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+
         render_grid(&grid);
         render_selection(&selection);
         render_model(&model);
 
-        render_quad((vec2){0.0f, 0.0f}, (vec2){800.0f, 48.0f}, (vec3){1.0f, 1.0f, 1.0f});
-        render_text("Hello, World! Tj", (vec2){0.0f, 0.0f}, (vec3){0.0f, 0.0, 0.0f});
+        char text[64];
+        sprintf(text, "%.2f, %.2f", xpos, ypos);
+
+        render_textbox(
+            text,
+            (vec2){xpos * 2 + 24, ypos * 2 + 24},
+            (vec3){1.0f, 1.0f, 1.0f},
+            (vec4){0.0f, 0.0f, 0.0f, 1.0f}
+        );
+
+        render_quad((vec2){100, 20}, (vec2){300, 220}, (vec4){0.0f, 0.0f, 0.0f, 1.0f});
 
         glfwSwapBuffers(window);
         glfwPollEvents();

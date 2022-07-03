@@ -4,6 +4,7 @@
 #include "viewport.h"
 
 glyph_t glyphs[128];
+unsigned int font_size = 24;
 
 static GLuint vao, vbo; 
 static GLuint shader;
@@ -23,7 +24,7 @@ void init_text() {
         return;
     }
 
-    FT_Set_Pixel_Sizes(face, 0, 48);
+    FT_Set_Pixel_Sizes(face, 0, font_size);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction
   
@@ -99,7 +100,7 @@ void render_text(char *text, vec2 pos, vec3 color) {
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
-    float line_height = 48;
+    float line_height = font_size;
     float baseline = line_height / 4;
 
     int i = 0;
