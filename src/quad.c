@@ -25,11 +25,17 @@ void init_quad() {
     glBindVertexArray(0);  
 }
 
-void render_quad(vec2 topLeft, vec2 bottomRight, vec3 color) {
+void render_quad(vec2 topLeft, vec2 bottomRight, vec4 color) {
     glUseProgram(shader);
 
     GLint color_loc = glGetUniformLocation(shader, "color");
-    glUniform3fv(color_loc, 1, (float *)color);
+    glUniform4fv(color_loc, 1, (float *)color);
+
+    GLint size_loc = glGetUniformLocation(shader, "size");
+    glUniform2fv(size_loc, 1, (float[2]){ bottomRight[0] - topLeft[0], bottomRight[1] - topLeft[1] });
+
+    GLint radius_loc = glGetUniformLocation(shader, "radius");
+    glUniform1f(radius_loc, 10);
 
     mat4x4 projection;
     mat4x4_ortho(projection, 0.0f, viewport.width, 0.0f, viewport.height, -1.0f, 1.0f);
