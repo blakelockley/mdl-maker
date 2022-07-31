@@ -36,9 +36,51 @@ light_t light;
 grid_t grid;
 model_t model;
 
+struct ImGuiContext* ctx;
+struct ImGuiIO* io;
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
+}
+
+void gui_init() {
+    // IMGUI_CHECKVERSION();
+    ctx = igCreateContext(NULL);
+    io  = igGetIO();
+
+    const char* glsl_version = "#version 330 core";
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    // Setup style
+    igStyleColorsDark(NULL);
+}
+
+void gui_terminate() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    igDestroyContext(ctx);
+}
+
+void gui_render() {
+    igRender();
+    ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
+}
+
+void gui_update() {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    igNewFrame();
+
+    igBegin("Test", NULL, 0);
+    igText("Test");
+    igButton("Test",(struct ImVec2){0,0});
+    igEnd();
+
+    // // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. 
+    // // Here we just want to make the demo initial state a bit more friendly!
+    // igSetNextWindowPos((struct ImVec2){0,0}, ImGuiCond_FirstUseEver,(struct ImVec2){0,0} ); 
+    igShowDemoWindow(NULL);
 }
 
 int main(int argc, char **argv) {
@@ -91,6 +133,8 @@ int main(int argc, char **argv) {
     init_selection(&selection);
     init_text();
     init_quad();
+
+    gui_init();
     
     init_model(&model);
     open_file(filename, &model);
@@ -101,6 +145,8 @@ int main(int argc, char **argv) {
             sprintf(buffer, "%s [fps %.2f]", buffer, calculate_fps());
 
         glfwSetWindowTitle(window, buffer);
+        
+        gui_update();
         
         glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
@@ -114,17 +160,7 @@ int main(int argc, char **argv) {
         render_selection(&selection);
         render_model(&model);
 
-        char text[64];
-        sprintf(text, "%.2f, %.2f", xpos, ypos);
-
-        render_textbox(
-            text,
-            (vec2){xpos * 2 + 24, ypos * 2 + 24},
-            (vec3){1.0f, 1.0f, 1.0f},
-            (vec4){0.0f, 0.0f, 0.0f, 1.0f}
-        );
-
-        render_quad((vec2){100, 20}, (vec2){300, 220}, (vec4){0.0f, 0.0f, 0.0f, 1.0f});
+        gui_render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -137,6 +173,8 @@ int main(int argc, char **argv) {
     free_selection(&selection);
     free_quad();
     free_text();
+
+    gui_terminate();
 
     glfwDestroyWindow(window);
     glfwTerminate();

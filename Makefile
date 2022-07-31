@@ -4,7 +4,7 @@
 
 CC = gcc
 CFLAGS = -Wall -g -Iincludes
-LFLAGS = libglfw.3.dylib libfreetype.6.dylib -framework OpenGL -framework Cocoa -framework IOKit
+LFLAGS = libglfw.3.dylib libfreetype.6.dylib cimgui.dylib -framework OpenGL -framework Cocoa -framework IOKit
 
 TARGET = main
 SRCS   = ${wildcard src/*.c}
