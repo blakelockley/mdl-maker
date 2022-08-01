@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 extern int show_fps;
+extern bool is_open;
 
 extern camera_t camera;
 extern selection_t selection;
@@ -35,6 +36,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         clear_selection(&selection);
         extend_selection(&selection, index);
     }
+    
+    if (key == GLFW_KEY_C && action == GLFW_PRESS)
+        is_open = true;
     
     if (key == GLFW_KEY_E && action == GLFW_PRESS)
         extend_face(&model, selection.indices, selection.len);
@@ -160,4 +164,11 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         else if (action == GLFW_RELEASE)
             handle_selection_end(&selection, normal_x, normal_y, shift_pressed);
     }
+}
+
+void set_colour(vec4 colour) {
+    vec4_copy(model.palette[0], colour);
+
+    for (int i = 0; i < model.faces_len; i++)
+        model.faces[i].color_index = 0;
 }

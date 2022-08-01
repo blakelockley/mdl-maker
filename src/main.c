@@ -29,6 +29,8 @@ char *filename;
 char buffer[128];
 int show_fps = 0;
 
+bool is_open = 1;
+
 selection_t selection;
 viewport_t viewport;
 camera_t camera;
@@ -44,7 +46,6 @@ void error_callback(int error, const char *description) {
 }
 
 void gui_init() {
-    // IMGUI_CHECKVERSION();
     ctx = igCreateContext(NULL);
     io  = igGetIO();
 
@@ -52,7 +53,6 @@ void gui_init() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // Setup style
     igStyleColorsDark(NULL);
 }
 
@@ -72,15 +72,18 @@ void gui_update() {
     ImGui_ImplGlfw_NewFrame();
     igNewFrame();
 
-    igBegin("Test", NULL, 0);
-    igText("Test");
-    igButton("Test",(struct ImVec2){0,0});
-    igEnd();
+    if (is_open) {
+        igBegin("Object Colour", &is_open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+        if (igButton("Reset", (struct ImVec2){0,0}))
+            set_colour((vec3){1.0f, 1.0f, 1.0f});
 
-    // // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. 
-    // // Here we just want to make the demo initial state a bit more friendly!
-    // igSetNextWindowPos((struct ImVec2){0,0}, ImGuiCond_FirstUseEver,(struct ImVec2){0,0} ); 
-    igShowDemoWindow(NULL);
+        model.faces[0].color_index = 1;
+        
+        // Edit a color (stored as ~4 floats)
+        igColorEdit4("Color 1", model.palette[0], 0);
+        igColorEdit4("Color 2", model.palette[1], 0);
+        igEnd();
+    }
 }
 
 int main(int argc, char **argv) {
@@ -157,10 +160,12 @@ int main(int argc, char **argv) {
         glfwGetCursorPos(window, &xpos, &ypos);
 
         render_grid(&grid);
-        render_selection(&selection);
         render_model(&model);
 
         gui_render();
+
+        if (!io->WantCaptureMouse)
+            render_selection(&selection);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
