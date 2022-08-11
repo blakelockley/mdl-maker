@@ -30,6 +30,7 @@ char buffer[128];
 int show_fps = 0;
 
 bool is_open = 1;
+bool show_circle_menu = 0;
 
 selection_t selection;
 viewport_t viewport;
@@ -77,13 +78,31 @@ void gui_update() {
         if (igButton("Reset", (struct ImVec2){0,0}))
             set_colour((vec3){1.0f, 1.0f, 1.0f});
 
-        model.faces[0].color_index = 1;
-        
-        // Edit a color (stored as ~4 floats)
+        // // Edit a color (stored as ~4 floats)
         igColorEdit4("Color 1", model.palette[0], 0);
         igColorEdit4("Color 2", model.palette[1], 0);
         igEnd();
     }
+
+
+    if (show_circle_menu) {
+        igBegin("Add Circle", &show_circle_menu, ImGuiWindowFlags_NoCollapse);
+        
+        static int vertices = 8;
+        static float radius = 0.1f;
+
+        igInputInt("Vertices", &vertices, 1, 1, 0);
+        igInputFloat("Radius", &radius, 0.1, 1.0, "%.3f", 0);
+        
+        if (igButton("Add", (struct ImVec2){0,0})) {
+            add_circle(vertices, radius);
+            show_circle_menu = 0;
+        }
+
+        igEnd();
+    }
+
+    igShowDemoWindow(NULL);
 }
 
 int main(int argc, char **argv) {
@@ -104,7 +123,7 @@ int main(int argc, char **argv) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_SAMPLES, 4);
 
-    window = glfwCreateWindow(800, 600, "mdl-maker", NULL, NULL);
+    window = glfwCreateWindow(1200, 800, "mdl-maker", NULL, NULL);
     if (!window) {
         glfwTerminate();
         exit(EXIT_FAILURE);

@@ -7,8 +7,11 @@
 
 #include <stdio.h>
 
+extern struct ImGuiIO* io;
+
 extern int show_fps;
 extern bool is_open;
+extern bool show_circle_menu;
 
 extern camera_t camera;
 extern selection_t selection;
@@ -22,6 +25,9 @@ void normalize_mouse_pos(double *normal_x, double *normal_y, double mouse_x, dou
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+    if (io->WantCaptureMouse)
+        return;
+
     int shift_pressed = (mods & GLFW_MOD_SHIFT);
 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -36,6 +42,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         clear_selection(&selection);
         extend_selection(&selection, index);
     }
+    
+    if (key == GLFW_KEY_B && action == GLFW_PRESS)
+        show_circle_menu = true;
     
     if (key == GLFW_KEY_C && action == GLFW_PRESS)
         is_open = true;
@@ -128,6 +137,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+    if (io->WantCaptureMouse)
+        return;
+    
     static float scroll = 0.0f;
     scroll += xoffset;
     
@@ -135,6 +147,9 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
+    if (io->WantCaptureMouse)
+        return;
+
     int w, h;
     glfwGetWindowSize(window, &w, &h);
 
@@ -147,6 +162,9 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
+    if (io->WantCaptureMouse)
+        return;
+
     int shift_pressed = (mods & GLFW_MOD_SHIFT);
 
     int w, h;
@@ -171,4 +189,15 @@ void set_colour(vec4 colour) {
 
     for (int i = 0; i < model.faces_len; i++)
         model.faces[i].color_index = 0;
+}
+
+void add_circle(int vertices, float radius) {
+    float step = ((M_PI * 2) / vertices);
+
+    for (int i = 0; i < vertices; i++) {
+        float x = cos(step * i) * radius;
+        float y = sin(step * i) * radius;
+
+        add_vertex(&model, (vec3){x, y, 0});
+    }
 }

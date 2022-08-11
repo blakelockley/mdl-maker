@@ -10,5 +10,6 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
 void set_colour(vec3 colour);
+void add_circle(int vertices, float radius);
 
 #endif  // CONTROLS_H
