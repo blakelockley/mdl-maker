@@ -142,7 +142,11 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     
     static float scroll = 0.0f;
     scroll += xoffset;
-    
+
+    camera.zoom += (yoffset * 0.75);
+    if (camera.zoom < 10) camera.zoom = 10;
+    if (camera.zoom > 90) camera.zoom = 90;
+
     set_camera_position(&camera, (vec3){ -sinf(scroll) * 2, camera.pos[1], cosf(scroll) * 2});
 }
 

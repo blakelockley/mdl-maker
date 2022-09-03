@@ -1,4 +1,7 @@
 #include "viewport.h"
+#include "camera.h"
+
+extern camera_t camera;
 
 void set_viewport(viewport_t *viewport, int width, int height) {
     viewport->width = width;
@@ -8,5 +11,6 @@ void set_viewport(viewport_t *viewport, int width, int height) {
 // Getters
 
 void get_projection_matrix(viewport_t *viewport, mat4x4 m) {
-    mat4x4_perspective(m, 45.0f, (float)viewport->width / (float)viewport->height, 0.1f, 100.0f);
+    float fov = camera.zoom * (M_PI / 180); // Radians
+    mat4x4_perspective(m, fov, (float)viewport->width / (float)viewport->height, 0.1f, 100.0f);
 }

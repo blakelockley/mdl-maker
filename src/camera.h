@@ -6,6 +6,8 @@
 struct _camera_t {
     vec3 pos, dir;
     vec3 up, center;
+
+    float zoom;
 };
 
 typedef struct _camera_t camera_t;
