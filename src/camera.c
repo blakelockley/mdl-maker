@@ -9,7 +9,7 @@ void init_camera(camera_t *camera) {
     
     set_camera_position(camera, (vec3){0.0, 1.0f, 2.0f});
 
-    camera->zoom = 45;
+    camera->zoom = CAMERA_ZOOM_INITIAL;
 }
 
 void free_camera(camera_t *camera) {

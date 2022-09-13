@@ -3,6 +3,8 @@
 
 #include "linmath.h"
 
+#define CAMERA_ZOOM_INITIAL 45
+
 struct _camera_t {
     vec3 pos, dir;
     vec3 up, center;
