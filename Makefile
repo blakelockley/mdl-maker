@@ -7,7 +7,7 @@ CFLAGS = -Wall -g -Iincludes
 LFLAGS = libglfw.3.dylib libfreetype.6.dylib cimgui.dylib -framework OpenGL -framework Cocoa -framework IOKit
 
 TARGET = main
-SRCS   = ${wildcard src/*.c}
+SRCS   = ${wildcard src/**/*.c src/*.c}
 
 $(TARGET): $(SRCS)
 	$(CC) $(CFLAGS) $(LFLAGS) $(SRCS) -o $(TARGET)
