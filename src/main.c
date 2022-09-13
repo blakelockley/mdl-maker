@@ -19,9 +19,6 @@
 #include "light.h"
 #include "fps.h"
 #include "file.h"
-#include "quad.h"
-#include "text.h"
-#include "textbox.h"
 
 GLFWwindow *window;
 
@@ -153,9 +150,6 @@ int main(int argc, char **argv) {
     init_light(&light);
     init_grid(&grid);
     init_selection(&selection);
-    init_text();
-    init_quad();
-
     gui_init();
     
     init_model(&model);
@@ -195,8 +189,6 @@ int main(int argc, char **argv) {
     free_light(&light);
     free_camera(&camera);
     free_selection(&selection);
-    free_quad();
-    free_text();
 
     gui_terminate();
 
