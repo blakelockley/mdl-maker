@@ -13,7 +13,7 @@
 #include "camera.h"
 #include "viewport.h"
 #include "grid.h"
-#include "callbacks.h"
+#include "controls.h"
 #include "selection.h"
 #include "model.h"
 #include "light.h"
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         sprintf(buffer, "mdl-maker");
         
         #if DEBUG
-        sprintf(buffer, "%s - [fps %.2f]", buffer, calculate_fps());
+        sprintf(buffer, "%s [fps %.2f]", buffer, calculate_fps());
         #endif
 
         glfwSetWindowTitle(window, buffer);

@@ -48,8 +48,8 @@ void MainMenuBar() {
         
         if (igBeginMenu("View", true))
         {
-            if (igMenuItem_Bool("Reset Zoom", "", false, true)) {
-                camera.zoom = CAMERA_ZOOM_INITIAL;
+            if (igMenuItem_Bool("Reset Camera", "", false, true)) {
+                init_camera(&camera);
             }
             
             igEndMenu();

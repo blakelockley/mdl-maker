@@ -6,8 +6,8 @@
 #define CAMERA_ZOOM_INITIAL 45
 
 struct _camera_t {
-    vec3 pos, dir;
-    vec3 up, center;
+    vec3 pos, dir, up;
+    vec3 orbit;
 
     float zoom;
 };
@@ -17,11 +17,13 @@ typedef struct _camera_t camera_t;
 void init_camera(camera_t *camera);
 void free_camera(camera_t *camera);
 
-// Setters
-void set_camera_position(camera_t *camera, vec3 v);
+// Other stuffs
+void update_orbit(camera_t *camera, float delta_x, float delta_y);
 
-// Getters
+// Matrices
 void get_view_matrix(camera_t *camera, mat4x4 m);
-void get_camera_heading(camera_t *camera, vec3 r);
 
 #endif  // CAMERA_H
+
+// TODO: Merge this with viewport so camera is soley responsible for matrcies
+//   OR: Have a new file/struct responsible for matrices
