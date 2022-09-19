@@ -19,13 +19,13 @@
 #include "light.h"
 #include "fps.h"
 #include "file.h"
+#include "gui.h"
 
 GLFWwindow *window;
 
 char buffer[128];
 
 #define DEBUG 1
-#include "gui/gui.h"
 selection_t selection;
 viewport_t viewport;
 camera_t camera;
