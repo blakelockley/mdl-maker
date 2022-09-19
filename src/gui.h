@@ -4,10 +4,6 @@
 #include <stdbool.h>
 #include "glfw.h"
 
-// Flags
-
-bool show_menu;
-
 // ImGui structs
 
 struct ImGuiContext* ctx;
@@ -19,7 +15,5 @@ void gui_init(GLFWwindow *window);
 void gui_terminate();
 void gui_update();
 void gui_render();
-
-
 
 #endif  // GUI_H

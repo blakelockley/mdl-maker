@@ -4,8 +4,8 @@
 #include "glfw.h"
 #include "linmath.h"
 
-#include "../camera.h"
-#include "../model.h"
+#include "camera.h"
+#include "model.h"
 
 #define SHOW_DEMO 1
 
@@ -89,6 +89,23 @@ void AddVertexMenu() {
     }
 }
 
+void DebugWindow() {
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration 
+        | ImGuiWindowFlags_AlwaysAutoResize
+        | ImGuiWindowFlags_NoSavedSettings
+        | ImGuiWindowFlags_NoFocusOnAppearing
+        | ImGuiWindowFlags_NoNav 
+        | ImGuiWindowFlags_NoMove;
+
+    igSetNextWindowBgAlpha(0.35f);
+    if (igBegin("Camera", NULL, flags)) {
+        igText("camera.pos %.2f, %.2f, %.2f", camera.pos[0], camera.pos[1], camera.pos[2]);
+        igText("camera.dir %.2f, %.2f, %.2f", camera.dir[0], camera.dir[1], camera.dir[2]);
+        igText("camera.len %f", vec3_len(camera.pos));
+        igEnd();
+    }
+}
+
 // IMGui
 
 void gui_init(GLFWwindow *window) {
@@ -121,6 +138,7 @@ void gui_update() {
     // Custom GUI
 
     MainMenuBar();
+    DebugWindow();
 
     #if SHOW_DEMO
     igShowDemoWindow(NULL);
