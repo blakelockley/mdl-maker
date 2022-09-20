@@ -96,12 +96,10 @@ int main(int argc, char **argv) {
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
-
         render_grid(&grid);
         render_model(&model);
-
+        render_selection(&selection);
+        
         gui_render();
 
         glfwSwapBuffers(window);
