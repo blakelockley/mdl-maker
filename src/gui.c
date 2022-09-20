@@ -13,9 +13,7 @@ extern camera_t camera;
 extern model_t model;
 
 bool show_add_vertex;
-
-void MainMenuBar();
-void AddVertexMenu();
+bool show_add_plane;
 
 // GUI
 
@@ -48,7 +46,7 @@ void MainMenuBar() {
         
         if (igBeginMenu("View", true))
         {
-            if (igMenuItem_Bool("Reset Camera", "", false, true)) {
+            if (igMenuItem_Bool("Reset Camera", NULL, false, true)) {
                 init_camera(&camera);
             }
             
@@ -60,14 +58,14 @@ void MainMenuBar() {
             if (igMenuItem_Bool("Add Vertex", "Ctrl+A", show_add_vertex, true))
                 show_add_vertex = !show_add_vertex;
             
+            if (igMenuItem_Bool("Add Plane", NULL, show_add_plane, true))
+                show_add_plane = !show_add_plane;
+            
             igEndMenu();
         }
     
         igEndMainMenuBar();
     }
-
-    if (show_add_vertex)
-        AddVertexMenu();
 }
 
 void AddVertexMenu() {
@@ -83,6 +81,47 @@ void AddVertexMenu() {
             
             vec3_set(pos, 0.0f, 0.0f, 0.0f);
             show_add_vertex = false;
+        }
+
+        igEnd();
+    }
+}
+
+void AddPlaneMenu() {
+    static vec3 pos = (vec3){ 0.0f, 0.5f, 0.0f};
+    static float side = 0.5f;
+    
+    if (igBegin("Add Plane", &show_add_plane, ImGuiWindowFlags_NoCollapse)) {
+        igText("Position");
+        igInputFloat("Position X", &pos[0], 0.1, 1.0, "%.3f", 0);
+        igInputFloat("Position Y", &pos[1], 0.1, 1.0, "%.3f", 0);
+        igInputFloat("Position Z", &pos[2], 0.1, 1.0, "%.3f", 0);
+        
+        igText("Side Length");
+        igInputFloat("Side Length", &side, 0.1, 1.0, "%.3f", 0);
+            
+        if (igButton("Add", (struct ImVec2) {0,0})) {
+            vec3 vertex;
+            uint32_t vertices[4];
+            
+            vec3_add(vertex, pos, (vec3){side, 0.0f, side});
+            vertices[0] = add_vertex(&model, vertex);
+            
+            vec3_add(vertex, pos, (vec3){side, 0.0f, -side});
+            vertices[1] = add_vertex(&model, vertex);
+            
+            vec3_add(vertex, pos, (vec3){-side, 0.0f, -side});
+            vertices[2] = add_vertex(&model, vertex);
+            
+            vec3_add(vertex, pos, (vec3){-side, 0.0f, side});
+            vertices[3] = add_vertex(&model, vertex);
+
+            add_face(&model, vertices, 4);
+            
+            vec3_set(pos, 0.0f, 0.0f, 0.0f);
+            side = 0.5f;
+            
+            show_add_plane = false;
         }
 
         igEnd();
@@ -139,6 +178,12 @@ void gui_update() {
 
     MainMenuBar();
     DebugWindow();
+
+    if (show_add_vertex)
+        AddVertexMenu();
+
+    if (show_add_plane)
+        AddPlaneMenu();
 
     #if SHOW_DEMO
     igShowDemoWindow(NULL);
