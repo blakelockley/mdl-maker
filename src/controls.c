@@ -6,9 +6,13 @@
 #include "macros.h"
 #include "camera.h"
 #include "selection.h"
+#include "model.h"
 
 extern camera_t camera;
 extern selection_t selection;
+extern model_t model;
+
+extern uint8_t mode;
 
 extern struct ImGuiIO* io;
 
@@ -74,5 +78,20 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     if (io->WantCaptureMouse)
         return;
 
-    update_depth(&camera, yoffset);
+    if (mode == MODE_SELECT)
+        update_depth(&camera, yoffset);
+
+    float delta = yoffset * 0.01f;
+
+    vec3 vec_delta;
+    vec3_scale(vec_delta, selection.control_axis, delta);
+
+    if (mode == MODE_TRANSLATE)
+        move_vertices(&model, selection.indices, selection.len, vec_delta);
+
+    if (mode == MODE_ROTATE)
+        rotate_vertices(&model, selection.indices, selection.len, mode_axis, delta);
+
+    if (mode == MODE_SCALE)
+        scale_vertices(&model, selection.indices, selection.len, delta);
 }

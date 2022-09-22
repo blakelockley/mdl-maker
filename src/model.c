@@ -11,6 +11,8 @@
 #include "normal_renderer.h"
 #include "wireframe_renderer.h"
 
+#include "gui.h"
+
 extern selection_t selection;
 extern camera_t camera;
 extern viewport_t viewport;
@@ -118,7 +120,46 @@ void scale_vertices(model_t *model, uint32_t *indices, uint32_t len, float facto
     for (int i = 0; i < len; i++) {
         vec3 vector;
         vec3_sub(vector, model->vertices[indices[i]], midpoint);
-        vec3_scale(vector, vector, factor);
+        vec3_scale(vector, vector, 1 + factor);
+        vec3_add(model->vertices[indices[i]], midpoint, vector);
+    }
+}
+
+void rotate_vertices(model_t *model, uint32_t *indices, uint32_t len, uint8_t axis, float theta) {
+    vec3 midpoint;
+    calculate_midpoint(model, midpoint, indices, len);
+
+    mat4x4 rotation;
+    mat4x4_identity(rotation);
+
+    switch (axis)
+    {
+    case MODE_AXIS_X:
+        mat4x4_rotation_x(rotation, theta);
+        break;
+    
+    case MODE_AXIS_Y:
+        mat4x4_rotation_y(rotation, theta);
+        break;
+    
+    case MODE_AXIS_Z:
+        mat4x4_rotation_z(rotation, theta);
+        break;
+    
+    default:
+        return;
+    }
+
+    for (int i = 0; i < len; i++) {
+        vec3 vector;
+        vec3_sub(vector, model->vertices[indices[i]], midpoint);
+        
+        vec4 v, r;
+        vec4_from_vec3(v, vector, 1.0f);
+        mat4x4_mul_vec4(r, rotation, v);
+
+        vec3_from_vec4(vector, r);
+        
         vec3_add(model->vertices[indices[i]], midpoint, vector);
     }
 }

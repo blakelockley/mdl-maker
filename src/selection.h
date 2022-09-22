@@ -15,6 +15,12 @@ struct _selection_t {
  
     GLuint shader;
     GLuint vao, vbo;
+
+    vec3 control_origin;
+    vec3 control_axis;
+ 
+    GLuint control_shader;
+    GLuint control_vao, control_vbo;
 };
 
 typedef struct _selection_t selection_t;
@@ -30,5 +36,7 @@ void extend_selection(selection_t *select, uint32_t index);
 void handle_selection_start(selection_t *select, double x, double y);
 void handle_selection_move(selection_t *select, double x, double y);
 void handle_selection_end(selection_t *select, double x, double y, int extend_selection);
+
+void update_control_axis(selection_t *selection);
 
 #endif  // SELECT_H

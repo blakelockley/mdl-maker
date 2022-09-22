@@ -64,6 +64,7 @@ void render_model(model_t *model);
 uint32_t add_vertex(model_t *model, vec3 vertex);
 void move_vertices(model_t *model, uint32_t *indices, uint32_t len, vec3 delta);
 void scale_vertices(model_t *model, uint32_t *indices, uint32_t len, float factor);
+void rotate_vertices(model_t *model, uint32_t *indices, uint32_t len, uint8_t axis, float theta);
 void duplicate_vertices(model_t *model, uint32_t *indices, uint32_t len);
 void remove_vertices(model_t *model, uint32_t *indices, uint32_t len);
 

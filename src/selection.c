@@ -13,6 +13,8 @@ extern viewport_t viewport;
 extern model_t model;
 
 void update_selection(selection_t *selection);
+void update_control_axis(selection_t *selection);
+void get_selection_midpoint(selection_t *selection, vec3 midpoint);
 
 void init_selection(selection_t *selection) {
     selection->is_visible = 0;
@@ -33,8 +35,22 @@ void init_selection(selection_t *selection) {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vec2), (void *)0);  // Attrib pointer for currently bound buffer
 
     selection->shader = load_shader("shaders/gui.vert", "shaders/gui.frag");
-}
 
+    glGenVertexArrays(1, &selection->control_vao);
+    glBindVertexArray(selection->control_vao);
+
+    glGenBuffers(1, &selection->control_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, selection->control_vbo);
+    
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void *)0);  // Attrib pointer for currently bound buffer
+
+    selection->control_shader = load_shader("shaders/static.vert", "shaders/static.frag");
+
+    vec3_set(selection->control_origin, 0.0f, 1.0f, 2.0f);
+    vec3_set(selection->control_axis, 1.0f, 0.0f, 0.0f);
+    update_control_axis(selection);
+}
 
 void free_selection(selection_t *selection) {
     glDeleteVertexArrays(1, &selection->vao);
@@ -42,12 +58,44 @@ void free_selection(selection_t *selection) {
 }
 
 void render_selection(selection_t *selection) {
+    glUseProgram(selection->control_shader);
+
+    mat4x4 model, view, projection;
+    mat4x4_identity(model);
+    get_view_matrix(&camera, view);
+    get_projection_matrix(&viewport, projection);
+    
+    GLint model_loc = glGetUniformLocation(selection->control_shader, "model");
+    glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)model);
+
+    GLint view_loc = glGetUniformLocation(selection->control_shader, "view");
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)view);
+
+    GLint projection_loc = glGetUniformLocation(selection->control_shader, "projection");
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
+
+    glDepthFunc(GL_ALWAYS);
+    glBindVertexArray(selection->control_vao);
+
+    GLint color_loc = glGetUniformLocation(selection->control_shader, "color");
+    glUniform3f(color_loc, 1.0f, 0.0f, 1.0f);
+
+    glPointSize(10.0f);
+    glDrawArrays(GL_POINTS, 0, 1);
+
+    color_loc = glGetUniformLocation(selection->control_shader, "color");
+    glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
+    glDrawArrays(GL_LINES, 1, 2);
+
+    glDepthFunc(GL_LEQUAL);
+    glBindVertexArray(0);
+    
     if (!selection->is_visible)
         return;
 
     glUseProgram(selection->shader);
 
-    GLint color_loc = glGetUniformLocation(selection->shader, "color");
+    color_loc = glGetUniformLocation(selection->shader, "color");
     glUniform3f(color_loc, 0.8f, 0.4f, 0.2f);
 
     glBindVertexArray(selection->vao);
@@ -114,6 +162,9 @@ void handle_selection_end(selection_t *selection, double x, double y, int extend
     }
     
     update_selection(selection);
+
+    get_selection_midpoint(selection, selection->control_origin);
+    update_control_axis(selection);
 }
 
 void get_selection_midpoint(selection_t *selection, vec3 midpoint) {
@@ -150,4 +201,23 @@ void update_selection(selection_t *selection) {
 
     glBindBuffer(GL_ARRAY_BUFFER, selection->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+void update_control_axis(selection_t *selection) {
+    vec3 control_vertices[3];
+    vec3_copy(control_vertices[0], selection->control_origin);
+
+    vec3 axis_a;
+    vec3_scale(axis_a, selection->control_axis, 100.0f);
+    vec3_add(control_vertices[1], selection->control_origin, axis_a);
+
+    vec3 axis_b;
+    vec3_scale(axis_b, selection->control_axis, -100.0f);
+    vec3_add(control_vertices[2], selection->control_origin, axis_b);
+
+    glBindBuffer(GL_ARRAY_BUFFER, selection->control_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * 3, control_vertices, GL_DYNAMIC_DRAW);
 }
