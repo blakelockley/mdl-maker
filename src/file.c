@@ -68,10 +68,7 @@ void open_file(char *filename, model_t *model) {
         }
     
         fread(buffer, sizeof(uint32_t), face_len, file);
-        face_t *face = load_face(model, (uint32_t *)buffer, face_len);
-
-        fread(buffer, sizeof(uint8_t), 1, file);
-        face->color_index = *(uint8_t *)&buffer[0];
+        load_face(model, (uint32_t *)buffer, face_len);
     }
 
     // Palette
@@ -93,7 +90,6 @@ void open_file(char *filename, model_t *model) {
     }
 
     fread(buffer, sizeof(vec3), len, file);
-    load_palette(model, (vec3 *)buffer, len);
 
     fclose(file);
 }
@@ -125,16 +121,9 @@ void save_file(char *filename, model_t *model) {
         fwrite(&face->len, sizeof(uint32_t), 1, file);
         fwrite(face->indices, sizeof(uint32_t), face->len, file);
         
-        // Color index
-        fwrite(&face->color_index, sizeof(uint8_t), 1, file);
+        // Color
+        fwrite(&face->color, sizeof(float), 3, file);
     }
-
-    section = SECTION_PALETTE;
-    fwrite(&section, sizeof(uint8_t), 1, file);
-    fwrite(&model->palette_len, sizeof(uint8_t), 1, file);
-
-    for (int i = 0; i < model->palette_len; i++)
-        fwrite(model->palette[i], sizeof(float), 3, file);
 
     fclose(file);
 }

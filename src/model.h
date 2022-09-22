@@ -29,15 +29,12 @@ struct _face_t
     vec3 midpoint;
     vec3 normal;
 
-    uint8_t color_index;
+    vec3 color;
 };
 
 typedef struct _face_t face_t;
 
 struct _model_t {
-    vec3 palette[8];
-    uint8_t palette_len;
-
     vec3* vertices;
     uint32_t vertices_cap;
     uint32_t vertices_len;
@@ -79,7 +76,6 @@ void set_render_mode(model_t *model, uint8_t mode);
 void toggle_render_mode(model_t *model, uint8_t mode);
 
 void load_vertices(model_t *model, vec3 *vertices, uint32_t len);
-void load_palette(model_t *model, vec3 *colors, uint8_t len);
 face_t *load_face(model_t *model, uint32_t *indices, uint32_t len);
 
 #endif  // MODEL_H

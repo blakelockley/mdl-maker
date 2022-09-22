@@ -37,16 +37,6 @@ void init_model(model_t *model) {
     model->faces_cap = 10;
     model->faces_len = 0;
 
-    model->palette_len = 8;
-    vec3_set(model->palette[0], 1.0f, 0.0f, 0.0f);
-    vec3_set(model->palette[1], 0.0f, 1.0f, 0.0f);
-    vec3_set(model->palette[2], 0.0f, 0.0f, 1.0f);
-    vec3_set(model->palette[3], 1.0f, 1.0f, 0.0f);
-    vec3_set(model->palette[4], 1.0f, 0.0f, 1.0f);
-    vec3_set(model->palette[5], 0.0f, 1.0f, 1.0f);
-    vec3_set(model->palette[6], 1.0f, 1.0f, 1.0f);
-    vec3_set(model->palette[7], 0.0f, 0.0f, 0.0f);
-
     model->face_renderer = (face_renderer_t *)malloc(sizeof(face_renderer_t));
     init_face_renderer(model->face_renderer);
 
@@ -162,6 +152,8 @@ void rotate_vertices(model_t *model, uint32_t *indices, uint32_t len, uint8_t ax
         
         vec3_add(model->vertices[indices[i]], midpoint, vector);
     }
+
+    update_model(model);
 }
 
 void duplicate_vertices(model_t *model, uint32_t *indices, uint32_t len) {
@@ -267,8 +259,8 @@ face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
     
     vec3_copy(face->midpoint, midpoint);
     vec3_copy(face->normal, normal);
-
-    face->color_index = rand() % model->palette_len;
+    
+    vec3_copy(face->color, (vec3){0.1f, 0.2f, 0.8f});
 
     return face;
 }
@@ -557,11 +549,6 @@ void load_vertices(model_t *model, vec3 *vertices, uint32_t len) {
 
     for (int i = 0; i < len; i++)
         vec3_copy(model->vertices[i], vertices[i]);
-}
-
-void load_palette(model_t *model, vec3 *palette, uint8_t len) {    
-    for (int i = 0; i < len; i++)
-        vec3_copy(model->palette[i], palette[i]);
 }
 
 // Add face without user-relative checks.

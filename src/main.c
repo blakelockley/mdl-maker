@@ -21,17 +21,18 @@
 #include "file.h"
 #include "gui.h"
 
+#define DEBUG 1
+
 GLFWwindow *window;
 
-char buffer[128];
-
-#define DEBUG 1
 selection_t selection;
 viewport_t viewport;
 camera_t camera;
 light_t light;
 grid_t grid;
 model_t model;
+
+char buffer[128];
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -81,13 +82,11 @@ int main(int argc, char **argv) {
     init_model(&model);
 
     while (!glfwWindowShouldClose(window)) {
-        sprintf(buffer, "mdl-maker");
-        
         #if DEBUG
+        sprintf(buffer, "mdl-maker");
         sprintf(buffer, "%s [fps %.2f]", buffer, calculate_fps());
-        #endif
-
         glfwSetWindowTitle(window, buffer);
+        #endif
         
         gui_update();
         

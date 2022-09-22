@@ -59,17 +59,17 @@ void render_model_faces(face_renderer_t *renderer, model_t *model) {
 
             vec3_copy(positions[vi], model->vertices[indices[0]]);
             vec3_copy(normals[vi], model->faces[i].normal);
-            vec3_copy(colors[vi], model->palette[model->faces[i].color_index]);
+            vec3_copy(colors[vi], model->faces[i].color);
             vi++;
             
             vec3_copy(positions[vi], model->vertices[indices[j - 1]]);
             vec3_copy(normals[vi], model->faces[i].normal);
-            vec3_copy(colors[vi], model->palette[model->faces[i].color_index]);
+            vec3_copy(colors[vi], model->faces[i].color);
             vi++;
             
             vec3_copy(positions[vi], model->vertices[indices[j - 0]]);
             vec3_copy(normals[vi], model->faces[i].normal);
-            vec3_copy(colors[vi], model->palette[model->faces[i].color_index]);
+            vec3_copy(colors[vi], model->faces[i].color);
             vi++;
         }
     }
