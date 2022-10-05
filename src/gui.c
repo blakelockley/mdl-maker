@@ -7,6 +7,8 @@
 #include "camera.h"
 #include "model.h"
 #include "selection.h"
+#include "primitives.h"
+#include "macros.h"
 
 #define SHOW_DEMO 1
 
@@ -17,6 +19,7 @@ extern selection_t selection;
 bool show_add_vertex;
 bool show_add_plane;
 bool show_add_disc;
+bool show_add_icosphere;
 
 void set_mode_axis(uint8_t axis) {
     mode_axis = axis;
@@ -91,6 +94,9 @@ void MainMenuBar() {
             if (igMenuItem_Bool("Add Disc", NULL, show_add_disc, true))
                 show_add_disc = !show_add_disc;
             
+            if (igMenuItem_Bool("Add Icosphere", NULL, show_add_icosphere, true))
+                show_add_icosphere = !show_add_icosphere;
+            
             igEndMenu();
         }
         
@@ -153,6 +159,7 @@ void AddVertexMenu() {
 void AddPlaneMenu() {
     static vec3 pos = (vec3){ 0.0f, 0.5f, 0.0f};
     static float side = 0.5f;
+    static int n_subdivisions = 0;
     
     if (igBegin("Add Plane", &show_add_plane, ImGuiWindowFlags_NoCollapse)) {
         igText("Position");
@@ -162,28 +169,13 @@ void AddPlaneMenu() {
         
         igText("Side Length");
         igInputFloat("Side Length", &side, 0.1, 1.0, "%.3f", 0);
+        
+        igText("Subdivisions");
+        igInputInt("Subdivisions", &n_subdivisions, 1, 2, 0);
+        n_subdivisions = MAX(n_subdivisions, 0);
             
         if (igButton("Add", (struct ImVec2) {0,0})) {
-            vec3 vertex;
-            uint32_t vertices[4];
-            
-            vec3_add(vertex, pos, (vec3){side, 0.0f, side});
-            vertices[0] = add_vertex(&model, vertex);
-            
-            vec3_add(vertex, pos, (vec3){side, 0.0f, -side});
-            vertices[1] = add_vertex(&model, vertex);
-            
-            vec3_add(vertex, pos, (vec3){-side, 0.0f, -side});
-            vertices[2] = add_vertex(&model, vertex);
-            
-            vec3_add(vertex, pos, (vec3){-side, 0.0f, side});
-            vertices[3] = add_vertex(&model, vertex);
-
-            add_face(&model, vertices, 4);
-            
-            vec3_set(pos, 0.0f, 0.0f, 0.0f);
-            side = 0.5f;
-            
+            build_plane(&model, pos, side, n_subdivisions);
             show_add_plane = false;
         }
 
@@ -235,6 +227,37 @@ void AddDiscMenu() {
             }
 
             show_add_disc = false;
+        }
+
+        igEnd();
+    }
+}
+
+void AddIcosphereMenu() {
+    static vec3 pos = (vec3){ 0.0f, 0.5f, 0.0f};
+    static float radius = 0.5f;
+    static int order = 0;
+    
+    if (igBegin("Add Icosphere", &show_add_icosphere, ImGuiWindowFlags_NoCollapse)) {
+        igText("Position");
+        igInputFloat("Position X", &pos[0], 0.1, 1.0, "%.3f", 0);
+        igInputFloat("Position Y", &pos[1], 0.1, 1.0, "%.3f", 0);
+        igInputFloat("Position Z", &pos[2], 0.1, 1.0, "%.3f", 0);
+        
+        igText("Radius");
+        igInputFloat("Radius", &radius, 0.1, 1.0, "%.3f", 0);
+        
+        igText("Num. of Recusions");
+        igInputInt("Num. of Recusions", &order, 1, 2, 0);
+            
+        if (igButton("Add", (struct ImVec2) {0,0})) {
+            build_icosphere(&model, pos, radius, order);
+            
+            // reset menu
+            vec3_set(pos, 0.0f, 0.0f, 0.0f);
+            radius = 0.5f;
+            order = 0.0f;
+            show_add_icosphere = false;
         }
 
         igEnd();
@@ -301,6 +324,9 @@ void gui_update() {
 
     if (show_add_disc)
         AddDiscMenu();
+
+    if (show_add_icosphere)
+        AddIcosphereMenu();
 
     #if SHOW_DEMO
     igShowDemoWindow(NULL);

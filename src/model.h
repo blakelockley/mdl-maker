@@ -65,9 +65,15 @@ void rotate_vertices(model_t *model, uint32_t *indices, uint32_t len, uint8_t ax
 void duplicate_vertices(model_t *model, uint32_t *indices, uint32_t len);
 void remove_vertices(model_t *model, uint32_t *indices, uint32_t len);
 
+// TODO: Return face index instead to account for re-allocation
+
 face_t *add_face(model_t *model, uint32_t *indices, uint32_t len);
+face_t *add_face_tri(model_t *model, uint32_t ia, uint32_t ib, uint32_t ic);
+face_t *add_face_quad(model_t *model, uint32_t ia, uint32_t ib, uint32_t ic, uint32_t id);
+
 face_t *extend_edge(model_t *model, uint32_t *indices, uint32_t len);
 face_t *extend_face(model_t *model, uint32_t *indices, uint32_t len);
+
 
 face_t *get_face(model_t *model, uint32_t *indices, uint32_t len);
 void flip_face(model_t *model, face_t *face);

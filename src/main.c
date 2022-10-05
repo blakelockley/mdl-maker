@@ -20,6 +20,7 @@
 #include "fps.h"
 #include "file.h"
 #include "gui.h"
+#include "primitives.h"
 
 #define DEBUG 1
 
@@ -80,6 +81,8 @@ int main(int argc, char **argv) {
     init_grid(&grid);
     init_selection(&selection);
     init_model(&model);
+
+    build_icosphere(&model, (vec3){0.0f, 0.5f, 0.0f}, 0.5f, 1);
 
     while (!glfwWindowShouldClose(window)) {
         #if DEBUG

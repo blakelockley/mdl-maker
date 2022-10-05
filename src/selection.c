@@ -165,6 +165,10 @@ void handle_selection_end(selection_t *selection, double x, double y, int extend
 
     get_selection_midpoint(selection, selection->control_origin);
     update_control_axis(selection);
+
+    for (int i = 0; i < selection->len; i++)
+        printf("%d, ", selection->indices[i]);
+    printf("\n");
 }
 
 void get_selection_midpoint(selection_t *selection, vec3 midpoint) {

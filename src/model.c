@@ -29,12 +29,12 @@ void print_vertices(model_t *model);
 void print_faces(model_t *model);
 
 void init_model(model_t *model) {
-    model->vertices = (vec3*)malloc(sizeof(vec3) * 10);
-    model->vertices_cap = 10;
+    model->vertices = (vec3*)malloc(sizeof(vec3) * 1024);
+    model->vertices_cap = 1024;
     model->vertices_len = 0;
 
-    model->faces = (face_t*)malloc(sizeof(face_t) * 10);
-    model->faces_cap = 10;
+    model->faces = (face_t*)malloc(sizeof(face_t) * 1024);
+    model->faces_cap = 1024;
     model->faces_len = 0;
 
     model->face_renderer = (face_renderer_t *)malloc(sizeof(face_renderer_t));
@@ -49,7 +49,7 @@ void init_model(model_t *model) {
     model->wireframe_renderer = (wireframe_renderer_t *)malloc(sizeof(wireframe_renderer_t));
     init_wireframe_renderer(model->wireframe_renderer);
 
-    model->render_mode = RENDER_MODE_VERTICES | RENDER_MODE_FACES;
+    model->render_mode = RENDER_MODE_VERTICES | RENDER_MODE_FACES | RENDER_MODE_WIREFRAME | RENDER_MODE_NORMALS;
 }
 
 void free_model(model_t *model) {
@@ -237,6 +237,8 @@ face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
     vec3 normal;
     calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
 
+    // TODO: Remove camera sorting logic from this module
+
     vec3 camera_to_face;
     vec3_sub(camera_to_face, midpoint, camera.pos);
 
@@ -245,6 +247,64 @@ face_t *add_face(model_t *model, uint32_t *indices, uint32_t len) {
         vec3_scale(normal, normal, -1.0f);
 
     sort_by_angle(model, midpoint, normal, indices, len);
+
+    if (model->faces_len == model->faces_cap) {
+        model->faces_cap *= 2;
+        model->faces = (face_t*)realloc(model->faces, sizeof(face_t) * model->faces_cap);
+    }
+
+    face_t *face = &model->faces[model->faces_len++];
+    face->len = len;
+    
+    face->indices = (uint32_t*)malloc(sizeof(uint32_t) * len);
+    memcpy(face->indices, indices, sizeof(uint32_t) * len);
+    
+    vec3_copy(face->midpoint, midpoint);
+    vec3_copy(face->normal, normal);
+    
+    vec3_copy(face->color, (vec3){0.1f, 0.2f, 0.8f});
+
+    return face;
+}
+
+face_t *add_face_tri(model_t *model, uint32_t ia, uint32_t ib, uint32_t ic) {
+    const uint32_t len = 3;
+    uint32_t indices[len] = { ia, ib, ic};
+
+    vec3 midpoint;
+    calculate_midpoint(model, midpoint, indices, len);
+
+    vec3 normal;
+    calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
+
+    if (model->faces_len == model->faces_cap) {
+        model->faces_cap *= 2;
+        model->faces = (face_t*)realloc(model->faces, sizeof(face_t) * model->faces_cap);
+    }
+
+    face_t *face = &model->faces[model->faces_len++];
+    face->len = len;
+    
+    face->indices = (uint32_t*)malloc(sizeof(uint32_t) * len);
+    memcpy(face->indices, indices, sizeof(uint32_t) * len);
+    
+    vec3_copy(face->midpoint, midpoint);
+    vec3_copy(face->normal, normal);
+    
+    vec3_copy(face->color, (vec3){0.7f, 0.3f, 0.2f});
+
+    return face;
+}
+
+face_t *add_face_quad(model_t *model, uint32_t ia, uint32_t ib, uint32_t ic, uint32_t id) {
+    const uint32_t len = 4;
+    uint32_t indices[len] = { ia, ib, ic, id};
+
+    vec3 midpoint;
+    calculate_midpoint(model, midpoint, indices, len);
+
+    vec3 normal;
+    calculate_normal(normal, model->vertices[indices[0]], model->vertices[indices[1]], model->vertices[indices[2]]);
 
     if (model->faces_len == model->faces_cap) {
         model->faces_cap *= 2;
