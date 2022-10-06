@@ -78,8 +78,12 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     if (io->WantCaptureMouse)
         return;
 
-    if (mode == MODE_SELECT)
-        update_depth(&camera, yoffset);
+    if (mode == MODE_SELECT) {
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+            update_depth(&camera, yoffset);
+        else
+            update_orbit(&camera, xoffset * 2.0f, yoffset * 2.0f);
+    }
 
     float delta = yoffset * 0.01f;
 
@@ -94,4 +98,5 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 
     if (mode == MODE_SCALE)
         scale_vertices(&model, selection.indices, selection.len, delta);
+
 }
