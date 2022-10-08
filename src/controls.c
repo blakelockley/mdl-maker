@@ -80,23 +80,13 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 
     if (mode == MODE_SELECT) {
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-            update_depth(&camera, yoffset);
-        else
             update_orbit(&camera, xoffset * 2.0f, yoffset * 2.0f);
+        else
+            update_depth(&camera, yoffset);
     }
 
     float delta = yoffset * 0.01f;
 
     vec3 vec_delta;
     vec3_scale(vec_delta, selection.control_axis, delta);
-
-    if (mode == MODE_TRANSLATE)
-        move_vertices(&model, selection.indices, selection.len, vec_delta);
-
-    if (mode == MODE_ROTATE)
-        rotate_vertices(&model, selection.indices, selection.len, mode_axis, delta);
-
-    if (mode == MODE_SCALE)
-        scale_vertices(&model, selection.indices, selection.len, delta);
-
 }
