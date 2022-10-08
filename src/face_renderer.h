@@ -12,7 +12,6 @@ struct _face_renderer_t
 
 typedef struct _face_renderer_t face_renderer_t;
 
-
 void init_face_renderer(face_renderer_t *renderer);
 void free_face_renderer(face_renderer_t *renderer);
 

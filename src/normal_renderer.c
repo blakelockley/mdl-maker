@@ -20,13 +20,14 @@ void init_normal_renderer(normal_renderer_t *renderer) {
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);
+
+    glBindVertexArray(0);
 }
 
 void free_normal_renderer(normal_renderer_t *renderer) {
     glDeleteVertexArrays(1, &renderer->vao);
     glDeleteBuffers(1, renderer->vbo);
 }
-
 
 void render_model_normals(normal_renderer_t *renderer, model_t *model) {
     vec3 vertices[model->faces_len * 2];
@@ -63,7 +64,8 @@ void render_model_normals(normal_renderer_t *renderer, model_t *model) {
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
      
     GLint color_loc = glGetUniformLocation(renderer->shader, "color");
-    
     glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
+    
     glDrawArrays(GL_LINES, 0, model->faces_len * 2);
+    glBindVertexArray(0);
 }

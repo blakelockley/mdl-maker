@@ -1,4 +1,4 @@
-#include "wireframe_renderer.h"
+#include "edge_renderer.h"
 #include "shader.h"
 #include "camera.h"
 #include "viewport.h"
@@ -8,15 +8,14 @@
 extern camera_t camera;
 extern viewport_t viewport;
 extern light_t light;
-extern selection_t selection;
 
-void init_wireframe_renderer(wireframe_renderer_t *renderer) {
+void init_edge_renderer(edge_renderer_t *renderer) {
     renderer->shader = load_shader("shaders/static.vert", "shaders/static.frag");
 
     glGenVertexArrays(1, &renderer->vao);
     glBindVertexArray(renderer->vao);
 
-    glGenBuffers(2, renderer->vbo);
+    glGenBuffers(1, renderer->vbo);
     
     // Positions
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
@@ -24,14 +23,16 @@ void init_wireframe_renderer(wireframe_renderer_t *renderer) {
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);
+
+    glBindVertexArray(0);
 }
 
-void free_wireframe_renderer(wireframe_renderer_t *renderer) {
+void free_edge_renderer(edge_renderer_t *renderer) {
     glDeleteVertexArrays(1, &renderer->vao);
     glDeleteBuffers(1, renderer->vbo);
 }
 
-void render_model_wireframe(wireframe_renderer_t *renderer, model_t *model) {    
+void render_model_edges(edge_renderer_t *renderer, model_t *model) {    
     uint32_t total_vertices = 0;
     for (int i = 0; i < model->faces_len; i++)
         total_vertices += model->faces[i].len * 2; // n -> * 2
@@ -76,7 +77,8 @@ void render_model_wireframe(wireframe_renderer_t *renderer, model_t *model) {
     glUniform3fv(light_color_loc, 1, (float*)light.color);
      
     GLint color_loc = glGetUniformLocation(renderer->shader, "color");
-    glUniform3f(color_loc, 0.95f, 0.95f, 0.95f);
+    glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
     
     glDrawArrays(GL_LINES, 0, total_vertices);
+    glBindVertexArray(0);
 }

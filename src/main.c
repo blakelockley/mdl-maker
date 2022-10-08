@@ -21,6 +21,10 @@
 #include "file.h"
 #include "gui.h"
 #include "primitives.h"
+#include "face_renderer.h"
+#include "vertex_renderer.h"
+#include "edge_renderer.h"
+#include "normal_renderer.h"
 
 #define DEBUG 1
 
@@ -82,6 +86,18 @@ int main(int argc, char **argv) {
     init_selection(&selection);
     init_model(&model);
 
+    face_renderer_t face_renderer;
+    init_face_renderer(&face_renderer);
+
+    vertex_renderer_t vertex_renderer;
+    init_vertex_renderer(&vertex_renderer);
+
+    edge_renderer_t edge_renderer;
+    init_edge_renderer(&edge_renderer);
+
+    normal_renderer_t normal_renderer;
+    init_normal_renderer(&normal_renderer);
+
     build_icosphere(&model, (vec3){0.0f, 0.5f, 0.0f}, 0.5f, 1);
 
     while (!glfwWindowShouldClose(window)) {
@@ -99,14 +115,24 @@ int main(int argc, char **argv) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         render_grid(&grid);
-        render_model(&model);
-        render_selection(&selection);
+
+        render_model_vertices(&vertex_renderer, &model);
+        render_model_edges(&edge_renderer, &model);
+        render_model_faces(&face_renderer, &model);
+        render_model_normals(&normal_renderer, &model);
         
+        render_selection(&selection);
+
         gui_render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    free_vertex_renderer(&vertex_renderer);
+    free_edge_renderer(&edge_renderer);
+    free_face_renderer(&face_renderer);
+    free_normal_renderer(&normal_renderer);
 
     free_model(&model);
     free_grid(&grid);

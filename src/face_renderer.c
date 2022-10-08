@@ -36,11 +36,13 @@ void init_face_renderer(face_renderer_t *renderer) {
 
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);
+
+    glBindVertexArray(0);
 }
 
 void free_face_renderer(face_renderer_t *renderer) {
     glDeleteVertexArrays(1, &renderer->vao);
-    glDeleteBuffers(2, renderer->vbo);
+    glDeleteBuffers(3, renderer->vbo);
 }
 
 void render_model_faces(face_renderer_t *renderer, model_t *model) {
@@ -106,9 +108,7 @@ void render_model_faces(face_renderer_t *renderer, model_t *model) {
 
     GLint light_color_loc = glGetUniformLocation(renderer->shader, "light_color");
     glUniform3fv(light_color_loc, 1, (float*)light.color);
-     
-    GLint color_loc = glGetUniformLocation(renderer->shader, "color");
-    glUniform3f(color_loc, 0.1f, 0.2f, 1.0f);
     
     glDrawArrays(GL_TRIANGLES, 0, total_vertices);
+    glBindVertexArray(0);
 }
