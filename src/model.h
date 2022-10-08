@@ -3,33 +3,18 @@
 
 #include "glfw.h"
 #include "linmath.h"
-
-#define RENDER_MODE_VERTICES  0b0001
-#define RENDER_MODE_FACES     0b0010
-#define RENDER_MODE_NORMALS   0b0100
-#define RENDER_MODE_WIREFRAME 0b1000
-
-struct _face_renderer_t;
-typedef struct _face_renderer_t face_renderer_t;
-
-struct _vertex_renderer_t;
-typedef struct _vertex_renderer_t vertex_renderer_t;
-
-struct _normal_renderer_t;
-typedef struct _normal_renderer_t normal_renderer_t;
-
-struct _wireframe_renderer_t;
-typedef struct _wireframe_renderer_t wireframe_renderer_t;
+ 
+#define INDEX_NOT_FOUND ((uint32_t) -1)
 
 struct _face_t 
 {
     uint32_t len;
     uint32_t* indices;
 
-    vec3 midpoint;
     vec3 normal;
-
     vec3 color;
+    
+    vec3 midpoint;
 };
 
 typedef struct _face_t face_t;
@@ -42,46 +27,39 @@ struct _model_t {
     face_t* faces;
     uint32_t faces_cap;
     uint32_t faces_len;
-
-    face_renderer_t *face_renderer;
-    vertex_renderer_t *vertex_renderer;
-    normal_renderer_t *normal_renderer;
-    wireframe_renderer_t *wireframe_renderer;
-
-    uint8_t render_mode;
 };
 
 typedef struct _model_t model_t;
 
+// Model
+
 void init_model(model_t *model);
 void free_model(model_t *model);
 
-void render_model(model_t *model);
+// Vertices
 
 uint32_t add_vertex(model_t *model, vec3 vertex);
-void move_vertices(model_t *model, uint32_t *indices, uint32_t len, vec3 delta);
-void scale_vertices(model_t *model, uint32_t *indices, uint32_t len, float factor);
-void rotate_vertices(model_t *model, uint32_t *indices, uint32_t len, uint8_t axis, float theta);
-void duplicate_vertices(model_t *model, uint32_t *indices, uint32_t len);
-void remove_vertices(model_t *model, uint32_t *indices, uint32_t len);
+void update_vertex(model_t *model, uint32_t index, vec3 vertex);
+void remove_vertex(model_t *model, uint32_t index);
 
-// TODO: Return face index instead to account for re-allocation
+// Face
 
-face_t *add_face(model_t *model, uint32_t *indices, uint32_t len);
-face_t *add_face_tri(model_t *model, uint32_t ia, uint32_t ib, uint32_t ic);
-face_t *add_face_quad(model_t *model, uint32_t ia, uint32_t ib, uint32_t ic, uint32_t id);
+uint32_t add_face(model_t *model, uint32_t *indices, uint32_t len);
+uint32_t add_face_tri(model_t *model, uint32_t ia, uint32_t ib, uint32_t ic);
+uint32_t add_face_quad(model_t *model, uint32_t ia, uint32_t ib, uint32_t ic, uint32_t id);
 
-face_t *extend_edge(model_t *model, uint32_t *indices, uint32_t len);
-face_t *extend_face(model_t *model, uint32_t *indices, uint32_t len);
+void flip_face(model_t *model, uint32_t index);
+void set_face_color(model_t *model, uint32_t index, vec3 color);
 
+void remove_face(model_t *model, uint32_t index);
 
-face_t *get_face(model_t *model, uint32_t *indices, uint32_t len);
-void flip_face(model_t *model, face_t *face);
+// Helper
 
-void set_render_mode(model_t *model, uint8_t mode);
-void toggle_render_mode(model_t *model, uint8_t mode);
+void calculate_normal(model_t *model, vec3 normal, uint32_t *indices, uint32_t len);
+void calculate_midpoint(model_t *model, vec3 midpoint, uint32_t *indices, uint32_t len);
+void recalculate_faces(model_t *model);
 
-void load_vertices(model_t *model, vec3 *vertices, uint32_t len);
-face_t *load_face(model_t *model, uint32_t *indices, uint32_t len);
+int check_coplanar_vertices(model_t *model, uint32_t *indices, uint32_t len);
+void sort_by_angle(model_t *model, vec3 midpoint, vec3 normal, uint32_t *indices, uint32_t len);
 
 #endif  // MODEL_H
