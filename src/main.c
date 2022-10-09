@@ -25,6 +25,7 @@
 #include "vertex_renderer.h"
 #include "edge_renderer.h"
 #include "normal_renderer.h"
+#include "picker.h"
 
 #define DEBUG 1
 
@@ -36,6 +37,7 @@ camera_t camera;
 light_t light;
 grid_t grid;
 model_t model;
+picker_t picker;
 
 char buffer[128];
 
@@ -98,6 +100,8 @@ int main(int argc, char **argv) {
     normal_renderer_t normal_renderer;
     init_normal_renderer(&normal_renderer);
 
+    init_picker(&picker);
+
     build_icosphere(&model, (vec3){0.0f, 0.5f, 0.0f}, 0.5f, 1);
 
     while (!glfwWindowShouldClose(window)) {
@@ -128,6 +132,8 @@ int main(int argc, char **argv) {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    free_picker(&picker);
 
     free_vertex_renderer(&vertex_renderer);
     free_edge_renderer(&edge_renderer);

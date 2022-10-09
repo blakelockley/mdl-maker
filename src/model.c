@@ -103,7 +103,7 @@ void flip_face(model_t *model, uint32_t index) {
 }
 
 void set_face_color(model_t *model, uint32_t index, vec3 color) {
-    vec3_copy(model->vertices[index], color);
+    vec3_copy(model->faces[index].color, color);
 }
 
 void remove_face(model_t *model, uint32_t index) {

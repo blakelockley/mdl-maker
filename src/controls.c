@@ -1,16 +1,20 @@
 #include "controls.h"
 
+#include <stdlib.h>
 #include "linmath.h"
-#include "gui.h"
 
+#include "gui.h"
 #include "macros.h"
 #include "camera.h"
 #include "selection.h"
 #include "model.h"
+#include "picker.h"
+
 
 extern camera_t camera;
 extern selection_t selection;
 extern model_t model;
+extern picker_t picker;
 
 extern uint8_t mode;
 
@@ -42,11 +46,16 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     float clip_x, clip_y;
     normalize_mouse_pos(window, &clip_x, &clip_y, mouse_x, mouse_y);
 
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-        handle_selection_start(&selection, clip_x, clip_y);    
-
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
-        handle_selection_end(&selection, clip_x, clip_y, mods & GLFW_MOD_SHIFT);    
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        uint32_t picked_face_index = render_picker_to_face_id(&picker, &model);
+        if (picked_face_index != INDEX_NOT_FOUND)
+            set_face_color(&model, picked_face_index, (vec3){0.0f, 1.0f, 0.0f});
+    }
+    
+    // if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    //     handle_selection_start(&selection, clip_x, clip_y);
+    // if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+    //     handle_selection_end(&selection, clip_x, clip_y, mods & GLFW_MOD_SHIFT);    
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
