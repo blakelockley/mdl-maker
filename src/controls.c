@@ -48,8 +48,12 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         uint32_t picked_face_index = render_picker_to_face_id(&picker, &model);
+        
+        if (!(mods & GLFW_MOD_SHIFT))
+            clear_selection(&selection);
+        
         if (picked_face_index != INDEX_NOT_FOUND)
-            set_face_color(&model, picked_face_index, (vec3){0.0f, 1.0f, 0.0f});
+            extend_selection(&selection, picked_face_index);
     }
     
     // if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)

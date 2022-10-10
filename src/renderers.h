@@ -27,6 +27,7 @@ void render_model_vertices(renderer_t *renderer, model_t *model);
 
 void init_edge_renderer(renderer_t *renderer);
 void render_model_edges(renderer_t *renderer, model_t *model);
+void render_model_edges_selection(renderer_t *renderer, model_t *model, uint32_t *indices, uint32_t len);
 
 // Face Renderer
 
