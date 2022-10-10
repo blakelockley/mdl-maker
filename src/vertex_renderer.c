@@ -1,4 +1,4 @@
-#include "vertex_renderer.h"
+#include "renderers.h"
 #include "shader.h"
 #include "camera.h"
 #include "viewport.h"
@@ -8,13 +8,11 @@ extern camera_t camera;
 extern viewport_t viewport;
 extern light_t light;
 
-void init_vertex_renderer(vertex_renderer_t *renderer) {
+void init_vertex_renderer(renderer_t *renderer) {
+    init_renderer(renderer, 1);
+    
     renderer->shader = load_shader("shaders/static.vert", "shaders/static.frag");
-    
-    glGenVertexArrays(1, &renderer->vao);
-    glBindVertexArray(renderer->vao);
-    
-    glGenBuffers(1, renderer->vbo);
+    renderer->render = render_model_vertices;
     
     // Positions
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
@@ -26,12 +24,7 @@ void init_vertex_renderer(vertex_renderer_t *renderer) {
     glBindVertexArray(0);
 }
 
-void free_vertex_renderer(vertex_renderer_t *renderer) {
-    glDeleteVertexArrays(1, &renderer->vao);
-    glDeleteBuffers(1, renderer->vbo);
-}
-
-void render_model_vertices(vertex_renderer_t *renderer, model_t *model) {    
+void render_model_vertices(renderer_t *renderer, model_t *model) {    
     glBindVertexArray(renderer->vao);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);

@@ -1,4 +1,4 @@
-#include "edge_renderer.h"
+#include "renderers.h"
 #include "shader.h"
 #include "camera.h"
 #include "viewport.h"
@@ -9,14 +9,12 @@ extern camera_t camera;
 extern viewport_t viewport;
 extern light_t light;
 
-void init_edge_renderer(edge_renderer_t *renderer) {
-    renderer->shader = load_shader("shaders/static.vert", "shaders/static.frag");
-
-    glGenVertexArrays(1, &renderer->vao);
-    glBindVertexArray(renderer->vao);
-
-    glGenBuffers(1, renderer->vbo);
+void init_edge_renderer(renderer_t *renderer) {
+    init_renderer(renderer, 1);
     
+    renderer->shader = load_shader("shaders/static.vert", "shaders/static.frag");
+    renderer->render = render_model_edges;
+
     // Positions
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
@@ -27,12 +25,7 @@ void init_edge_renderer(edge_renderer_t *renderer) {
     glBindVertexArray(0);
 }
 
-void free_edge_renderer(edge_renderer_t *renderer) {
-    glDeleteVertexArrays(1, &renderer->vao);
-    glDeleteBuffers(1, renderer->vbo);
-}
-
-void render_model_edges(edge_renderer_t *renderer, model_t *model) {    
+void render_model_edges(renderer_t *renderer, model_t *model) {    
     uint32_t total_vertices = 0;
     for (int i = 0; i < model->faces_len; i++)
         total_vertices += model->faces[i].len * 2; // n -> * 2

@@ -1,4 +1,4 @@
-#include "normal_renderer.h"
+#include "renderers.h"
 #include "shader.h"
 #include "camera.h"
 #include "viewport.h"
@@ -6,13 +6,11 @@
 extern camera_t camera;
 extern viewport_t viewport;
 
-void init_normal_renderer(normal_renderer_t *renderer) {
+void init_normal_renderer(renderer_t *renderer) {
+    init_renderer(renderer, 1);
+    
     renderer->shader = load_shader("shaders/static.vert", "shaders/static.frag");
-
-    glGenVertexArrays(1, &renderer->vao);
-    glBindVertexArray(renderer->vao);
-
-    glGenBuffers(1, renderer->vbo);
+    renderer->render = render_model_normals;
 
     // Vertices
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
@@ -24,12 +22,7 @@ void init_normal_renderer(normal_renderer_t *renderer) {
     glBindVertexArray(0);
 }
 
-void free_normal_renderer(normal_renderer_t *renderer) {
-    glDeleteVertexArrays(1, &renderer->vao);
-    glDeleteBuffers(1, renderer->vbo);
-}
-
-void render_model_normals(normal_renderer_t *renderer, model_t *model) {
+void render_model_normals(renderer_t *renderer, model_t *model) {
     vec3 vertices[model->faces_len * 2];
     
     for (int i = 0; i < model->faces_len; i++) {

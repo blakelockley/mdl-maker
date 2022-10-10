@@ -1,4 +1,4 @@
-#include "face_renderer.h"
+#include "renderers.h"
 #include "shader.h"
 #include "camera.h"
 #include "viewport.h"
@@ -8,13 +8,11 @@ extern camera_t camera;
 extern viewport_t viewport;
 extern light_t light;
 
-void init_face_renderer(face_renderer_t *renderer) {
+void init_face_renderer(renderer_t *renderer) {
+    init_renderer(renderer, 3);
+    
     renderer->shader = load_shader("shaders/face.vert", "shaders/face.frag");
-
-    glGenVertexArrays(1, &renderer->vao);
-    glBindVertexArray(renderer->vao);
-
-    glGenBuffers(3, renderer->vbo);
+    renderer->render = render_model_faces;
     
     // Positions
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
@@ -40,12 +38,7 @@ void init_face_renderer(face_renderer_t *renderer) {
     glBindVertexArray(0);
 }
 
-void free_face_renderer(face_renderer_t *renderer) {
-    glDeleteVertexArrays(1, &renderer->vao);
-    glDeleteBuffers(3, renderer->vbo);
-}
-
-void render_model_faces(face_renderer_t *renderer, model_t *model) {
+void render_model_faces(renderer_t *renderer, model_t *model) {
     uint32_t total_vertices = 0;
     for (int i = 0; i < model->faces_len; i++)
         total_vertices += (model->faces[i].len - 2) * 3; // n -> (n - 2) * 3
