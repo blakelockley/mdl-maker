@@ -9,7 +9,7 @@ extern camera_t camera;
 extern viewport_t viewport;
 extern light_t light;
 
-void init_edge_renderer(renderer_t *renderer) {
+renderer_t * init_edge_renderer(renderer_t *renderer) {
     init_renderer(renderer, 1);
     
     renderer->shader = load_shader("shaders/static.vert", "shaders/static.frag");
@@ -23,6 +23,8 @@ void init_edge_renderer(renderer_t *renderer) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);
 
     glBindVertexArray(0);
+
+    return renderer;
 }
 
 void render_model_edges(renderer_t *renderer, model_t *model) {    

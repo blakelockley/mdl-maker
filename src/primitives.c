@@ -161,7 +161,7 @@ void build_icosphere(model_t *model, vec3 pos, float radius, int order) {
     faces[19] = add_face(model, face_indices, 3);
 
     for (int level = 0; level < order; level++) {
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 20; i++) { // TODO: Set limit based on current level of recursion
             face_t *face = &model->faces[faces[i]];
 
             uint32_t ia = face->indices[0];

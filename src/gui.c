@@ -21,8 +21,10 @@ bool show_add_plane;
 bool show_add_disc;
 bool show_add_icosphere;
 
-void set_mode_axis(uint8_t axis) {
-    mode_axis = axis;
+bool render_vertices = true;
+bool render_edges = false;
+bool render_faces = true;
+bool render_normals = false;
 
     switch (mode_axis){
     case MODE_AXIS_X:
@@ -79,6 +81,21 @@ void MainMenuBar() {
             if (igMenuItem_Bool("Reset Camera", NULL, false, true)) {
                 init_camera(&camera);
             }
+
+            igSeparator();
+            igMenuItem_Bool("Renderers", NULL, false, false);
+            
+            if (igMenuItem_Bool("Render Vertices", NULL, render_vertices, true))
+                render_vertices = !render_vertices;
+            
+            if (igMenuItem_Bool("Render Edges", NULL, render_edges, true))
+                render_edges = !render_edges;
+            
+            if (igMenuItem_Bool("Render Faces", NULL, render_faces, true))
+                render_faces = !render_faces;
+            
+            if (igMenuItem_Bool("Render Normals", NULL, render_normals, true))
+                render_normals = !render_normals;
             
             igEndMenu();
         }

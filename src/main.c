@@ -21,11 +21,8 @@
 #include "file.h"
 #include "gui.h"
 #include "primitives.h"
-#include "face_renderer.h"
-#include "vertex_renderer.h"
-#include "edge_renderer.h"
-#include "normal_renderer.h"
 #include "picker.h"
+#include "renderers.h"
 
 #define DEBUG 1
 
@@ -40,6 +37,11 @@ model_t model;
 picker_t picker;
 
 char buffer[128];
+
+extern bool render_vertices;
+extern bool render_edges;
+extern bool render_faces;
+extern bool render_normals;
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -88,17 +90,10 @@ int main(int argc, char **argv) {
     init_selection(&selection);
     init_model(&model);
 
-    face_renderer_t face_renderer;
-    init_face_renderer(&face_renderer);
-
-    vertex_renderer_t vertex_renderer;
-    init_vertex_renderer(&vertex_renderer);
-
-    edge_renderer_t edge_renderer;
-    init_edge_renderer(&edge_renderer);
-
-    normal_renderer_t normal_renderer;
-    init_normal_renderer(&normal_renderer);
+    renderer_t *vertex_renderer = init_vertex_renderer(malloc(sizeof(renderer_t)));
+    renderer_t *edge_renderer   = init_edge_renderer(malloc(sizeof(renderer_t)));
+    renderer_t *face_renderer   = init_face_renderer(malloc(sizeof(renderer_t)));
+    renderer_t *normal_renderer = init_normal_renderer(malloc(sizeof(renderer_t)));
 
     init_picker(&picker);
 
@@ -120,12 +115,19 @@ int main(int argc, char **argv) {
 
         render_grid(&grid);
 
-        render_model_vertices(&vertex_renderer, &model);
-        render_model_edges(&edge_renderer, &model);
-        render_model_faces(&face_renderer, &model);
-        render_model_normals(&normal_renderer, &model);
+        if (render_vertices)
+            vertex_renderer->render(vertex_renderer, &model);
         
-        render_selection(&selection);
+        if (render_edges)
+            edge_renderer->render(edge_renderer, &model);
+        
+        if (render_faces)
+            face_renderer->render(face_renderer, &model);
+        
+        if (render_normals)
+            normal_renderer->render(normal_renderer, &model);
+
+        render_model_edges_selection(edge_renderer, &model, selection.indices, selection.len);
 
         gui_render();
 
@@ -135,10 +137,17 @@ int main(int argc, char **argv) {
 
     free_picker(&picker);
 
-    free_vertex_renderer(&vertex_renderer);
-    free_edge_renderer(&edge_renderer);
-    free_face_renderer(&face_renderer);
-    free_normal_renderer(&normal_renderer);
+    deinit_renderer(vertex_renderer);
+    free(vertex_renderer);
+
+    deinit_renderer(edge_renderer);
+    free(edge_renderer);
+
+    deinit_renderer(face_renderer);
+    free(face_renderer);
+
+    deinit_renderer(normal_renderer);
+    free(normal_renderer);
 
     free_model(&model);
     free_grid(&grid);
