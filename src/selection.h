@@ -37,6 +37,8 @@ void handle_selection_start(selection_t *select, double x, double y);
 void handle_selection_move(selection_t *select, double x, double y);
 void handle_selection_end(selection_t *select, double x, double y, int extend_selection);
 
+void update_selection(selection_t *selection);
+
 void update_control_axis(selection_t *selection);
 
 #endif  // SELECT_H

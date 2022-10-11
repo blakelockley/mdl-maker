@@ -12,7 +12,7 @@ extern camera_t camera;
 extern viewport_t viewport;
 extern model_t model;
 
-void update_selection(selection_t *selection);
+void buffer_selection(selection_t *selection);
 void update_control_axis(selection_t *selection);
 void get_selection_midpoint(selection_t *selection, vec3 midpoint);
 
@@ -102,12 +102,27 @@ void render_selection(selection_t *selection) {
     glDrawArrays(GL_LINE_LOOP, 0, 4);
 }
 
+void update_selection(selection_t *selection) {
+    if (selection->len > 0) {    
+        float *color = model.faces[selection->indices[0]].color;
+        
+        if (igBegin("Edit Face", NULL, ImGuiWindowFlags_NoCollapse)) {
+            igText("Position");
+            igColorPicker3("Colour", color, 0);
+            igEnd();
+
+            for (int i = 1; i < selection->len; i++)
+                vec3_copy(model.faces[selection->indices[i]].color, color);
+        }
+    }
+}
+
 void handle_selection_start(selection_t *selection, double x, double y) {
     selection->is_visible = 0;
     selection->ax = x;
     selection->ay = y;
 
-    update_selection(selection);
+    buffer_selection(selection);
 }
 
 void handle_selection_move(selection_t *selection, double x, double y) {
@@ -115,7 +130,7 @@ void handle_selection_move(selection_t *selection, double x, double y) {
     selection->bx = x;
     selection->by = y;
 
-    update_selection(selection);  
+    buffer_selection(selection);  
 }
 
 void handle_selection_end(selection_t *selection, double x, double y, int extend_selection) {
@@ -161,7 +176,7 @@ void handle_selection_end(selection_t *selection, double x, double y, int extend
             selection->indices[selection->len++] = i;
     }
     
-    update_selection(selection);
+    buffer_selection(selection);
 
     get_selection_midpoint(selection, selection->control_origin);
     update_control_axis(selection);
@@ -193,7 +208,7 @@ void extend_selection(selection_t *selection, uint32_t index) {
     selection->indices[selection->len++] = index;
 }
 
-void update_selection(selection_t *selection) {
+void buffer_selection(selection_t *selection) {
     vec2 vertices[4];
 
     vec2_set(vertices[0], selection->ax, selection->ay);

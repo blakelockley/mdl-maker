@@ -107,6 +107,7 @@ int main(int argc, char **argv) {
         #endif
         
         gui_update();
+        update_selection(&selection);
         
         glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
