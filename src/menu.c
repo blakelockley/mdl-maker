@@ -1,4 +1,4 @@
-#include "gui.h"
+#include "menu.h"
 
 #include <stdlib.h>
 #include "glfw.h"
@@ -16,42 +16,26 @@ extern camera_t camera;
 extern model_t model;
 extern selection_t selection;
 
-bool show_add_vertex;
-bool show_add_plane;
-bool show_add_disc;
-bool show_add_icosphere;
-
 bool render_vertices = true;
 bool render_edges = false;
 bool render_faces = true;
 bool render_normals = false;
 
-    switch (mode_axis){
-    case MODE_AXIS_X:
-        vec3_set(selection.control_axis, 1.0f, 0.0f, 0.0f);
-        break;
-    
-    case MODE_AXIS_Y:
-        vec3_set(selection.control_axis, 0.0f, 1.0f, 0.0f);
-        break;
-    
-    case MODE_AXIS_Z:
-        vec3_set(selection.control_axis, 0.0f, 0.0f, 1.0f);
-        break;
-    
-    default:
-        vec3_set(selection.control_axis, 0.0f, 0.0f, 0.0f);
-        break;
-    }
+void AddVertexMenu(bool *p_open);
+void AddPlaneMenu(bool *p_open);
+void AddDiscMenu(bool *p_open);
+void AddIcosphereMenu(bool *p_open);
 
-    update_control_axis(&selection);
-}
-
-// GUI
+// ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration 
+//     | ImGuiWindowFlags_AlwaysAutoResize
+//     | ImGuiWindowFlags_NoSavedSettings
+//     | ImGuiWindowFlags_NoFocusOnAppearing
+//     | ImGuiWindowFlags_NoNav 
+//     | ImGuiWindowFlags_NoMove;
 
 void MainMenuBar() {
     if (igBeginMainMenuBar()) {
-        
+
         if (igBeginMenu("File", true)) {
             igMenuItem_Bool("(demo menu)", NULL, false, false);
             
@@ -100,11 +84,16 @@ void MainMenuBar() {
             igEndMenu();
         }
         
+        static bool show_add_vertex = false;
+        static bool show_add_plane = false;
+        static bool show_add_disc = false;
+        static bool show_add_icosphere = false;
+        
         if (igBeginMenu("Edit", true))
         {
             if (igMenuItem_Bool("Add Vertex", "Ctrl+A", show_add_vertex, true))
                 show_add_vertex = !show_add_vertex;
-            
+     
             if (igMenuItem_Bool("Add Plane", NULL, show_add_plane, true))
                 show_add_plane = !show_add_plane;
             
@@ -116,48 +105,44 @@ void MainMenuBar() {
             
             igEndMenu();
         }
+
+        if (show_add_vertex)
+            AddVertexMenu(&show_add_vertex);
+
+        if (show_add_plane)
+            AddPlaneMenu(&show_add_plane);
+
+        if (show_add_disc)
+            AddDiscMenu(&show_add_disc);
+
+        if (show_add_icosphere)
+            AddIcosphereMenu(&show_add_icosphere);
+
+        #ifdef SHOW_DEMO
         
-        if (igBeginMenu("Mode", true))
+        static bool show_demo_window = false;
+        
+        if (igBeginMenu("ImGui", true))
         {
-            if (igMenuItem_Bool("Select", NULL, !mode, true))
-                mode = MODE_SELECT;
-            
-            if (igMenuItem_Bool("Translate", NULL, mode & MODE_TRANSLATE, true))
-                mode = MODE_TRANSLATE;
-            
-            if (igMenuItem_Bool("Rotate", NULL, mode & MODE_ROTATE, true))
-                mode = MODE_ROTATE;
-            
-            if (igMenuItem_Bool("Scale", NULL, mode & MODE_SCALE, true))
-                mode = MODE_SCALE;
-
-            igSeparator();
-
-            igMenuItem_Bool("Confine to axis", NULL, false, false);
-
-            if (igMenuItem_Bool("None", NULL, !mode_axis, true))
-                set_mode_axis(MODE_AXIS_NONE);
-            
-            if (igMenuItem_Bool("X Axis", NULL, mode_axis & MODE_AXIS_X, true))
-                set_mode_axis(MODE_AXIS_X);
-            
-            if (igMenuItem_Bool("Y Axis", NULL, mode_axis & MODE_AXIS_Y, true))
-                set_mode_axis(MODE_AXIS_Y);
-            
-            if (igMenuItem_Bool("Z Axis", NULL, mode_axis & MODE_AXIS_Z, true))
-                set_mode_axis(MODE_AXIS_Z);
-            
+            if (igMenuItem_Bool("Show ImGui Demo Window", NULL, show_demo_window, true))
+                show_demo_window = !show_demo_window;
             igEndMenu();
         }
-    
+        
+        // https://github.com/ocornut/imgui/blob/master/imgui_demo.cpp
+        if (show_demo_window)
+            igShowDemoWindow(&show_demo_window);
+       
+        #endif
+        
         igEndMainMenuBar();
     }
 }
 
-void AddVertexMenu() {
+void AddVertexMenu(bool *p_open) {
     static vec3 pos = (vec3){ 0.0f, 0.0f, 0.0f};
     
-    if (igBegin("Add Vertex", &show_add_vertex, ImGuiWindowFlags_NoCollapse)) {
+    if (igBegin("Add Vertex", p_open, ImGuiWindowFlags_NoCollapse)) {
         igInputFloat("X", &pos[0], 0.1, 1.0, "%.3f", 0);
         igInputFloat("Y", &pos[1], 0.1, 1.0, "%.3f", 0);
         igInputFloat("Z", &pos[2], 0.1, 1.0, "%.3f", 0);
@@ -166,19 +151,19 @@ void AddVertexMenu() {
             add_vertex(&model, pos);
             
             vec3_set(pos, 0.0f, 0.0f, 0.0f);
-            show_add_vertex = false;
+            *p_open = false;
         }
 
         igEnd();
     }
 }
 
-void AddPlaneMenu() {
+void AddPlaneMenu(bool *p_open) {
     static vec3 pos = (vec3){ 0.0f, 0.5f, 0.0f};
     static float side = 0.5f;
     static int n_subdivisions = 0;
     
-    if (igBegin("Add Plane", &show_add_plane, ImGuiWindowFlags_NoCollapse)) {
+    if (igBegin("Add Plane", p_open, ImGuiWindowFlags_NoCollapse)) {
         igText("Position");
         igInputFloat("Position X", &pos[0], 0.1, 1.0, "%.3f", 0);
         igInputFloat("Position Y", &pos[1], 0.1, 1.0, "%.3f", 0);
@@ -193,19 +178,19 @@ void AddPlaneMenu() {
             
         if (igButton("Add", (struct ImVec2) {0,0})) {
             build_plane(&model, pos, side, n_subdivisions);
-            show_add_plane = false;
+            *p_open = false;
         }
 
         igEnd();
     }
 }
 
-void AddDiscMenu() {
+void AddDiscMenu(bool *p_open) {
     static vec3 pos = (vec3){ 0.0f, 0.5f, 0.0f};
     static float radius = 0.5f;
     static int n_vertices = 12;
     
-    if (igBegin("Add Disc", &show_add_disc, ImGuiWindowFlags_NoCollapse)) {
+    if (igBegin("Add Disc", p_open, ImGuiWindowFlags_NoCollapse)) {
         igText("Position");
         igInputFloat("Position X", &pos[0], 0.1, 1.0, "%.3f", 0);
         igInputFloat("Position Y", &pos[1], 0.1, 1.0, "%.3f", 0);
@@ -243,23 +228,21 @@ void AddDiscMenu() {
                 add_face(&model, indices, 3);
             }
 
-            show_add_disc = false;
+            *p_open = false;
         }
 
         igEnd();
     }
 }
 
-void AddIcosphereMenu() {
+void AddIcosphereMenu(bool *p_open) {
     static vec3 pos = (vec3){ 0.0f, 0.5f, 0.0f};
     static float radius = 0.5f;
     static int order = 0;
     
-    if (igBegin("Add Icosphere", &show_add_icosphere, ImGuiWindowFlags_NoCollapse)) {
+    if (igBegin("Add Icosphere", p_open, ImGuiWindowFlags_NoCollapse)) {
         igText("Position");
-        igInputFloat("Position X", &pos[0], 0.1, 1.0, "%.3f", 0);
-        igInputFloat("Position Y", &pos[1], 0.1, 1.0, "%.3f", 0);
-        igInputFloat("Position Z", &pos[2], 0.1, 1.0, "%.3f", 0);
+        igInputFloat3("Position X", pos, "%.2f", 0);
         
         igText("Radius");
         igInputFloat("Radius", &radius, 0.1, 1.0, "%.3f", 0);
@@ -274,79 +257,13 @@ void AddIcosphereMenu() {
             vec3_set(pos, 0.0f, 0.0f, 0.0f);
             radius = 0.5f;
             order = 0.0f;
-            show_add_icosphere = false;
+            *p_open = false;
         }
 
         igEnd();
     }
 }
 
-
-void DebugWindow() {
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration 
-        | ImGuiWindowFlags_AlwaysAutoResize
-        | ImGuiWindowFlags_NoSavedSettings
-        | ImGuiWindowFlags_NoFocusOnAppearing
-        | ImGuiWindowFlags_NoNav 
-        | ImGuiWindowFlags_NoMove;
-
-    igSetNextWindowBgAlpha(0.35f);
-    if (igBegin("Camera", NULL, flags)) {
-        igText("camera.pos %.2f, %.2f, %.2f", camera.pos[0], camera.pos[1], camera.pos[2]);
-        igText("camera.dir %.2f, %.2f, %.2f", camera.dir[0], camera.dir[1], camera.dir[2]);
-        igText("camera.len %f", vec3_len(camera.pos));
-        igEnd();
-    }
+void update_menu() {
+    MainMenuBar();   
 }
-
-// IMGui
-
-void gui_init(GLFWwindow *window) {
-    ctx = igCreateContext(NULL);
-    io  = igGetIO();
-
-    const char* glsl_version = "#version 330 core";
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
-
-    igStyleColorsDark(NULL);
-}
-
-void gui_terminate() {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    igDestroyContext(ctx);
-}
-
-void gui_render() {
-    igRender();
-    ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
-}
-
-void gui_update() {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    igNewFrame();
-
-    // Custom GUI
-
-    MainMenuBar();
-    DebugWindow();
-
-    if (show_add_vertex)
-        AddVertexMenu();
-
-    if (show_add_plane)
-        AddPlaneMenu();
-
-    if (show_add_disc)
-        AddDiscMenu();
-
-    if (show_add_icosphere)
-        AddIcosphereMenu();
-
-    #if SHOW_DEMO
-    igShowDemoWindow(NULL);
-    #endif
-}
-

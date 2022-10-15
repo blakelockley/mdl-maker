@@ -105,14 +105,33 @@ void render_selection(selection_t *selection) {
 void update_selection(selection_t *selection) {
     if (selection->len > 0) {    
         float *color = model.faces[selection->indices[0]].color;
-        
-        if (igBegin("Edit Face", NULL, ImGuiWindowFlags_NoCollapse)) {
-            igText("Position");
-            igColorPicker3("Colour", color, 0);
-            igEnd();
 
-            for (int i = 1; i < selection->len; i++)
+
+        if (igBegin("Edit Face(s)", NULL, ImGuiWindowFlags_NoCollapse)) {
+            static char buffer[32];
+            
+            sprintf(buffer, "Num. Face: %d", selection->len);
+            igText(buffer);
+
+            igSeparator();
+            
+            igText("Reverse the vertex order of the face");
+            if (igButton("Flip Face(s)", (struct ImVec2){ 0, 0 }))
+                for (int i = 0; i < selection->len; i++)
+                    flip_face(&model, selection->indices[i]);
+            
+            igSeparator();
+            
+            igColorPicker3("Colour", color, 0);
+
+            static bool apply_to_all = false;
+            apply_to_all = (selection->len == 1) ? false : apply_to_all;
+            igCheckbox("Apply to all face", &apply_to_all);
+            
+            for (int i = 1; apply_to_all && i < selection->len; i++)
                 vec3_copy(model.faces[selection->indices[i]].color, color);
+            
+            igEnd();
         }
     }
 }

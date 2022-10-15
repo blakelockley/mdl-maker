@@ -19,7 +19,7 @@
 #include "light.h"
 #include "fps.h"
 #include "file.h"
-#include "gui.h"
+#include "menu.h"
 #include "primitives.h"
 #include "picker.h"
 #include "renderers.h"
@@ -27,6 +27,9 @@
 #define DEBUG 1
 
 GLFWwindow *window;
+
+struct ImGuiContext* ctx;
+struct ImGuiIO* io;
 
 selection_t selection;
 viewport_t viewport;
@@ -48,6 +51,8 @@ void error_callback(int error, const char *description) {
 }
 
 int main(int argc, char **argv) {
+    // GLFW Setup
+    
     glfwSetErrorCallback(error_callback);
     if (!glfwInit())
         exit(EXIT_FAILURE);
@@ -72,6 +77,17 @@ int main(int argc, char **argv) {
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
+    // ImGui Setup
+
+    ctx = igCreateContext(NULL);
+    io  = igGetIO();
+
+    const char* glsl_version = "#version 330 core";
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    igStyleColorsDark(NULL);
+
     // OpenGL setup
 
     glEnable(GL_DEPTH_TEST);
@@ -81,8 +97,6 @@ int main(int argc, char **argv) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Engine setup
-
-    gui_init(window);
 
     init_camera(&camera);
     init_light(&light);
@@ -99,18 +113,25 @@ int main(int argc, char **argv) {
 
     build_icosphere(&model, (vec3){0.0f, 0.5f, 0.0f}, 0.5f, 1);
 
+    // Update-Render loop
+
     while (!glfwWindowShouldClose(window)) {
         #if DEBUG
         sprintf(buffer, "mdl-maker");
         sprintf(buffer, "%s [fps %.2f]", buffer, calculate_fps());
         glfwSetWindowTitle(window, buffer);
         #endif
+       
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        igNewFrame();
+
+        update_menu();
+       
+        glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
         
-        gui_update();
         update_selection(&selection);
         
-        glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
-
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -130,7 +151,8 @@ int main(int argc, char **argv) {
 
         render_model_edges_selection(edge_renderer, &model, selection.indices, selection.len);
 
-        gui_render();
+        igRender();
+        ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -156,8 +178,12 @@ int main(int argc, char **argv) {
     free_camera(&camera);
     free_selection(&selection);
 
-    gui_terminate();
+    // Terminate ImGui
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    igDestroyContext(ctx);
 
+    // Terminate GLFW
     glfwDestroyWindow(window);
     glfwTerminate();
 

@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include "linmath.h"
 
-#include "gui.h"
 #include "macros.h"
 #include "camera.h"
 #include "selection.h"
@@ -15,8 +14,6 @@ extern camera_t camera;
 extern selection_t selection;
 extern model_t model;
 extern picker_t picker;
-
-extern uint8_t mode;
 
 extern struct ImGuiIO* io;
 
@@ -90,16 +87,8 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     if (io->WantCaptureMouse)
         return;
-
-    if (mode == MODE_SELECT) {
-        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-            update_orbit(&camera, xoffset * 2.0f, yoffset * 2.0f);
-        else
-            update_depth(&camera, yoffset);
-    }
-
-    float delta = yoffset * 0.01f;
-
-    vec3 vec_delta;
-    vec3_scale(vec_delta, selection.control_axis, delta);
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        update_orbit(&camera, xoffset * 2.0f, yoffset * 2.0f);
+    else
+        update_depth(&camera, yoffset);
 }
