@@ -17,14 +17,6 @@ extern picker_t picker;
 
 extern struct ImGuiIO* io;
 
-void normalize_mouse_pos(GLFWwindow *window, float *normal_x, float *normal_y, float mouse_x, float mouse_y) {
-    int width, height;
-    glfwGetWindowSize(window, &width, &height);
-    
-    *normal_x = (2.0f * mouse_x) / width - 1.0f;
-    *normal_y = 1.0f - (2.0f * mouse_y) / height;
-}
-
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (io->WantCaptureKeyboard)
         return;
@@ -40,38 +32,41 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     float mouse_x = io->MousePos.x;
     float mouse_y = io->MousePos.y;
 
-    float clip_x, clip_y;
-    normalize_mouse_pos(window, &clip_x, &clip_y, mouse_x, mouse_y);
-
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        uint32_t picked_face_index = render_picker_to_face_id(&picker, &model);
+    if (selection.mode == MODE_VERTEX) {        
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+            handle_selection_start(&selection, mouse_x, mouse_y);
         
-        if (!(mods & GLFW_MOD_SHIFT))
-            clear_selection(&selection);
-        
-        if (picked_face_index != INDEX_NOT_FOUND)
-            extend_selection(&selection, picked_face_index);
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+            handle_selection_end(&selection, mouse_x, mouse_y);    
     }
     
-    // if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-    //     handle_selection_start(&selection, clip_x, clip_y);
-    // if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
-    //     handle_selection_end(&selection, clip_x, clip_y, mods & GLFW_MOD_SHIFT);    
+    if (selection.mode == MODE_FACE) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+            uint32_t picked_face_index = render_picker_to_face_id(&picker, &model);
+            
+            if (!(mods & GLFW_MOD_SHIFT))
+                clear_selection(&selection);
+            
+            if (picked_face_index != INDEX_NOT_FOUND)
+                extend_selection(&selection, picked_face_index);
+        }
+    }
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     if (io->WantCaptureMouse)
         return;
 
+    float mouse_x = io->MousePos.x;
+    float mouse_y = io->MousePos.y;
+
     double delta_x = io->MouseDelta.x;
     double delta_y = io->MouseDelta.y;
 
-    float clip_x, clip_y;
-    normalize_mouse_pos(window, &clip_x, &clip_y, xpos, ypos);
-
     // Selection
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-        handle_selection_move(&selection, clip_x, clip_y);
+    if (selection.mode == MODE_VERTEX 
+     && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+        handle_selection_move(&selection, mouse_x, mouse_y);
 
     // Euclidan translation
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS

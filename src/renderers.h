@@ -22,6 +22,7 @@ void deinit_renderer(renderer_t *renderer);
 
 renderer_t *init_vertex_renderer(renderer_t *renderer);
 void render_model_vertices(renderer_t *renderer, model_t *model);
+void render_model_vertices_selection(renderer_t *renderer, model_t *model, uint32_t *indices, uint32_t len);
 
 // Edge Renderer
 

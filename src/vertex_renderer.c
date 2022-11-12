@@ -48,12 +48,52 @@ void render_model_vertices(renderer_t *renderer, model_t *model) {
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
      
     GLint color_loc = glGetUniformLocation(renderer->shader, "color");
+    glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
     
     glBindVertexArray(renderer->vao);
-    glPointSize(10);
 
-    glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
+    glPointSize(10);
     glDrawArrays(GL_POINTS, 0, model->vertices_len);
 
     glBindVertexArray(0);
+}
+
+void render_model_vertices_selection(renderer_t *renderer, model_t *model, uint32_t *indices, uint32_t len) {
+    vec3 positions[len];
+    for (int i = 0; i < len; i++)
+        vec3_copy(positions[i], model->vertices[indices[i]]);
+
+    glBindVertexArray(renderer->vao);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_DYNAMIC_DRAW);
+
+    glUseProgram(renderer->shader);
+    
+    mat4x4 _model, view, projection;
+    mat4x4_identity(_model);
+    get_view_matrix(&camera, view);
+    get_projection_matrix(&viewport, projection);
+    
+    GLint model_loc = glGetUniformLocation(renderer->shader, "model");
+    glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)_model);
+
+    GLint view_loc = glGetUniformLocation(renderer->shader, "view");
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)view);
+
+    GLint projection_loc = glGetUniformLocation(renderer->shader, "projection");
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
+     
+    GLint color_loc = glGetUniformLocation(renderer->shader, "color");
+    glUniform3f(color_loc, 0.20f, 0.92f, 0.34f);
+
+    glDepthFunc(GL_ALWAYS);
+    glBindVertexArray(renderer->vao);
+    
+    glPointSize(10);
+    glDrawArrays(GL_POINTS, 0, len);
+
+    glBindVertexArray(0);
+
+    glDepthFunc(GL_LEQUAL);
 }

@@ -149,7 +149,13 @@ int main(int argc, char **argv) {
         if (render_normals)
             normal_renderer->render(normal_renderer, &model);
 
-        render_model_edges_selection(edge_renderer, &model, selection.indices, selection.len);
+        if (selection.mode == MODE_VERTEX)
+            render_model_vertices_selection(vertex_renderer, &model, selection.indices, selection.len);
+
+        if (selection.mode == MODE_FACE)
+            render_model_edges_selection(edge_renderer, &model, selection.indices, selection.len);
+
+        render_selection(&selection);
 
         igRender();
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
