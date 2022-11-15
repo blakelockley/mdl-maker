@@ -23,6 +23,7 @@
 #include "primitives.h"
 #include "picker.h"
 #include "renderers.h"
+#include "transform.h"
 
 #define DEBUG 1
 
@@ -38,6 +39,7 @@ light_t light;
 grid_t grid;
 model_t model;
 picker_t picker;
+transform_t transform;
 
 char buffer[128];
 
@@ -103,6 +105,7 @@ int main(int argc, char **argv) {
     init_grid(&grid);
     init_selection(&selection);
     init_model(&model);
+    init_transform(&transform);
 
     renderer_t *vertex_renderer = init_vertex_renderer(malloc(sizeof(renderer_t)));
     renderer_t *edge_renderer   = init_edge_renderer(malloc(sizeof(renderer_t)));

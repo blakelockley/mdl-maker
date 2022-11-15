@@ -8,11 +8,13 @@
 #include "model.h"
 #include "viewport.h"
 #include "picker.h"
+#include "transform.h"
 
 extern camera_t camera;
 extern viewport_t viewport;
 extern model_t model;
 extern picker_t picker;
+extern transform_t transform;
 
 extern GLFWwindow *window;
 
@@ -72,7 +74,13 @@ void update_selection(selection_t *selection) {
             sprintf(buffer, "Num. Vertices: %d", selection->len);
             igText(buffer);
 
+            igSliderFloat("Translation", &transform.translation_delta, -5.0f, 5.0f, "%.2f", 0);
+            igSliderFloat("Rotation", &transform.rotation_delta, -5.0f, 5.0f, "%.2f", 0);
+            igSliderFloat("Scale", &transform.scale_delta, 0.0f, 5.0f, "%.2f", 0);
+            
             igEnd();
+
+            apply_transform(&transform);
         }
     }
     
@@ -143,6 +151,8 @@ void handle_selection_end(selection_t *selection, float x, float y) {
     
     render_picker_to_vertex_ids(&picker, &model);
     select_ids_in_rect(selection, (vec2){min_x, min_y}, (vec2){max_x, max_y});
+
+    start_transform(&transform, &model, selection);
 }
 
 void get_selection_midpoint(selection_t *selection, vec3 midpoint) {
