@@ -18,19 +18,16 @@ struct _transform_t
     
     vec3 midpoint;
     
-    vec3 *deltas;
-    uint32_t deltas_len;
-    uint32_t deltas_cap;
+    vec3 *initial_vertices; // matches length of selection->len
+    uint32_t initial_vertices_cap;
     
-    vec3 translation_axis;
-    float translation_delta;
+    float scale;
     
     vec3 rotation_axis;
     float rotation_delta;
     
-    vec3 scale_axis;
-    float scale_delta;
-
+    vec3 translation_axis;
+    float translation_delta;
 };
 
 typedef struct _transform_t transform_t;
@@ -39,5 +36,6 @@ void init_transform(transform_t *transform);
 
 void start_transform(transform_t *transform, model_t *model, selection_t *selection);
 void apply_transform(transform_t *transform);
+void reset_transform(transform_t *transform);
 
 #endif // TRANSFORM_H

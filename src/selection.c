@@ -74,9 +74,15 @@ void update_selection(selection_t *selection) {
             sprintf(buffer, "Num. Vertices: %d", selection->len);
             igText(buffer);
 
+            igText("Transformation");
+
             igSliderFloat("Translation", &transform.translation_delta, -5.0f, 5.0f, "%.2f", 0);
             igSliderFloat("Rotation", &transform.rotation_delta, -5.0f, 5.0f, "%.2f", 0);
-            igSliderFloat("Scale", &transform.scale_delta, 0.0f, 5.0f, "%.2f", 0);
+            igSliderFloat("Scale", &transform.scale, 0.0f, 5.0f, "%.2f", 0);
+
+            if (igButton("Reset", (struct ImVec2){ 0, 0 })) {
+                reset_transform(&transform);
+            }
             
             igEnd();
 
