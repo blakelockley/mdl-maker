@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
 
     init_picker(&picker);
 
-    build_icosphere(&model, (vec3){0.0f, 0.5f, 0.0f}, 0.5f, 1);
+    open_file("obj.mdl", &model);
 
     // Update-Render loop
 

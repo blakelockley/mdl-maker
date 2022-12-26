@@ -9,6 +9,7 @@
 #include "selection.h"
 #include "primitives.h"
 #include "macros.h"
+#include "file.h"
 
 #define SHOW_DEMO 1
 
@@ -34,32 +35,27 @@ void AddIcosphereMenu(bool *p_open);
 //     | ImGuiWindowFlags_NoMove;
 
 void MainMenuBar() {
+    static bool show_open_modal = false;
+    
     if (igBeginMainMenuBar()) {
 
-        if (igBeginMenu("File", true)) {
-            igMenuItem_Bool("(demo menu)", NULL, false, false);
-            
-            if (igMenuItem_Bool("New", "Shift+N", false, true)) {
-                printf("New Item\n");
-            }
-            
-            if (igMenuItem_Bool("Open", "Ctrl+O", true, false)) {
-                printf("Open\n");
+        if (igBeginMenu("File", true)) {            
+
+            if (igMenuItem_Bool("Open", NULL, false, true)) {
+                show_open_modal = true;
             }
 
-            igSeparator();
-        
             if (igMenuItem_Bool("Save", "Ctrl+S", false, false)) {
-                printf("Save\n");
+                printf("TODO: Save\n");
             }
             
             if (igMenuItem_Bool("Save As..", NULL, false, false)) {
-                printf("Save As\n");
+                printf("TODO:As\n");
             }
             
             igEndMenu();
         }
-        
+
         if (igBeginMenu("View", true))
         {
             if (igMenuItem_Bool("Reset Camera", NULL, false, true)) {
@@ -149,9 +145,31 @@ void MainMenuBar() {
             igShowDemoWindow(&show_demo_window);
        
         #endif
-        
+
         igEndMainMenuBar();
     }
+
+    ImVec2 center;
+    ImGuiViewport_GetCenter(&center, igGetMainViewport());
+    igSetNextWindowPos(center, ImGuiCond_Appearing, (ImVec2){0.5f, 0.5f});
+
+    if (igBeginPopupModal("OpenModal", &show_open_modal, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        static char filename[128] = "obj.mdl";
+        igInputText("File path", filename, sizeof(filename), 0, NULL, NULL);
+
+        if (igButton("Open", (ImVec2){120, 0})) {
+            open_file(filename, &model);
+            
+            show_open_modal = false;
+            igCloseCurrentPopup();
+        }
+
+        igEndPopup();
+    }
+
+    if (show_open_modal)
+        igOpenPopup_Str("OpenModal", 0);
 }
 
 void AddVertexMenu(bool *p_open) {
