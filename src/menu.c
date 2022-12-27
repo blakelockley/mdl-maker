@@ -36,21 +36,25 @@ void AddIcosphereMenu(bool *p_open);
 
 void MainMenuBar() {
     static bool show_open_modal = false;
+    static bool show_save_modal = false;
     
     if (igBeginMainMenuBar()) {
 
         if (igBeginMenu("File", true)) {            
 
-            if (igMenuItem_Bool("Open", NULL, false, true)) {
+            if (igMenuItem_Bool("Open", NULL, show_open_modal, true)) {
                 show_open_modal = true;
             }
 
-            if (igMenuItem_Bool("Save", "Ctrl+S", false, false)) {
-                printf("TODO: Save\n");
+            if (igMenuItem_Bool("Save", NULL, false, true)) {
+                if (model.filename)
+                    save_file(model.filename, &model);
+                else
+                    show_save_modal = true;
             }
             
-            if (igMenuItem_Bool("Save As..", NULL, false, false)) {
-                printf("TODO:As\n");
+            if (igMenuItem_Bool("Save As...", NULL, false, true)) {
+                show_save_modal = true;
             }
             
             igEndMenu();
@@ -153,9 +157,9 @@ void MainMenuBar() {
     ImGuiViewport_GetCenter(&center, igGetMainViewport());
     igSetNextWindowPos(center, ImGuiCond_Appearing, (ImVec2){0.5f, 0.5f});
 
-    if (igBeginPopupModal("OpenModal", &show_open_modal, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-        static char filename[128] = "obj.mdl";
+    static char filename[128] = "";
+    
+    if (igBeginPopupModal("Open File", &show_open_modal, ImGuiWindowFlags_AlwaysAutoResize)) {
         igInputText("File path", filename, sizeof(filename), 0, NULL, NULL);
 
         if (igButton("Open", (ImVec2){120, 0})) {
@@ -167,9 +171,25 @@ void MainMenuBar() {
 
         igEndPopup();
     }
+    
+    if (igBeginPopupModal("Save File", &show_save_modal, ImGuiWindowFlags_AlwaysAutoResize)) {
+        igInputText("File path", filename, sizeof(filename), 0, NULL, NULL);
+
+        if (igButton("Save", (ImVec2){120, 0})) {
+            save_file(filename, &model);
+            
+            show_save_modal = false;
+            igCloseCurrentPopup();
+        }
+
+        igEndPopup();
+    }
 
     if (show_open_modal)
-        igOpenPopup_Str("OpenModal", 0);
+        igOpenPopup_Str("Open File", 0);
+
+    if (show_save_modal)
+        igOpenPopup_Str("Save File", 0);
 }
 
 void AddVertexMenu(bool *p_open) {

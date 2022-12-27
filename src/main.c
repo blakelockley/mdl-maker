@@ -114,16 +114,13 @@ int main(int argc, char **argv) {
 
     init_picker(&picker);
 
-    open_file("obj.mdl", &model);
+    // open_file("obj.mdl", &model);
 
     // Update-Render loop
 
     while (!glfwWindowShouldClose(window)) {
-        #if DEBUG
-        sprintf(buffer, "mdl-maker");
-        sprintf(buffer, "%s [fps %.2f]", buffer, calculate_fps());
+        sprintf(buffer, "mdl-maker - %s", model.filename);
         glfwSetWindowTitle(window, buffer);
-        #endif
        
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();

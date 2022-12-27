@@ -20,6 +20,8 @@ struct _face_t
 typedef struct _face_t face_t;
 
 struct _model_t {
+    char *filename;
+
     vec3* vertices;
     uint32_t vertices_cap;
     uint32_t vertices_len;

@@ -4,6 +4,8 @@
 // Model
 
 void init_model(model_t *model) {
+    model->filename = NULL;
+    
     model->vertices = (vec3*)malloc(sizeof(vec3) * 1024);
     model->vertices_cap = 1024;
     model->vertices_len = 0;

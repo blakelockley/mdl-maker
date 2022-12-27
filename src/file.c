@@ -5,15 +5,18 @@
 #include <string.h>
 
 enum _section_t {
-    SECTION_VERTICES = 0,
-    SECTION_FACES = 1,
-    SECTION_COLORS = 2,
+    SECTION_NONE = 0,
+    SECTION_VERTICES = 1,
+    SECTION_FACES = 2,
+    SECTION_COLORS = 3,
 };
 
 typedef enum _section_t section_t;
 
 void open_file(char *filename, model_t *model) {
-    FILE *file = fopen(filename, "r");
+    model->filename = filename;
+    
+    FILE *file = fopen(model->filename, "r");
     if (!file) {
         printf("[ERROR]: Could not open file \"%s\".\n", filename);
         return;
@@ -25,13 +28,18 @@ void open_file(char *filename, model_t *model) {
     uint32_t face_len;
     uint32_t face_buffer[32];
 
-    uint8_t section = SECTION_VERTICES;
+    uint8_t section = SECTION_NONE;
 
     while (fgets(buffer, buffer_size, file) != NULL) {
         if (buffer[0] == '\0' || buffer[0] == '#')
             continue;
 
         // check for section header
+
+        if (buffer[0] == '\n') {
+            section = SECTION_NONE;
+            continue;
+        }
         
         if (strncmp(buffer, "[vertices]", strlen("[vertices]")) == 0) {
             section = SECTION_VERTICES;
@@ -79,6 +87,44 @@ void open_file(char *filename, model_t *model) {
 
             set_face_color(model, face_index++, color);
         }
+    }
+
+    fclose(file);
+}
+
+void save_file(char *filename, model_t *model) {    
+    if (filename != NULL) // override file name to provided value if provided
+        model->filename = filename;
+
+    if (model->filename == NULL) { // ensure a file name has been set
+        printf("[ERROR]: Unable to save model as no filename was provided.\n");
+        return;
+    }
+    
+    FILE *file = fopen(model->filename, "w");
+    if (!file) {
+        printf("[ERROR]: Could not open file \"%s\".\n", filename);
+        return;
+    }
+
+    fprintf(file, "[vertices]\n");
+    for (int i = 0; i < model->vertices_len; i++)
+        fprintf(file, "%.4f %.4f %.4f\n", model->vertices[i][0], model->vertices[i][1], model->vertices[i][2]);
+
+    fprintf(file, "\n[faces]\n");
+    for (int i = 0; i < model->faces_len; i++) {
+        face_t *face = &model->faces[i];
+
+        for (int j = 0; j < face->len; j++) {
+            fprintf(file, "%d", face->indices[j]);
+            fprintf(file, j < (face->len - 1) ? " " : "\n");
+        }
+    }
+
+    fprintf(file, "\n[colors]\n");
+    for (int i = 0; i < model->faces_len; i++) {
+        face_t *face = &model->faces[i];
+        fprintf(file, "%.4f %.4f %.4f\n", face->color[0], face->color[1], face->color[2]);
     }
 
     fclose(file);
@@ -149,7 +195,7 @@ void open_file_binary(char *filename, model_t *model) {
     fclose(file);
 }
 
-void save_file(char *filename, model_t *model) {
+void export_file(char *filename, model_t *model) {
     FILE *file = fopen(filename, "wb");
     if (!file) {
         printf("Error: Could not open file %s\n", filename);
