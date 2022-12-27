@@ -69,10 +69,27 @@ void render_selection(selection_t *selection) {
 void update_selection(selection_t *selection) {
     if (selection->len > 0 && selection->mode == MODE_VERTEX) {    
         if (igBegin("Edit Verticess", NULL, ImGuiWindowFlags_NoCollapse)) {
-            static char buffer[32];
+            static char buffer[128];
             
             sprintf(buffer, "Num. Vertices: %d", selection->len);
             igText(buffer);
+
+            sprintf(buffer, "");
+            for (int i = 0; i < selection->len; i++)
+                sprintf(buffer, "%s%d ", buffer, selection->indices[i]);
+            
+            igText(buffer);
+
+            char *coplanar_str = selection->len > 1 ? (selection->is_coplanar ? "Yes" : "No") : "--";
+            sprintf(buffer, "Coplanar: %s", coplanar_str);
+            igText(buffer);
+
+            if (selection->is_coplanar) {
+                if (igButton("Extend", (struct ImVec2){ 100, 0 }))
+                    start_extend(&transform);
+
+                igSliderFloat("Extend Delta", &transform.extend_delta, -5.0f, 5.0f, "%.2f", 0);
+            }
 
             igText("Transformation");
 
@@ -86,6 +103,7 @@ void update_selection(selection_t *selection) {
             
             igEnd();
 
+            // TODO: I don't think this is the best way to handle transformations
             apply_transform(&transform);
         }
     }
@@ -157,6 +175,10 @@ void handle_selection_end(selection_t *selection, float x, float y) {
     
     render_picker_to_vertex_ids(&picker, &model);
     select_ids_in_rect(selection, (vec2){min_x, min_y}, (vec2){max_x, max_y});
+
+    selection->is_coplanar = (selection->len > 1) \
+        && check_coplanar_vertices(&model, selection->indices, selection->len);
+
 
     start_transform(&transform, &model, selection);
 }

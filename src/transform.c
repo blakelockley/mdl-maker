@@ -90,3 +90,39 @@ void reset_transform(transform_t *transform) {
     transform->rotation_delta = 0.0f;
     transform->translation_delta = 0.0f;
 }
+
+void start_extend(transform_t *transform) {
+    selection_t *selection = transform->selection;
+    
+    uint32_t sorted_indices[selection->len];
+    uint32_t extend_indices[selection->len];
+
+    vec3 normal;
+    calculate_normal(transform->model, normal, selection->indices, selection->len);
+
+    for (int i = 0; i < selection->len; i++)
+        sorted_indices[i] = selection->indices[i];
+
+    sort_by_angle(transform->model, transform->midpoint, normal, sorted_indices, selection->len);
+    
+    for (int i = 0; i < selection->len; i++) {
+        vec3 v;
+        vec3_add(v, transform->model->vertices[sorted_indices[i]], normal);
+
+        extend_indices[i] = add_vertex(transform->model, v);
+    }
+
+    for (int i = 0; i < selection->len; i++) {
+        uint32_t ia = sorted_indices[i];
+        uint32_t ib = sorted_indices[(i + 1) % selection->len];
+        uint32_t ic = extend_indices[(i + 1) % selection->len];
+        uint32_t id = extend_indices[i];
+        
+        uint32_t face_index = add_face_quad(transform->model, ia, ib, ic, id);
+        vec3_set(transform->model->faces[face_index].color, (rand() % 255) / 255.0f, (rand() % 255) / 255.0f, (rand() % 255) / 255.0f);
+    }
+}
+
+void flip_extend(transform_t *transform) {
+    // TODO: Add ability to flip extend normal
+}

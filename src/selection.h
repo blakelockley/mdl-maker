@@ -15,6 +15,8 @@ struct _selection_t {
     bool is_visible;
     double ax, ay;
     double bx, by;
+
+    bool is_coplanar;
  
     GLuint shader;
     GLuint vao, vbo;

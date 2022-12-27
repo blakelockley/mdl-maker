@@ -28,6 +28,9 @@ struct _transform_t
     
     vec3 translation_axis;
     float translation_delta;
+
+    vec3 extend_normal;
+    float extend_delta;
 };
 
 typedef struct _transform_t transform_t;
@@ -37,5 +40,9 @@ void init_transform(transform_t *transform);
 void start_transform(transform_t *transform, model_t *model, selection_t *selection);
 void apply_transform(transform_t *transform);
 void reset_transform(transform_t *transform);
+
+void start_extend(transform_t *transform);
+void flip_extend(transform_t *transform);
+
 
 #endif // TRANSFORM_H
