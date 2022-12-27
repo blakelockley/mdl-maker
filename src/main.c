@@ -53,8 +53,11 @@ void error_callback(int error, const char *description) {
 }
 
 int main(int argc, char **argv) {
-    // GLFW Setup
+    char *filename = NULL;
+    if (argc >= 2)
+        filename = argv[1];
     
+    // GLFW Setup
     glfwSetErrorCallback(error_callback);
     if (!glfwInit())
         exit(EXIT_FAILURE);
@@ -114,7 +117,8 @@ int main(int argc, char **argv) {
 
     init_picker(&picker);
 
-    // open_file("obj.mdl", &model);
+    if (filename)
+        open_file(filename, &model);
 
     // Update-Render loop
 
