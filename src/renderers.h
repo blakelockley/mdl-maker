@@ -40,4 +40,15 @@ void render_model_faces(renderer_t *renderer, model_t *model);
 renderer_t *init_normal_renderer(renderer_t *renderer);
 void render_model_normals(renderer_t *renderer, model_t *model);
 
+// Debug Renderer (singleton debug renderer instance is owned by debug_renderer.c file)
+
+void init_debug_renderer();
+
+void clear_debug_shapes();
+void render_debug_shapes();
+
+void push_debug_point(vec3 p, vec3 color);
+void push_debug_line(vec3 a, vec3 b, vec3 color);
+void push_debug_plane(vec3 origin, vec3 normal, float width, float height, vec3 color);
+
 #endif // RENDERERS_H

@@ -19,3 +19,7 @@ void deinit_renderer(renderer_t *renderer) {
     
     free(renderer->vbo);
 }
+
+void load_renderer_uniforms(renderer_t *renderer) {
+    // TODO: ...
+}

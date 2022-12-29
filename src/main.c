@@ -110,6 +110,7 @@ int main(int argc, char **argv) {
     init_model(&model);
     init_transform(&transform);
 
+    init_debug_renderer();
     renderer_t *vertex_renderer = init_vertex_renderer(malloc(sizeof(renderer_t)));
     renderer_t *edge_renderer   = init_edge_renderer(malloc(sizeof(renderer_t)));
     renderer_t *face_renderer   = init_face_renderer(malloc(sizeof(renderer_t)));
@@ -130,12 +131,12 @@ int main(int argc, char **argv) {
         ImGui_ImplGlfw_NewFrame();
         igNewFrame();
 
-        update_menu();
-       
+        // TODO: Get rid of viewpoint struct
         glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
-        
+
+        update_menu();
         update_selection(&selection);
-        
+
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -160,9 +161,12 @@ int main(int argc, char **argv) {
             render_model_edges_selection(edge_renderer, &model, selection.indices, selection.len);
 
         render_selection(&selection);
+        render_debug_shapes();
 
         igRender();
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
+
+        clear_debug_shapes();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
