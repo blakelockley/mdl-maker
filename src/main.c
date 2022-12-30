@@ -11,7 +11,6 @@
 
 #define ENGINE_INCLUDES
 #include "camera.h"
-#include "viewport.h"
 #include "grid.h"
 #include "controls.h"
 #include "selection.h"
@@ -33,7 +32,6 @@ struct ImGuiContext* ctx;
 struct ImGuiIO* io;
 
 selection_t selection;
-viewport_t viewport;
 camera_t camera;
 light_t light;
 grid_t grid;
@@ -130,9 +128,6 @@ int main(int argc, char **argv) {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         igNewFrame();
-
-        // TODO: Get rid of viewpoint struct
-        glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
         update_menu();
         update_selection(&selection);

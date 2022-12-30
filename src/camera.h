@@ -22,8 +22,7 @@ void update_depth(camera_t *camera, float delta);
 
 // Matrices
 void get_view_matrix(camera_t *camera, mat4x4 m);
+void get_projection_matrix(camera_t *camera, mat4x4 m);
+void get_view_projection_matrix(camera_t *camera, mat4x4 m);
 
 #endif  // CAMERA_H
-
-// TODO: Merge this with viewport so camera is soley responsible for matrcies
-//   OR: Have a new file/struct responsible for matrices

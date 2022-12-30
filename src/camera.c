@@ -1,8 +1,11 @@
+#include <math.h>
+
 #include "camera.h"
 #include "linmath.h"
 #include "macros.h"
+#include "glfw.h"
 
-#include <math.h>
+extern GLFWwindow *window;
 
 void init_camera(camera_t *camera) {
     vec3_set(camera->up, 0.0f, 1.0f, 0.0f);
@@ -19,7 +22,6 @@ void free_camera(camera_t *camera) {
     // no-op
 }
 
-
 // Getters
 
 void get_view_matrix(camera_t *camera, mat4x4 m) { 
@@ -27,6 +29,22 @@ void get_view_matrix(camera_t *camera, mat4x4 m) {
     vec3_add(ahead, camera->pos, camera->dir);
 
     mat4x4_look_at(m, camera->pos, ahead, camera->up);
+}
+
+void get_projection_matrix(camera_t *camera, mat4x4 m) {
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    
+    float fov = CLAMP(camera->zoom, 1, 179) * (M_PI / 180); // convert to radians
+    mat4x4_perspective(m, fov, (float)width / (float)height, 0.1f, 100.0f);
+}
+
+void get_view_projection_matrix(camera_t *camera, mat4x4 m) {
+    mat4x4 view, projection;
+    get_view_matrix(camera, view);
+    get_projection_matrix(camera, projection);
+
+    mat4x4_mul(m, projection, view);
 }
 
 void update_position(camera_t *camera, float delta_x, float delta_y) {

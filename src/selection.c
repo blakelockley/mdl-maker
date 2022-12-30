@@ -6,14 +6,12 @@
 #include "camera.h"
 #include "shader.h"
 #include "model.h"
-#include "viewport.h"
 #include "picker.h"
 #include "transform.h"
 
 #include "renderers.h"
 
 extern camera_t camera;
-extern viewport_t viewport;
 extern model_t model;
 extern picker_t picker;
 extern transform_t transform;
@@ -172,7 +170,7 @@ void handle_selection_start(selection_t *selection, float x, float y) {
     else if (selection->action == ACTION_MOVE) {
         mat4x4 view, projection, vp, inverse_vp;
         get_view_matrix(&camera, view);
-        get_projection_matrix(&viewport, projection);
+        get_projection_matrix(&camera, projection);
         
         mat4x4_mul(vp, projection, view);
 
@@ -217,7 +215,7 @@ void handle_selection_move(selection_t *selection, float x, float y) {
     else if (selection->action == ACTION_MOVE) {
         mat4x4 view, projection, vp, inverse_vp;
         get_view_matrix(&camera, view);
-        get_projection_matrix(&viewport, projection);
+        get_projection_matrix(&camera, projection);
         
         mat4x4_mul(vp, projection, view);
 

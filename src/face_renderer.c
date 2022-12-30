@@ -1,11 +1,9 @@
 #include "renderers.h"
 #include "shader.h"
 #include "camera.h"
-#include "viewport.h"
 #include "light.h"
 
 extern camera_t camera;
-extern viewport_t viewport;
 extern light_t light;
 
 renderer_t *init_face_renderer(renderer_t *renderer) {
@@ -87,7 +85,7 @@ void render_model_faces(renderer_t *renderer, model_t *model) {
     mat4x4 _model, view, projection;
     mat4x4_identity(_model);
     get_view_matrix(&camera, view);
-    get_projection_matrix(&viewport, projection);
+    get_projection_matrix(&camera, projection);
     
     GLint model_loc = glGetUniformLocation(renderer->shader, "model");
     glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)_model);
