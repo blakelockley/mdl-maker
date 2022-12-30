@@ -4,10 +4,24 @@
 #include "glfw.h"
 #include "linmath.h"
 
-#define MODE_VERTEX 1
-#define MODE_FACE   2
+enum _selection_mode_t {
+    MODE_VERTEX = 0,
+    MODE_FACE = 1,
+};
+
+typedef enum _selection_mode_t selection_mode_t;
+
+enum _selection_action_t {
+    ACTION_SELECT = 0,
+    ACTION_MOVE = 1,
+};
+
+typedef enum _selection_action_t selection_action_t;
 
 struct _selection_t {
+    selection_mode_t mode;
+    selection_action_t action;
+
     uint32_t *indices;
     uint32_t len;
     uint32_t cap;
@@ -20,8 +34,6 @@ struct _selection_t {
  
     GLuint shader;
     GLuint vao, vbo;
-
-    uint8_t mode;
 };
 
 typedef struct _selection_t selection_t;

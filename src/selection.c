@@ -10,6 +10,8 @@
 #include "picker.h"
 #include "transform.h"
 
+#include "renderers.h"
+
 extern camera_t camera;
 extern viewport_t viewport;
 extern model_t model;
@@ -26,6 +28,9 @@ void get_selection_midpoint(selection_t *selection, vec3 midpoint);
 // (1 << (uint32_t)ceilf(log2f(n))) * 10;
 
 void init_selection(selection_t *selection) {
+    selection->mode = MODE_VERTEX;
+    selection->action = ACTION_SELECT;
+    
     selection->is_visible = 0;
 
     selection->indices = (uint32_t*)malloc(sizeof(uint32_t) * 10);
@@ -44,8 +49,6 @@ void init_selection(selection_t *selection) {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vec2), (void *)0);  // Attrib pointer for currently bound buffer
 
     selection->shader = load_shader("shaders/gui.vert", "shaders/gui.frag");
-
-    selection->mode = MODE_VERTEX;
 }
 
 void free_selection(selection_t *selection) {
@@ -74,38 +77,47 @@ void update_selection(selection_t *selection) {
             sprintf(buffer, "Num. Vertices: %d", selection->len);
             igText(buffer);
 
-            sprintf(buffer, "");
+            sprintf(buffer, "Sel. Vertices: ");
             for (int i = 0; i < selection->len; i++)
                 sprintf(buffer, "%s%d ", buffer, selection->indices[i]);
+            igText(buffer);
             
+            char *actions[] = {"Select", "Move"};
+            sprintf(buffer, "Action: %-7s", actions[selection->action]);
             igText(buffer);
 
+            for (int i = 0; i < 2; i++) {
+                igSameLine(0, 10);
+                if (igButton(actions[i], (struct ImVec2){ 100, 0 })) {
+                    selection->action = i;
+                }
+            }
+
             char *coplanar_str = selection->len > 1 ? (selection->is_coplanar ? "Yes" : "No") : "--";
-            sprintf(buffer, "Coplanar: %s", coplanar_str);
+            sprintf(buffer, "Coplanar: %-5s", coplanar_str);
             igText(buffer);
 
             if (selection->is_coplanar) {
+                igSameLine(0, 10);
                 if (igButton("Extend", (struct ImVec2){ 100, 0 }))
                     start_extend(&transform);
-
-                igSliderFloat("Extend Delta", &transform.extend_delta, -5.0f, 5.0f, "%.2f", 0);
             }
 
-            igText("Transformation");
+            // igText("Transformation");
 
-            igSliderFloat("Translation", &transform.translation_delta, -5.0f, 5.0f, "%.2f", 0);
-            igSliderFloat("Rotation", &transform.rotation_delta, -5.0f, 5.0f, "%.2f", 0);
-            igSliderFloat("Scale", &transform.scale, 0.0f, 5.0f, "%.2f", 0);
+            // igSliderFloat("Translation", &transform.translation_delta, -5.0f, 5.0f, "%.2f", 0);
+            // igSliderFloat("Rotation", &transform.rotation_delta, -5.0f, 5.0f, "%.2f", 0);
+            // igSliderFloat("Scale", &transform.scale, 0.0f, 5.0f, "%.2f", 0);
 
-            if (igButton("Reset", (struct ImVec2){ 0, 0 })) {
-                reset_transform(&transform);
-            }
-            
+            // if (igButton("Reset", (struct ImVec2){ 0, 0 })) {
+            //     reset_transform(&transform);
+            // }    
+
             igEnd();
-
-            // TODO: I don't think this is the best way to handle transformations
-            apply_transform(&transform);
         }
+        
+        // TODO: I don't think this is the best way to handle transformations
+        // apply_transform(&transform);
     }
     
     if (selection->len > 0 && selection->mode == MODE_FACE) {    
@@ -141,46 +153,106 @@ void update_selection(selection_t *selection) {
 }
 
 void handle_selection_start(selection_t *selection, float x, float y) {
-    selection->is_visible = 0;
     selection->ax = x;
     selection->ay = y;
+    
+    if (selection->action == ACTION_SELECT) {
+        selection->is_visible = 0;
 
-    buffer_selection(selection);
+        buffer_selection(selection);
+    }
+    
+    else if (selection->action == ACTION_MOVE) {
+        printf("move start: %f %f\n", x, y);
+    }
 }
 
 void handle_selection_move(selection_t *selection, float x, float y) {
-    selection->is_visible = 1;
     selection->bx = x;
     selection->by = y;
+    
+    if (selection->action == ACTION_SELECT) {
+        selection->is_visible = 1;
 
-    buffer_selection(selection);
+        buffer_selection(selection);
+    }
+    
+    else if (selection->action == ACTION_MOVE) {
+        // float delta_x = selection->bx - selection->ax;
+        // float delta_y = selection->by - selection->ay;
+        
+        // printf("move delta: %f %f\n", delta_x, delta_y);
+
+        mat4x4 view, projection, vp, inverse_vp;
+        get_view_matrix(&camera, view);
+        get_projection_matrix(&viewport, projection);
+        
+        mat4x4_mul(vp, projection, view);
+
+        vec4 midpoint, projected_midpoint;
+        vec4_from_vec3(midpoint, transform.midpoint, 1);
+        
+        mat4x4_mul_vec4(projected_midpoint, vp, midpoint);
+        vec4_scale(projected_midpoint, projected_midpoint, 1 / projected_midpoint[3]); // perspective divide
+  
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+    
+        float clip_x = (x / width) * 2.0f - 1.0f;
+        float clip_y = 1.0f - (y / height) * 2.0f;
+        float clip_z = projected_midpoint[2];
+        
+        vec4 v, r;
+        vec4_set(v, clip_x, clip_y, clip_z, 1);
+        
+        mat4x4_invert(inverse_vp, vp);
+        mat4x4_mul_vec4(r, inverse_vp, v);
+        
+        vec3 plane_pos;
+        vec3_from_vec4(plane_pos, r);
+
+        // vec3 delta;
+        vec3_sub(transform.translation_axis, plane_pos, transform.midpoint);
+        transform.translation_delta = 1.0f;
+
+        apply_transform(&transform);
+    }
 }
 
 void handle_selection_end(selection_t *selection, float x, float y) {
-    selection->is_visible = 0;
-    selection->bx = x;
-    selection->by = y;
+    if (selection->action == ACTION_SELECT) {
+        selection->is_visible = 0;
+        selection->bx = x;
+        selection->by = y;
+        
+        float min_x = fminf(selection->ax, selection->bx);
+        float min_y = fminf(selection->ay, selection->by);
+
+        float max_x = fmaxf(selection->ax, selection->bx);
+        float max_y = fmaxf(selection->ay, selection->by);
+
+        float width = max_x - min_x;
+        float height = max_y - min_y;
+
+        if (width < 5.0f || height < 5.0f)
+            return; // selection too small
+        
+        render_picker_to_vertex_ids(&picker, &model);
+        select_ids_in_rect(selection, (vec2){min_x, min_y}, (vec2){max_x, max_y});
+
+        selection->is_coplanar = (selection->len > 1) \
+            && check_coplanar_vertices(&model, selection->indices, selection->len);
+
+        start_transform(&transform, &model, selection);
+
+        selection->action = ACTION_MOVE;
+    }
     
-    float min_x = fminf(selection->ax, selection->bx);
-    float min_y = fminf(selection->ay, selection->by);
+    else if (selection->action == ACTION_MOVE) {
+        printf("move end: %f %f\n", x, y);
 
-    float max_x = fmaxf(selection->ax, selection->bx);
-    float max_y = fmaxf(selection->ay, selection->by);
-
-    float width = max_x - min_x;
-    float height = max_y - min_y;
-
-    if (width < 5.0f || height < 5.0f)
-        return; // selection too small
-    
-    render_picker_to_vertex_ids(&picker, &model);
-    select_ids_in_rect(selection, (vec2){min_x, min_y}, (vec2){max_x, max_y});
-
-    selection->is_coplanar = (selection->len > 1) \
-        && check_coplanar_vertices(&model, selection->indices, selection->len);
-
-
-    start_transform(&transform, &model, selection);
+        selection->action = ACTION_SELECT;
+    }
 }
 
 void get_selection_midpoint(selection_t *selection, vec3 midpoint) {
