@@ -16,7 +16,7 @@ struct _transform_t
     model_t *model;
     selection_t *selection;
     
-    vec3 midpoint;
+    vec3 midpoint, offset;
     
     vec3 *initial_vertices; // matches length of selection->len
     uint32_t initial_vertices_cap;

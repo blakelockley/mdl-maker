@@ -118,6 +118,13 @@ void update_selection(selection_t *selection) {
         
         // TODO: I don't think this is the best way to handle transformations
         // apply_transform(&transform);
+
+        push_debug_point(transform.midpoint, (vec3){1.0f, 0.0f, 0.0f});
+        
+        vec3 grab_point;
+        vec3_add(grab_point, transform.midpoint, transform.offset);
+
+        push_debug_point(grab_point, (vec3){1.0f, 1.0f, 0.0f});
     }
     
     if (selection->len > 0 && selection->mode == MODE_FACE) {    
@@ -163,26 +170,6 @@ void handle_selection_start(selection_t *selection, float x, float y) {
     }
     
     else if (selection->action == ACTION_MOVE) {
-        printf("move start: %f %f\n", x, y);
-    }
-}
-
-void handle_selection_move(selection_t *selection, float x, float y) {
-    selection->bx = x;
-    selection->by = y;
-    
-    if (selection->action == ACTION_SELECT) {
-        selection->is_visible = 1;
-
-        buffer_selection(selection);
-    }
-    
-    else if (selection->action == ACTION_MOVE) {
-        // float delta_x = selection->bx - selection->ax;
-        // float delta_y = selection->by - selection->ay;
-        
-        // printf("move delta: %f %f\n", delta_x, delta_y);
-
         mat4x4 view, projection, vp, inverse_vp;
         get_view_matrix(&camera, view);
         get_projection_matrix(&viewport, projection);
@@ -211,7 +198,52 @@ void handle_selection_move(selection_t *selection, float x, float y) {
         vec3 plane_pos;
         vec3_from_vec4(plane_pos, r);
 
-        // vec3 delta;
+        vec3_sub(transform.offset, plane_pos, transform.midpoint);
+
+        start_transform(&transform, &model, selection);
+    }
+}
+
+void handle_selection_move(selection_t *selection, float x, float y) {
+    selection->bx = x;
+    selection->by = y;
+    
+    if (selection->action == ACTION_SELECT) {
+        selection->is_visible = 1;
+
+        buffer_selection(selection);
+    }
+    
+    else if (selection->action == ACTION_MOVE) {
+        mat4x4 view, projection, vp, inverse_vp;
+        get_view_matrix(&camera, view);
+        get_projection_matrix(&viewport, projection);
+        
+        mat4x4_mul(vp, projection, view);
+
+        vec4 midpoint, projected_midpoint;
+        vec4_from_vec3(midpoint, transform.midpoint, 1);
+        
+        mat4x4_mul_vec4(projected_midpoint, vp, midpoint);
+        vec4_scale(projected_midpoint, projected_midpoint, 1 / projected_midpoint[3]); // perspective divide
+  
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+    
+        float clip_x = (x / width) * 2.0f - 1.0f;
+        float clip_y = 1.0f - (y / height) * 2.0f;
+        float clip_z = projected_midpoint[2];
+        
+        vec4 v, r;
+        vec4_set(v, clip_x, clip_y, clip_z, 1);
+        
+        mat4x4_invert(inverse_vp, vp);
+        mat4x4_mul_vec4(r, inverse_vp, v);
+        
+        vec3 plane_pos;
+        vec3_from_vec4(plane_pos, r);
+        vec3_sub(plane_pos, plane_pos, transform.offset);
+
         vec3_sub(transform.translation_axis, plane_pos, transform.midpoint);
         transform.translation_delta = 1.0f;
 
@@ -249,9 +281,7 @@ void handle_selection_end(selection_t *selection, float x, float y) {
     }
     
     else if (selection->action == ACTION_MOVE) {
-        printf("move end: %f %f\n", x, y);
-
-        selection->action = ACTION_SELECT;
+        // selection->action = ACTION_SELECT;
     }
 }
 
