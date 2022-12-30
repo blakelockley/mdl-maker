@@ -93,19 +93,11 @@ uint32_t render_picker_to_face_id(picker_t *picker, model_t *model) {
 
     glUseProgram(picker->shader);
     
-    mat4x4 _model, view, projection;
-    mat4x4_identity(_model);
-    get_view_matrix(&camera, view);
-    get_projection_matrix(&camera, projection);
+    mat4x4 mvp;
+    get_view_projection_matrix(&camera, mvp);
     
-    GLint model_loc = glGetUniformLocation(picker->shader, "model");
-    glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)_model);
-
-    GLint view_loc = glGetUniformLocation(picker->shader, "view");
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)view);
-
-    GLint projection_loc = glGetUniformLocation(picker->shader, "projection");
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
+    GLint mvp_loc = glGetUniformLocation(picker->shader, "mvp");
+    glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
     
     glDrawArrays(GL_TRIANGLES, 0, total_vertices);
     glBindVertexArray(0);
@@ -144,19 +136,11 @@ void render_picker_to_vertex_ids(picker_t *picker, model_t *model) {
 
     glUseProgram(picker->shader);
 
-    mat4x4 _model, view, projection;
-    mat4x4_identity(_model);
-    get_view_matrix(&camera, view);
-    get_projection_matrix(&camera, projection);
+    mat4x4 mvp;
+    get_view_projection_matrix(&camera, mvp);
     
-    GLint model_loc = glGetUniformLocation(picker->shader, "model");
-    glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)_model);
-
-    GLint view_loc = glGetUniformLocation(picker->shader, "view");
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)view);
-
-    GLint projection_loc = glGetUniformLocation(picker->shader, "projection");
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
+    GLint mvp_loc = glGetUniformLocation(picker->shader, "mvp");
+    glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
 
     glBindVertexArray(picker->vao);
 

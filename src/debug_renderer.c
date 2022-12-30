@@ -58,19 +58,11 @@ void init_debug_renderer() {
 void render_debug_shapes() {    
     glUseProgram(renderer.shader);
     
-    mat4x4 _model, view, projection;
-    mat4x4_identity(_model);
-    get_view_matrix(&camera, view);
-    get_projection_matrix(&camera, projection);
+    mat4x4 mvp;
+    get_view_projection_matrix(&camera, mvp);
     
-    GLint model_loc = glGetUniformLocation(renderer.shader, "model");
-    glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)_model);
-
-    GLint view_loc = glGetUniformLocation(renderer.shader, "view");
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)view);
-
-    GLint projection_loc = glGetUniformLocation(renderer.shader, "projection");
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
+    GLint mvp_loc = glGetUniformLocation(renderer.shader, "mvp");
+    glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
      
     GLint color_loc = glGetUniformLocation(renderer.shader, "color");
     glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);

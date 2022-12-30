@@ -68,6 +68,20 @@ void render_model_faces(renderer_t *renderer, model_t *model) {
             vi++;
         }
     }
+    
+    glUseProgram(renderer->shader);
+    
+    mat4x4 mvp;
+    get_view_projection_matrix(&camera, mvp);
+    
+    GLint mvp_loc = glGetUniformLocation(renderer->shader, "mvp");
+    glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
+
+    GLint light_pos_loc = glGetUniformLocation(renderer->shader, "light_pos");
+    glUniform3fv(light_pos_loc, 1, (float*)light.pos);
+
+    GLint light_color_loc = glGetUniformLocation(renderer->shader, "light_color");
+    glUniform3fv(light_color_loc, 1, (float*)light.color);
 
     glBindVertexArray(renderer->vao);
     
@@ -80,28 +94,6 @@ void render_model_faces(renderer_t *renderer, model_t *model) {
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[2]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_DYNAMIC_DRAW);
 
-    glUseProgram(renderer->shader);
-    
-    mat4x4 _model, view, projection;
-    mat4x4_identity(_model);
-    get_view_matrix(&camera, view);
-    get_projection_matrix(&camera, projection);
-    
-    GLint model_loc = glGetUniformLocation(renderer->shader, "model");
-    glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)_model);
-
-    GLint view_loc = glGetUniformLocation(renderer->shader, "view");
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)view);
-
-    GLint projection_loc = glGetUniformLocation(renderer->shader, "projection");
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
-
-    GLint light_pos_loc = glGetUniformLocation(renderer->shader, "light_pos");
-    glUniform3fv(light_pos_loc, 1, (float*)light.pos);
-
-    GLint light_color_loc = glGetUniformLocation(renderer->shader, "light_color");
-    glUniform3fv(light_color_loc, 1, (float*)light.color);
-    
     glDrawArrays(GL_TRIANGLES, 0, total_vertices);
     glBindVertexArray(0);
 }

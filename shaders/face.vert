@@ -8,12 +8,12 @@ out vec3 out_frag_pos;
 out vec3 out_normal;
 out vec3 out_color;
 
-uniform mat4 model, view, projection;
+uniform mat4 mvp;
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(pos, 1.0);
-    out_frag_pos = vec3(model * vec4(pos, 1.0));
+    gl_Position = mvp * vec4(pos, 1.0);
+    out_frag_pos = pos;
     out_normal = normal;
     out_color = color;
 }

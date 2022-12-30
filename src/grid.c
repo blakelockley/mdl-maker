@@ -52,19 +52,11 @@ void free_grid(grid_t *grid) {
 void render_grid(grid_t *grid) {
     glUseProgram(grid->shader);
 
-    mat4x4 model, view, projection;
-    mat4x4_identity(model);
-    get_view_matrix(&camera, view);
-    get_projection_matrix(&camera, projection);
-
-    GLint model_loc = glGetUniformLocation(grid->shader, "model");
-    glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float *)model);
-
-    GLint view_loc = glGetUniformLocation(grid->shader, "view");
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float *)view);
-
-    GLint projection_loc = glGetUniformLocation(grid->shader, "projection");
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float *)projection);
+    mat4x4 mvp;
+    get_view_projection_matrix(&camera, mvp);
+    
+    GLint mvp_loc = glGetUniformLocation(grid->shader, "mvp");
+    glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
 
     GLint color_loc = glGetUniformLocation(grid->shader, "color");
     glBindVertexArray(grid->vao);
