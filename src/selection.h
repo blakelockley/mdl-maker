@@ -48,13 +48,13 @@ void render_selection(selection_t *select);
 void clear_selection(selection_t *select);
 void append_selection(selection_t *select, uint32_t index);
 
-void handle_selection_start(selection_t *selection, float x, float y);
-void handle_selection_move(selection_t *selection, float x, float y);
-void handle_selection_end(selection_t *selection, float x, float y);
+void handle_selection_start(selection_t *selection, float x, float y, bool shift_pressed);
+void handle_selection_move(selection_t *selection, float x, float y, bool shift_pressed);
+void handle_selection_end(selection_t *selection, float x, float y, bool shift_pressed);
 
 void update_selection(selection_t *selection);
 
-void move_selection(selection_t *selection);
+void move_selection(selection_t *selection, vec3 location);
 void scale_selection(selection_t *selection, float scale);
 void extend_selection(selection_t *selection);
 

@@ -254,10 +254,16 @@ void select_ids_in_rect(selection_t *selection, vec2 tl, vec2 br) {
         }
     }
     
-    selection->len = 0;
-
     for (int i = 0; i < model.vertices_len; i++) {
         if (!sparse_map[i])
+            continue;
+        
+        // check if index already exists in selection
+        bool already_exists = false;
+        for (int j = 0; j < selection->len && !already_exists; j++)
+            already_exists = (selection->indices[j] == i);
+
+        if (already_exists)
             continue;
 
         if (selection->len == selection->cap) {

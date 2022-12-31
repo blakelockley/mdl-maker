@@ -17,7 +17,7 @@ extern picker_t picker;
 extern GLFWwindow *window;
 
 void buffer_selection(selection_t *selection);
-void caclulate_selection_midpoint(selection_t *selection, vec3 midpoint);
+void caclulate_selection_midpoint(selection_t *selection);
 
 // closest power of 2 * 10
 // (1 << (uint32_t)ceilf(log2f(n))) * 10;
@@ -101,11 +101,7 @@ void update_selection(selection_t *selection) {
             igEnd();
         }
         
-        push_debug_point(selection->midpoint, (vec3){1.0f, 0.0f, 0.0f});
-        
-        vec3 grab_point;
-        vec3_add(grab_point, selection->midpoint, selection->midpoint);
-        push_debug_point(grab_point, (vec3){1.0f, 1.0f, 0.0f});
+        push_debug_point(selection->midpoint, (vec3){1.0f, 0.0f, 1.0f});
     }
     
     if (selection->len > 0 && selection->mode == MODE_FACE) {    
@@ -140,99 +136,96 @@ void update_selection(selection_t *selection) {
     }
 }
 
-void handle_selection_start(selection_t *selection, float x, float y) {
+void handle_selection_start(selection_t *selection, float x, float y, bool shift_pressed) {
     selection->ax = x;
     selection->ay = y;
-    
-    if (selection->action == ACTION_SELECT) {
+
+    if (shift_pressed || selection->len == 0) {
         selection->is_visible = 0;
-
         buffer_selection(selection);
+        
+        return;
     }
-    
-    else if (selection->action == ACTION_MOVE) {
-        mat4x4 view, projection, vp, inverse_vp;
-        get_view_matrix(&camera, view);
-        get_projection_matrix(&camera, projection);
-        
-        mat4x4_mul(vp, projection, view);
 
-        vec4 midpoint, projected_midpoint;
-        vec4_from_vec3(midpoint, selection->midpoint, 1);
-        
-        mat4x4_mul_vec4(projected_midpoint, vp, midpoint);
-        vec4_scale(projected_midpoint, projected_midpoint, 1 / projected_midpoint[3]); // perspective divide
-  
-        int width, height;
-        glfwGetWindowSize(window, &width, &height);
-    
-        float clip_x = (x / width) * 2.0f - 1.0f;
-        float clip_y = 1.0f - (y / height) * 2.0f;
-        float clip_z = projected_midpoint[2];
-        
-        vec4 v, r;
-        vec4_set(v, clip_x, clip_y, clip_z, 1);
-        
-        mat4x4_invert(inverse_vp, vp);
-        mat4x4_mul_vec4(r, inverse_vp, v);
-        
-        vec3 plane_pos;
-        vec3_from_vec4(plane_pos, r);
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
 
-        vec3_sub(selection->offset, plane_pos, selection->midpoint);
-    }
+    float clip_x = (x / width) * 2.0f - 1.0f;
+    float clip_y = 1.0f - (y / height) * 2.0f;
+    
+    mat4x4 view, projection, vp, inverse_vp;
+    get_view_matrix(&camera, view);
+    get_projection_matrix(&camera, projection);
+    
+    mat4x4_mul(vp, projection, view);
+
+    vec4 midpoint, projected_midpoint;
+    vec4_from_vec3(midpoint, selection->midpoint, 1);
+    mat4x4_mul_vec4(projected_midpoint, vp, midpoint);
+    
+    float clip_z = projected_midpoint[2] / projected_midpoint[3]; // perspective divide
+    
+    vec4 v, r;
+    vec4_set(v, clip_x, clip_y, clip_z, 1);
+    
+    mat4x4_invert(inverse_vp, vp);
+    mat4x4_mul_vec4(r, inverse_vp, v);
+    
+    vec3 plane_pos;
+    vec3_from_vec4(plane_pos, r);
+
+    vec3_sub(selection->offset, plane_pos, selection->midpoint);
 }
 
-void handle_selection_move(selection_t *selection, float x, float y) {
+void handle_selection_move(selection_t *selection, float x, float y, bool shift_pressed) {
     selection->bx = x;
     selection->by = y;
-    
-    if (selection->action == ACTION_SELECT) {
+
+    if (shift_pressed || selection->len == 0) {
         selection->is_visible = 1;
-
         buffer_selection(selection);
+        
+        return;
     }
+        
+    mat4x4 view, projection, vp, inverse_vp;
+    get_view_matrix(&camera, view);
+    get_projection_matrix(&camera, projection);
     
-    else if (selection->action == ACTION_MOVE) {
-        mat4x4 view, projection, vp, inverse_vp;
-        get_view_matrix(&camera, view);
-        get_projection_matrix(&camera, projection);
-        
-        mat4x4_mul(vp, projection, view);
+    mat4x4_mul(vp, projection, view);
 
-        vec4 midpoint, projected_midpoint;
-        vec4_from_vec3(midpoint, selection->midpoint, 1);
-        
-        mat4x4_mul_vec4(projected_midpoint, vp, midpoint);
-        vec4_scale(projected_midpoint, projected_midpoint, 1 / projected_midpoint[3]); // perspective divide
-  
-        int width, height;
-        glfwGetWindowSize(window, &width, &height);
+    vec4 midpoint, projected_midpoint;
+    vec4_from_vec3(midpoint, selection->midpoint, 1);
     
-        float clip_x = (x / width) * 2.0f - 1.0f;
-        float clip_y = 1.0f - (y / height) * 2.0f;
-        float clip_z = projected_midpoint[2];
-        
-        vec4 v, r;
-        vec4_set(v, clip_x, clip_y, clip_z, 1);
-        
-        mat4x4_invert(inverse_vp, vp);
-        mat4x4_mul_vec4(r, inverse_vp, v);
-        
-        vec3 plane_pos;
-        vec3_from_vec4(plane_pos, r);
-        vec3_sub(plane_pos, plane_pos, selection->offset);
+    mat4x4_mul_vec4(projected_midpoint, vp, midpoint);
+    vec4_scale(projected_midpoint, projected_midpoint, 1 / projected_midpoint[3]); // perspective divide
 
-        // vec3_sub(selection->translation_axis, plane_pos, selection->midpoint);
-        // selection->translation_delta = 1.0f;
-    }
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+
+    float clip_x = (x / width) * 2.0f - 1.0f;
+    float clip_y = 1.0f - (y / height) * 2.0f;
+    float clip_z = projected_midpoint[2];
+    
+    vec4 v, r;
+    vec4_set(v, clip_x, clip_y, clip_z, 1);
+    
+    mat4x4_invert(inverse_vp, vp);
+    mat4x4_mul_vec4(r, inverse_vp, v);
+    
+    vec3 plane_pos;
+    vec3_from_vec4(plane_pos, r);
+    vec3_sub(plane_pos, plane_pos, selection->offset);
+
+    move_selection(selection, plane_pos);
 }
 
-void handle_selection_end(selection_t *selection, float x, float y) {
-    if (selection->action == ACTION_SELECT) {
+void handle_selection_end(selection_t *selection, float x, float y, bool shift_pressed) {
+    selection->bx = x;
+    selection->by = y;
+
+    if (shift_pressed || selection->len == 0) {
         selection->is_visible = 0;
-        selection->bx = x;
-        selection->by = y;
         
         float min_x = fminf(selection->ax, selection->bx);
         float min_y = fminf(selection->ay, selection->by);
@@ -245,6 +238,9 @@ void handle_selection_end(selection_t *selection, float x, float y) {
 
         if (width < 5.0f || height < 5.0f)
             return; // selection too small
+
+        if (!shift_pressed)
+            selection->len = 0;
         
         render_picker_to_vertex_ids(&picker, &model);
         select_ids_in_rect(selection, (vec2){min_x, min_y}, (vec2){max_x, max_y});
@@ -252,21 +248,18 @@ void handle_selection_end(selection_t *selection, float x, float y) {
         selection->is_coplanar = (selection->len > 1) \
             && check_coplanar_vertices(&model, selection->indices, selection->len);
 
-        selection->action = ACTION_MOVE;
-    }
-    
-    else if (selection->action == ACTION_MOVE) {
-        // selection->action = ACTION_SELECT;
+        caclulate_selection_midpoint(selection);
     }
 }
 
-void caclulate_selection_midpoint(selection_t *selection, vec3 midpoint) {
+void caclulate_selection_midpoint(selection_t *selection) {
+    vec3 midpoint;
     vec3_zero(midpoint);
 
     for (int i = 0; i < selection->len; i++)
         vec3_add(midpoint, midpoint, model.vertices[selection->indices[i]]);
 
-    vec3_scale(midpoint, midpoint, 1.0f / (float)selection->len);
+    vec3_scale(selection->midpoint, midpoint, 1.0f / (float)selection->len);
 }
 
 void clear_selection(selection_t *selection) {
@@ -311,4 +304,63 @@ void buffer_selection(selection_t *selection) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
     glBindVertexArray(0);
+}
+
+void scale_selection(selection_t *selection, float scale) {
+    for (int i = 0; i < selection->len; i++) {
+        uint32_t index = selection->indices[i];
+        
+        vec3 delta;
+        vec3_sub(delta, model.vertices[index], selection->midpoint);
+        vec3_scale(delta, delta, scale);
+        
+        vec3_add(model.vertices[selection->indices[i]], selection->midpoint, delta);
+    }
+
+    caclulate_selection_midpoint(selection);
+}
+
+void move_selection(selection_t *selection, vec3 location) {
+    for (int i = 0; i < selection->len; i++) {
+        uint32_t index = selection->indices[i];
+
+        vec3 delta;
+        vec3_sub(delta, model.vertices[index], selection->midpoint);
+        
+        vec3_add(model.vertices[index], location, delta);
+    }
+
+    caclulate_selection_midpoint(selection);
+}
+
+void extend_selection(selection_t *selection) {
+    uint32_t sorted_indices[selection->len];
+    uint32_t extend_indices[selection->len];
+
+    vec3 normal;
+    calculate_normal(&model, normal, selection->indices, selection->len);
+
+    for (int i = 0; i < selection->len; i++)
+        sorted_indices[i] = selection->indices[i];
+
+    sort_by_angle(&model, selection->midpoint, normal, sorted_indices, selection->len);
+    
+    for (int i = 0; i < selection->len; i++) {
+        vec3 v;
+        vec3_add(v, model.vertices[sorted_indices[i]], normal);
+
+        extend_indices[i] = add_vertex(&model, v);
+    }
+
+    for (int i = 0; i < selection->len; i++) {
+        uint32_t ia = sorted_indices[i];
+        uint32_t ib = sorted_indices[(i + 1) % selection->len];
+        uint32_t ic = extend_indices[(i + 1) % selection->len];
+        uint32_t id = extend_indices[i];
+        
+        uint32_t face_index = add_face_quad(&model, ia, ib, ic, id);
+        vec3_set(model.faces[face_index].color, (rand() % 255) / 255.0f, (rand() % 255) / 255.0f, (rand() % 255) / 255.0f);
+    }
+
+    // TODO: Update selection
 }

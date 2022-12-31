@@ -22,7 +22,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         return;
 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
+        selection.len = 0;
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
@@ -32,19 +32,22 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     float mouse_x = io->MousePos.x;
     float mouse_y = io->MousePos.y;
 
+    bool shift_pressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+
     if (selection.mode == MODE_VERTEX) {        
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-            handle_selection_start(&selection, mouse_x, mouse_y);
+            handle_selection_start(&selection, mouse_x, mouse_y, shift_pressed);
         
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
-            handle_selection_end(&selection, mouse_x, mouse_y);    
+            handle_selection_end(&selection, mouse_x, mouse_y, shift_pressed);
     }
     
+    // TODO: Move logic into selection/face picker
     if (selection.mode == MODE_FACE) {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
             uint32_t picked_face_index = render_picker_to_face_id(&picker, &model);
             
-            if (!(mods & GLFW_MOD_SHIFT))
+            if (!shift_pressed)
                 clear_selection(&selection);
             
             if (picked_face_index != INDEX_NOT_FOUND)
@@ -63,10 +66,12 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     double delta_x = io->MouseDelta.x;
     double delta_y = io->MouseDelta.y;
 
+    bool shift_pressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+
     // Selection
     if (selection.mode == MODE_VERTEX 
      && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-        handle_selection_move(&selection, mouse_x, mouse_y);
+        handle_selection_move(&selection, mouse_x, mouse_y, shift_pressed);
 
     // Euclidan translation
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS
