@@ -48,7 +48,7 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
                 clear_selection(&selection);
             
             if (picked_face_index != INDEX_NOT_FOUND)
-                extend_selection(&selection, picked_face_index);
+                append_selection(&selection, picked_face_index);
         }
     }
 }

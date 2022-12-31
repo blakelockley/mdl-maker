@@ -7,20 +7,17 @@
 #include "shader.h"
 #include "model.h"
 #include "picker.h"
-#include "transform.h"
 
 #include "renderers.h"
 
 extern camera_t camera;
 extern model_t model;
 extern picker_t picker;
-extern transform_t transform;
 
 extern GLFWwindow *window;
 
 void buffer_selection(selection_t *selection);
-void update_control_axis(selection_t *selection);
-void get_selection_midpoint(selection_t *selection, vec3 midpoint);
+void caclulate_selection_midpoint(selection_t *selection, vec3 midpoint);
 
 // closest power of 2 * 10
 // (1 << (uint32_t)ceilf(log2f(n))) * 10;
@@ -98,30 +95,16 @@ void update_selection(selection_t *selection) {
             if (selection->is_coplanar) {
                 igSameLine(0, 10);
                 if (igButton("Extend", (struct ImVec2){ 100, 0 }))
-                    start_extend(&transform);
+                    extend_selection(selection);
             }
-
-            // igText("Transformation");
-
-            // igSliderFloat("Translation", &transform.translation_delta, -5.0f, 5.0f, "%.2f", 0);
-            // igSliderFloat("Rotation", &transform.rotation_delta, -5.0f, 5.0f, "%.2f", 0);
-            // igSliderFloat("Scale", &transform.scale, 0.0f, 5.0f, "%.2f", 0);
-
-            // if (igButton("Reset", (struct ImVec2){ 0, 0 })) {
-            //     reset_transform(&transform);
-            // }    
 
             igEnd();
         }
         
-        // TODO: I don't think this is the best way to handle transformations
-        // apply_transform(&transform);
-
-        push_debug_point(transform.midpoint, (vec3){1.0f, 0.0f, 0.0f});
+        push_debug_point(selection->midpoint, (vec3){1.0f, 0.0f, 0.0f});
         
         vec3 grab_point;
-        vec3_add(grab_point, transform.midpoint, transform.offset);
-
+        vec3_add(grab_point, selection->midpoint, selection->midpoint);
         push_debug_point(grab_point, (vec3){1.0f, 1.0f, 0.0f});
     }
     
@@ -175,7 +158,7 @@ void handle_selection_start(selection_t *selection, float x, float y) {
         mat4x4_mul(vp, projection, view);
 
         vec4 midpoint, projected_midpoint;
-        vec4_from_vec3(midpoint, transform.midpoint, 1);
+        vec4_from_vec3(midpoint, selection->midpoint, 1);
         
         mat4x4_mul_vec4(projected_midpoint, vp, midpoint);
         vec4_scale(projected_midpoint, projected_midpoint, 1 / projected_midpoint[3]); // perspective divide
@@ -196,9 +179,7 @@ void handle_selection_start(selection_t *selection, float x, float y) {
         vec3 plane_pos;
         vec3_from_vec4(plane_pos, r);
 
-        vec3_sub(transform.offset, plane_pos, transform.midpoint);
-
-        start_transform(&transform, &model, selection);
+        vec3_sub(selection->offset, plane_pos, selection->midpoint);
     }
 }
 
@@ -220,7 +201,7 @@ void handle_selection_move(selection_t *selection, float x, float y) {
         mat4x4_mul(vp, projection, view);
 
         vec4 midpoint, projected_midpoint;
-        vec4_from_vec3(midpoint, transform.midpoint, 1);
+        vec4_from_vec3(midpoint, selection->midpoint, 1);
         
         mat4x4_mul_vec4(projected_midpoint, vp, midpoint);
         vec4_scale(projected_midpoint, projected_midpoint, 1 / projected_midpoint[3]); // perspective divide
@@ -240,12 +221,10 @@ void handle_selection_move(selection_t *selection, float x, float y) {
         
         vec3 plane_pos;
         vec3_from_vec4(plane_pos, r);
-        vec3_sub(plane_pos, plane_pos, transform.offset);
+        vec3_sub(plane_pos, plane_pos, selection->offset);
 
-        vec3_sub(transform.translation_axis, plane_pos, transform.midpoint);
-        transform.translation_delta = 1.0f;
-
-        apply_transform(&transform);
+        // vec3_sub(selection->translation_axis, plane_pos, selection->midpoint);
+        // selection->translation_delta = 1.0f;
     }
 }
 
@@ -273,8 +252,6 @@ void handle_selection_end(selection_t *selection, float x, float y) {
         selection->is_coplanar = (selection->len > 1) \
             && check_coplanar_vertices(&model, selection->indices, selection->len);
 
-        start_transform(&transform, &model, selection);
-
         selection->action = ACTION_MOVE;
     }
     
@@ -283,7 +260,7 @@ void handle_selection_end(selection_t *selection, float x, float y) {
     }
 }
 
-void get_selection_midpoint(selection_t *selection, vec3 midpoint) {
+void caclulate_selection_midpoint(selection_t *selection, vec3 midpoint) {
     vec3_zero(midpoint);
 
     for (int i = 0; i < selection->len; i++)
@@ -296,7 +273,7 @@ void clear_selection(selection_t *selection) {
     selection->len = 0;
 }
 
-void extend_selection(selection_t *selection, uint32_t index) {
+void append_selection(selection_t *selection, uint32_t index) {
     if (selection->len == selection->cap) {
         selection->cap *= 2;
         selection->indices = (uint32_t*)realloc(selection->indices, sizeof(uint32_t) * selection->cap);

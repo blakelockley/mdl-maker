@@ -31,7 +31,9 @@ struct _selection_t {
     double bx, by;
 
     bool is_coplanar;
- 
+    vec3 midpoint, offset, normal;
+
+    // TODO: Move this into GUI renderer?
     GLuint shader;
     GLuint vao, vbo;
 };
@@ -44,12 +46,16 @@ void free_selection(selection_t *select);
 void render_selection(selection_t *select);
 
 void clear_selection(selection_t *select);
-void extend_selection(selection_t *select, uint32_t index);
+void append_selection(selection_t *select, uint32_t index);
 
 void handle_selection_start(selection_t *selection, float x, float y);
 void handle_selection_move(selection_t *selection, float x, float y);
 void handle_selection_end(selection_t *selection, float x, float y);
 
 void update_selection(selection_t *selection);
+
+void move_selection(selection_t *selection);
+void scale_selection(selection_t *selection, float scale);
+void extend_selection(selection_t *selection);
 
 #endif  // SELECT_H
