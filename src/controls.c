@@ -34,26 +34,22 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 
     bool shift_pressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
 
-    if (selection.mode == MODE_VERTEX) {        
-        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-            handle_selection_start(&selection, mouse_x, mouse_y, shift_pressed);
-        
-        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
-            handle_selection_end(&selection, mouse_x, mouse_y, shift_pressed);
-    }
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+        handle_selection_start(&selection, mouse_x, mouse_y, shift_pressed);
+    
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+        handle_selection_end(&selection, mouse_x, mouse_y, shift_pressed);
     
     // TODO: Move logic into selection/face picker
-    if (selection.mode == MODE_FACE) {
-        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-            uint32_t picked_face_index = render_picker_to_face_id(&picker, &model);
-            
-            if (!shift_pressed)
-                clear_selection(&selection);
-            
-            if (picked_face_index != INDEX_NOT_FOUND)
-                append_selection(&selection, picked_face_index);
-        }
-    }
+    // if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+    //     uint32_t picked_face_index = render_picker_to_face_id(&picker, &model);
+        
+    //     if (!shift_pressed)
+    //         clear_selection(&selection);
+        
+    //     if (picked_face_index != INDEX_NOT_FOUND)
+    //         append_selection(&selection, picked_face_index);
+    // }
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
@@ -69,18 +65,15 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     bool shift_pressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
 
     // Selection
-    if (selection.mode == MODE_VERTEX 
-     && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
         handle_selection_move(&selection, mouse_x, mouse_y, shift_pressed);
 
     // Euclidan translation
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS
-     && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && !shift_pressed)
         update_position(&camera, delta_x, delta_y);
     
     // Orbital rotation
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE
-     && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && !shift_pressed)
         update_orbit(&camera, delta_x, delta_y);
 }
 

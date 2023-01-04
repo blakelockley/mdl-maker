@@ -18,12 +18,12 @@ extern GLFWwindow *window;
 
 void buffer_selection(selection_t *selection);
 void caclulate_selection_midpoint(selection_t *selection);
+void select_faces(selection_t *selection);
 
 // closest power of 2 * 10
 // (1 << (uint32_t)ceilf(log2f(n))) * 10;
 
 void init_selection(selection_t *selection) {
-    selection->mode = MODE_VERTEX;
     selection->action = ACTION_SELECT;
     
     selection->is_visible = 0;
@@ -31,6 +31,10 @@ void init_selection(selection_t *selection) {
     selection->indices = (uint32_t*)malloc(sizeof(uint32_t) * 10);
     selection->len = 0;
     selection->cap = 10;
+
+    selection->faces = (uint32_t*)malloc(sizeof(uint32_t) * 10);
+    selection->faces_len = 0;
+    selection->faces_cap = 10;
 
     glGenVertexArrays(1, &selection->vao);
     glBindVertexArray(selection->vao);
@@ -51,7 +55,10 @@ void free_selection(selection_t *selection) {
     glDeleteBuffers(1, &selection->vbo);
 }
 
-void render_selection(selection_t *selection) {
+void render_selection(selection_t *selection, renderer_t *vertex_renderer, renderer_t *edge_renderer) {
+    render_model_vertices_selection(vertex_renderer, &model, selection->indices, selection->len);
+    render_model_edges_selection(edge_renderer, &model, selection->faces, selection->faces_len);
+    
     if (!selection->is_visible)
         return;
 
@@ -65,74 +72,70 @@ void render_selection(selection_t *selection) {
 }
 
 void update_selection(selection_t *selection) {
-    if (selection->len > 0 && selection->mode == MODE_VERTEX) {    
-        if (igBegin("Edit Verticess", NULL, ImGuiWindowFlags_NoCollapse)) {
-            static char buffer[128];
+
+    push_debug_point(selection->midpoint, (vec3){1.0f, 0.0f, 1.0f});
+   
+    if (igBegin("Edit Verticess", NULL, ImGuiWindowFlags_NoCollapse)) {
+        static char buffer[128];
+        
+        sprintf(buffer, "Num. Vertices: %d", selection->len);
+        igText(buffer);
+
+        sprintf(buffer, "Sel. Vertices: ");
+        for (int i = 0; i < selection->len; i++)
+            sprintf(buffer, "%s%d ", buffer, selection->indices[i]);
+        igText(buffer);
+        
+        char *actions[] = {"Select", "Move"};
+        sprintf(buffer, "Action: %-7s", actions[selection->action]);
+        igText(buffer);
+
+        for (int i = 0; i < 2; i++) {
+            igSameLine(0, 10);
+            if (igButton(actions[i], (struct ImVec2){ 100, 0 })) {
+                selection->action = i;
+            }
+        }
+
+        char *coplanar_str = selection->len > 1 ? (selection->is_coplanar ? "Yes" : "No") : "--";
+        sprintf(buffer, "Coplanar: %-5s", coplanar_str);
+        igText(buffer);
+
+        if (selection->is_coplanar) {
+            igSameLine(0, 10);
+            if (igButton("Extend", (struct ImVec2){ 100, 0 }))
+                extend_selection(selection);
+        }
+
+        if (selection->faces_len > 0) {
+            igSeparator();
             
-            sprintf(buffer, "Num. Vertices: %d", selection->len);
+            sprintf(buffer, "Num. Face: %d", selection->faces_len);
             igText(buffer);
 
             sprintf(buffer, "Sel. Vertices: ");
-            for (int i = 0; i < selection->len; i++)
-                sprintf(buffer, "%s%d ", buffer, selection->indices[i]);
+            for (int i = 0; i < selection->faces_len; i++)
+                sprintf(buffer, "%s%d ", buffer, selection->faces[i]);
             igText(buffer);
-            
-            char *actions[] = {"Select", "Move"};
-            sprintf(buffer, "Action: %-7s", actions[selection->action]);
-            igText(buffer);
-
-            for (int i = 0; i < 2; i++) {
-                igSameLine(0, 10);
-                if (igButton(actions[i], (struct ImVec2){ 100, 0 })) {
-                    selection->action = i;
-                }
-            }
-
-            char *coplanar_str = selection->len > 1 ? (selection->is_coplanar ? "Yes" : "No") : "--";
-            sprintf(buffer, "Coplanar: %-5s", coplanar_str);
-            igText(buffer);
-
-            if (selection->is_coplanar) {
-                igSameLine(0, 10);
-                if (igButton("Extend", (struct ImVec2){ 100, 0 }))
-                    extend_selection(selection);
-            }
-
-            igEnd();
-        }
-        
-        push_debug_point(selection->midpoint, (vec3){1.0f, 0.0f, 1.0f});
-    }
-    
-    if (selection->len > 0 && selection->mode == MODE_FACE) {    
-        float *color = model.faces[selection->indices[0]].color;
-
-        if (igBegin("Edit Face(s)", NULL, ImGuiWindowFlags_NoCollapse)) {
-            static char buffer[32];
-            
-            sprintf(buffer, "Num. Face: %d", selection->len);
-            igText(buffer);
-
-            igSeparator();
             
             igText("Reverse the vertex order of the face");
             if (igButton("Flip Face(s)", (struct ImVec2){ 0, 0 }))
-                for (int i = 0; i < selection->len; i++)
-                    flip_face(&model, selection->indices[i]);
+                for (int i = 0; i < selection->faces_len; i++)
+                    flip_face(&model, selection->faces[i]);
             
-            igSeparator();
-            
-            igColorPicker3("Colour", color, 0);
+            float *color = model.faces[selection->faces[0]].color;
+            igColorEdit3("Colour", color, ImGuiColorEditFlags_Float);
 
             static bool apply_to_all = false;
-            apply_to_all = (selection->len == 1) ? false : apply_to_all;
+            apply_to_all = (selection->faces_len == 1) ? false : apply_to_all;
             igCheckbox("Apply to all face", &apply_to_all);
             
-            for (int i = 1; apply_to_all && i < selection->len; i++)
-                vec3_copy(model.faces[selection->indices[i]].color, color);
-            
-            igEnd();
+            for (int i = 1; apply_to_all && i < selection->faces_len; i++)
+                vec3_copy(model.faces[selection->faces[i]].color, color);
+
         }
+        
+        igEnd();
     }
 }
 
@@ -249,6 +252,8 @@ void handle_selection_end(selection_t *selection, float x, float y, bool shift_p
             && check_coplanar_vertices(&model, selection->indices, selection->len);
 
         caclulate_selection_midpoint(selection);
+
+        select_faces(selection);
     }
 }
 
@@ -273,6 +278,33 @@ void append_selection(selection_t *selection, uint32_t index) {
     }
 
     selection->indices[selection->len++] = index;
+}
+
+void select_faces(selection_t *selection) {
+    bool sparse_map[model.vertices_len];
+    memset(sparse_map, false, sizeof(sparse_map));
+
+    for (int i = 0; i < selection->len; i++)
+        sparse_map[i] = true;
+    
+    selection->faces_len = 0;
+    for (int i = 0; i < model.faces_len; i++) {
+        face_t *face = &model.faces[i];
+        
+        bool is_included = true;
+        for (int j = 0; j < face->len && is_included; j++)
+            is_included = sparse_map[face->indices[j]];
+
+        if (!is_included)
+            continue;
+
+        if (selection->faces_len == selection->faces_cap) {
+            selection->faces_cap *= 2;
+            selection->faces = (uint32_t*)realloc(selection->faces, sizeof(uint32_t) * selection->faces_cap);
+        }
+
+        selection->faces[selection->faces_len++] = i;
+    }
 }
 
 // Converts the coordinates from screen space: [0, width/height] to clip space: [-1.0f, 1.0f]

@@ -118,21 +118,6 @@ void MainMenuBar() {
         if (show_add_icosphere)
             AddIcosphereMenu(&show_add_icosphere);
 
-        if (igBeginMenu(selection.mode == MODE_VERTEX ? "Select: Vertices" : "Select: Faces", true))
-        {
-            if (igMenuItem_Bool("Select Vertices", NULL, selection.mode == MODE_VERTEX, true)) {
-                selection.len = 0;
-                selection.mode = MODE_VERTEX;
-            }
-     
-            if (igMenuItem_Bool("Select Faces", NULL, selection.mode == MODE_FACE, true)) {
-                selection.len = 0;
-                selection.mode = MODE_FACE;
-            }
-            
-            igEndMenu();
-        }
-
         #ifdef SHOW_DEMO
         
         static bool show_demo_window = false;
