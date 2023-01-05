@@ -65,8 +65,8 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
         handle_selection_move(&selection, mouse_x, mouse_y, shift_pressed);
 
     // Euclidan translation
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && !shift_pressed)
-        update_position(&camera, delta_x, delta_y);
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && shift_pressed)
+        update_origin(&camera, delta_x, delta_y);
     
     // Orbital rotation
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && !shift_pressed)
@@ -76,8 +76,9 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     if (io->WantCaptureMouse)
         return;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) // no mouse
         update_orbit(&camera, xoffset * 2.0f, yoffset * 2.0f);
     else
-        update_depth(&camera, yoffset);
+        update_radius(&camera, yoffset);
 }
