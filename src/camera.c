@@ -110,6 +110,7 @@ void update_orbit(camera_t *camera, float delta_x, float delta_y) {
 
 void update_radius(camera_t *camera, float delta) {
     camera->radius += delta * -0.1f;
+    camera->radius = CLAMP(camera->radius, 0.1f, 10.0f);
     
     derive_camera(camera);
 }

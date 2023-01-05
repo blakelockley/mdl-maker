@@ -57,6 +57,12 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
 
     double delta_x = io->MouseDelta.x;
     double delta_y = io->MouseDelta.y;
+    
+    if (!glfwGetWindowAttrib(window, GLFW_FOCUSED))
+        glfwFocusWindow(window);
+
+    if (fabs(delta_x) > 100.0f || fabs(delta_y) > 100.0f)
+        return; // discard action when delta is too large
 
     bool shift_pressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
 
