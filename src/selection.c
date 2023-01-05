@@ -72,6 +72,8 @@ void render_selection(selection_t *selection, renderer_t *vertex_renderer, rende
 }
 
 void update_selection(selection_t *selection) {
+    if (selection->len == 0)
+        return;
 
     push_debug_point(selection->midpoint, (vec3){1.0f, 0.0f, 1.0f});
    
@@ -85,17 +87,6 @@ void update_selection(selection_t *selection) {
         for (int i = 0; i < selection->len; i++)
             sprintf(buffer, "%s%d ", buffer, selection->indices[i]);
         igText(buffer);
-        
-        char *actions[] = {"Select", "Move"};
-        sprintf(buffer, "Action: %-7s", actions[selection->action]);
-        igText(buffer);
-
-        for (int i = 0; i < 2; i++) {
-            igSameLine(0, 10);
-            if (igButton(actions[i], (struct ImVec2){ 100, 0 })) {
-                selection->action = i;
-            }
-        }
 
         char *coplanar_str = selection->len > 1 ? (selection->is_coplanar ? "Yes" : "No") : "--";
         sprintf(buffer, "Coplanar: %-5s", coplanar_str);
@@ -110,29 +101,32 @@ void update_selection(selection_t *selection) {
         if (selection->faces_len > 0) {
             igSeparator();
             
-            sprintf(buffer, "Num. Face: %d", selection->faces_len);
+            sprintf(buffer, "Num. Faces: %d", selection->faces_len);
             igText(buffer);
 
-            sprintf(buffer, "Sel. Vertices: ");
+            sprintf(buffer, "Sel. Faces: ");
             for (int i = 0; i < selection->faces_len; i++)
                 sprintf(buffer, "%s%d ", buffer, selection->faces[i]);
             igText(buffer);
             
-            igText("Reverse the vertex order of the face");
             if (igButton("Flip Face(s)", (struct ImVec2){ 0, 0 }))
                 for (int i = 0; i < selection->faces_len; i++)
                     flip_face(&model, selection->faces[i]);
+            
+            igSameLine(0, 10);
+            igText("Reverse the vertex order of the face");
             
             float *color = model.faces[selection->faces[0]].color;
             igColorEdit3("Colour", color, ImGuiColorEditFlags_Float);
 
             static bool apply_to_all = false;
             apply_to_all = (selection->faces_len == 1) ? false : apply_to_all;
-            igCheckbox("Apply to all face", &apply_to_all);
+
+            if (selection->faces_len > 1)
+                igCheckbox("Apply to all selected faces", &apply_to_all);
             
             for (int i = 1; apply_to_all && i < selection->faces_len; i++)
                 vec3_copy(model.faces[selection->faces[i]].color, color);
-
         }
         
         igEnd();
@@ -180,6 +174,75 @@ void handle_selection_start(selection_t *selection, float x, float y, bool shift
     vec3_sub(selection->offset, plane_pos, selection->midpoint);
 }
 
+void handle_selection_end(selection_t *selection, float x, float y, bool shift_pressed) {    
+    selection->bx = x;
+    selection->by = y;
+    
+    if (!shift_pressed)
+        clear_selection(selection);
+
+    if (selection->ax == selection->bx && selection->ay == selection->by) {
+        uint32_t picked_face_index = render_picker_to_face_id(&picker, &model);
+        if (picked_face_index != INDEX_NOT_FOUND) {
+            
+            face_t *face = &model.faces[picked_face_index];
+            for (int i = 0; i < face->len; i++) {
+                uint32_t index = face->indices[i];
+                
+                // check if index already exists in selection
+                bool already_exists = false;
+                for (int j = 0; j < selection->len && !already_exists; j++)
+                    already_exists = (selection->indices[j] == index);
+
+                if (already_exists)
+                    continue;
+                
+                if (selection->len == selection->cap) {
+                    selection->cap *= 2;
+                    selection->indices = (uint32_t*)realloc(selection->indices, sizeof(uint32_t) * selection->cap);
+                }
+
+                selection->indices[selection->len++] = index;
+            }
+            
+            select_faces(selection);
+            selection->is_coplanar = (selection->len > 1) \
+                && check_coplanar_vertices(&model, selection->indices, selection->len);
+        }
+
+        return;
+    }
+
+    if (shift_pressed || selection->len == 0) {
+        selection->is_visible = 0;
+        
+        float min_x = fminf(selection->ax, selection->bx);
+        float min_y = fminf(selection->ay, selection->by);
+
+        float max_x = fmaxf(selection->ax, selection->bx);
+        float max_y = fmaxf(selection->ay, selection->by);
+
+        float width = max_x - min_x;
+        float height = max_y - min_y;
+
+        if (width < 5.0f || height < 5.0f)
+            return; // selection too small
+
+        if (!shift_pressed)
+            selection->len = 0;
+        
+        render_picker_to_vertex_ids(&picker, &model);
+        select_ids_in_rect(selection, (vec2){min_x, min_y}, (vec2){max_x, max_y});
+
+        selection->is_coplanar = (selection->len > 1) \
+            && check_coplanar_vertices(&model, selection->indices, selection->len);
+
+        caclulate_selection_midpoint(selection);
+
+        select_faces(selection);
+    }
+}
+
 void handle_selection_move(selection_t *selection, float x, float y, bool shift_pressed) {
     selection->bx = x;
     selection->by = y;
@@ -223,40 +286,6 @@ void handle_selection_move(selection_t *selection, float x, float y, bool shift_
     move_selection(selection, plane_pos);
 }
 
-void handle_selection_end(selection_t *selection, float x, float y, bool shift_pressed) {
-    selection->bx = x;
-    selection->by = y;
-
-    if (shift_pressed || selection->len == 0) {
-        selection->is_visible = 0;
-        
-        float min_x = fminf(selection->ax, selection->bx);
-        float min_y = fminf(selection->ay, selection->by);
-
-        float max_x = fmaxf(selection->ax, selection->bx);
-        float max_y = fmaxf(selection->ay, selection->by);
-
-        float width = max_x - min_x;
-        float height = max_y - min_y;
-
-        if (width < 5.0f || height < 5.0f)
-            return; // selection too small
-
-        if (!shift_pressed)
-            selection->len = 0;
-        
-        render_picker_to_vertex_ids(&picker, &model);
-        select_ids_in_rect(selection, (vec2){min_x, min_y}, (vec2){max_x, max_y});
-
-        selection->is_coplanar = (selection->len > 1) \
-            && check_coplanar_vertices(&model, selection->indices, selection->len);
-
-        caclulate_selection_midpoint(selection);
-
-        select_faces(selection);
-    }
-}
-
 void caclulate_selection_midpoint(selection_t *selection) {
     vec3 midpoint;
     vec3_zero(midpoint);
@@ -269,15 +298,7 @@ void caclulate_selection_midpoint(selection_t *selection) {
 
 void clear_selection(selection_t *selection) {
     selection->len = 0;
-}
-
-void append_selection(selection_t *selection, uint32_t index) {
-    if (selection->len == selection->cap) {
-        selection->cap *= 2;
-        selection->indices = (uint32_t*)realloc(selection->indices, sizeof(uint32_t) * selection->cap);
-    }
-
-    selection->indices[selection->len++] = index;
+    selection->faces_len = 0;
 }
 
 void select_faces(selection_t *selection) {
@@ -285,7 +306,7 @@ void select_faces(selection_t *selection) {
     memset(sparse_map, false, sizeof(sparse_map));
 
     for (int i = 0; i < selection->len; i++)
-        sparse_map[i] = true;
+        sparse_map[selection->indices[i]] = true;
     
     selection->faces_len = 0;
     for (int i = 0; i < model.faces_len; i++) {

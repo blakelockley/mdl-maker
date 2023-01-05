@@ -8,7 +8,7 @@
 #include "selection.h"
 #include "model.h"
 #include "picker.h"
-
+#include "file.h"
 
 extern camera_t camera;
 extern selection_t selection;
@@ -20,9 +20,16 @@ extern struct ImGuiIO* io;
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (io->WantCaptureKeyboard)
         return;
+    
+    // TODO: Check for changes and show save dialog before closing
+    if (key == GLFW_KEY_W && action == GLFW_PRESS && mods == GLFW_MOD_SUPER)
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    
+    if (key == GLFW_KEY_S && action == GLFW_PRESS && mods == GLFW_MOD_SUPER)
+        save_file(NULL, &model);
 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        selection.len = 0;
+        clear_selection(&selection);
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
@@ -39,17 +46,6 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
         handle_selection_end(&selection, mouse_x, mouse_y, shift_pressed);
-    
-    // TODO: Move logic into selection/face picker
-    // if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-    //     uint32_t picked_face_index = render_picker_to_face_id(&picker, &model);
-        
-    //     if (!shift_pressed)
-    //         clear_selection(&selection);
-        
-    //     if (picked_face_index != INDEX_NOT_FOUND)
-    //         append_selection(&selection, picked_face_index);
-    // }
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
