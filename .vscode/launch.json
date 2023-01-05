@@ -6,7 +6,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/main",
-      "args": ["object.mdl"],
+      "args": ["debug.mdl"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
