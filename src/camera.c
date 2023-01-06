@@ -13,7 +13,7 @@ void init_camera(camera_t *camera) {
     vec3_zero(camera->origin);
     
     camera->theta = 0.0f;
-    camera->phi = 0.0f;
+    camera->phi = M_PI_4;
     camera->radius = 2.0f;
     
     // zoom in degrees
@@ -101,7 +101,7 @@ void update_origin(camera_t *camera, float delta_x, float delta_y) {
 
 void update_orbit(camera_t *camera, float delta_x, float delta_y) {    
     camera->phi += delta_y * 0.01f;
-    camera->phi = CLAMP(camera->phi, (-M_PI / 2), (M_PI / 2));
+    camera->phi = CLAMP(camera->phi, -M_PI_2, M_PI_2);
     
     camera->theta += delta_x * 0.01f;
 
