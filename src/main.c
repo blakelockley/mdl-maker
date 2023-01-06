@@ -153,8 +153,6 @@ int main(int argc, char **argv) {
         igRender();
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 
-        clear_debug_shapes();
-
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

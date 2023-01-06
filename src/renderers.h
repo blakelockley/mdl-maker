@@ -44,11 +44,11 @@ void render_model_normals(renderer_t *renderer, model_t *model);
 
 void init_debug_renderer();
 
-void clear_debug_shapes();
-void render_debug_shapes();
+// Control Renderer
 
-void push_debug_point(vec3 p, vec3 color);
-void push_debug_line(vec3 a, vec3 b, vec3 color);
-void push_debug_plane(vec3 origin, vec3 normal, float width, float height, vec3 color);
+renderer_t *init_control_renderer(renderer_t *renderer);
+void render_control_point(renderer_t *renderer, vec3 p, vec3 color);
+void render_control_line(renderer_t *renderer, vec3 a, vec3 b, vec3 color);
+void render_control_plane(renderer_t *renderer, vec3 origin, vec3 normal, float width, float height, vec3 color);
 
 #endif // RENDERERS_H
