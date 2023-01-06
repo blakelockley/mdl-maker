@@ -4,13 +4,10 @@
 #include "glfw.h"
 #include "model.h"
 
-struct _renderer_t
-{
+struct _renderer_t {
     uint32_t shader;
     uint32_t vao, vbo_len;
     uint32_t *vbo;
-
-    void (*render)(struct _renderer_t *renderer, model_t *model);
 };
 
 typedef struct _renderer_t renderer_t;

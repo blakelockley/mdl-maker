@@ -9,9 +9,6 @@ extern light_t light;
 renderer_t *init_face_renderer(renderer_t *renderer) {
     init_renderer(renderer, 3);
     
-    renderer->shader = load_shader("shaders/face.vert", "shaders/face.frag");
-    renderer->render = render_model_faces;
-    
     // Positions
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
@@ -35,6 +32,7 @@ renderer_t *init_face_renderer(renderer_t *renderer) {
 
     glBindVertexArray(0);
 
+    renderer->shader = load_shader("shaders/face.vert", "shaders/face.frag");
     return renderer;
 }
 

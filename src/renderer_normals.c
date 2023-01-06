@@ -7,9 +7,6 @@ extern camera_t camera;
 renderer_t *init_normal_renderer(renderer_t *renderer) {
     init_renderer(renderer, 1);
     
-    renderer->shader = load_shader("shaders/static.vert", "shaders/static.frag");
-    renderer->render = render_model_normals;
-
     // Vertices
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
@@ -19,6 +16,7 @@ renderer_t *init_normal_renderer(renderer_t *renderer) {
 
     glBindVertexArray(0);
 
+    renderer->shader = load_shader("shaders/static.vert", "shaders/static.frag");
     return renderer;
 }
 
