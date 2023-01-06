@@ -39,6 +39,12 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     float mouse_x = io->MousePos.x;
     float mouse_y = io->MousePos.y;
 
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+
+    if (mouse_x < 0 || mouse_x > width || mouse_y < 0 || mouse_y > height)
+        return; // discard action when click is outside of window
+
     bool shift_pressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
