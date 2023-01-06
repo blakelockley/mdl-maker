@@ -302,6 +302,17 @@ static inline void mat4x4_mul_vec4(vec4 r, const mat4x4 m, const vec4 v) {
     vec4_copy(r, tmp);
 }
 
+// Assumes w-component is 1 and performs a perspective divide after multiplication
+static inline void mat4x4_mul_vec3(vec3 r, const mat4x4 m, const vec3 v) {
+    vec4 tmp;
+    vec4_from_vec3(tmp, v, 1);
+
+    mat4x4_mul_vec4(tmp, m, tmp);
+    vec4_scale(tmp, tmp, 1.0f / tmp[3]);
+
+    vec3_from_vec4(r, tmp);
+}
+
 static inline void mat4x4_invert(mat4x4 M, const mat4x4 m) {
     mat4x4 tmp;
 
