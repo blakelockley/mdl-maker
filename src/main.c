@@ -30,7 +30,6 @@ GLFWwindow *window;
 struct ImGuiContext* ctx;
 struct ImGuiIO* io;
 
-selection_t selection;
 camera_t camera;
 light_t light;
 grid_t grid;
@@ -74,7 +73,6 @@ int main(int argc, char **argv) {
     glfwSwapInterval(1);
 
     glfwSetKeyCallback(window, key_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
@@ -97,19 +95,24 @@ int main(int argc, char **argv) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // Renderers setup
+
+    renderer_t *vertex_renderer = init_vertex_renderer(malloc(sizeof(renderer_t)));
+    renderer_t *edge_renderer   = init_edge_renderer(malloc(sizeof(renderer_t)));
+    renderer_t *face_renderer   = init_face_renderer(malloc(sizeof(renderer_t)));
+    renderer_t *normal_renderer = init_normal_renderer(malloc(sizeof(renderer_t)));
+    
+    renderer_t *control_renderer = init_control_renderer(malloc(sizeof(renderer_t)));
+    renderer_t *selection_renderer = init_selection_renderer(malloc(sizeof(renderer_t)));
+
     // Engine setup
 
     init_camera(&camera);
     init_light(&light);
     init_grid(&grid);
-    init_selection(&selection);
     init_model(&model);
-
-    init_debug_renderer();
-    renderer_t *vertex_renderer = init_vertex_renderer(malloc(sizeof(renderer_t)));
-    renderer_t *edge_renderer   = init_edge_renderer(malloc(sizeof(renderer_t)));
-    renderer_t *face_renderer   = init_face_renderer(malloc(sizeof(renderer_t)));
-    renderer_t *normal_renderer = init_normal_renderer(malloc(sizeof(renderer_t)));
+    
+    init_selection(selection_renderer, control_renderer, vertex_renderer, edge_renderer);
 
     init_picker(&picker);
 
@@ -127,7 +130,7 @@ int main(int argc, char **argv) {
         igNewFrame();
 
         update_menu();
-        update_selection(&selection);
+        update_selection();
         debug_camera(&camera);
 
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
@@ -136,19 +139,18 @@ int main(int argc, char **argv) {
         render_grid(&grid);
 
         if (render_vertices)
-            vertex_renderer->render(vertex_renderer, &model);
+            render_model_vertices(vertex_renderer, &model);
         
         if (render_edges)
-            edge_renderer->render(edge_renderer, &model);
+            render_model_edges(edge_renderer, &model);
         
         if (render_faces)
-            face_renderer->render(face_renderer, &model);
+            render_model_faces(face_renderer, &model);
         
         if (render_normals)
-            normal_renderer->render(normal_renderer, &model);
+            render_model_normals(normal_renderer, &model);
 
-        render_selection(&selection, vertex_renderer, edge_renderer);
-        render_debug_shapes();
+        render_selection();
 
         igRender();
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
@@ -171,11 +173,18 @@ int main(int argc, char **argv) {
     deinit_renderer(normal_renderer);
     free(normal_renderer);
 
+    deinit_renderer(control_renderer);
+    free(control_renderer);
+
+    deinit_renderer(selection_renderer);
+    free(selection_renderer);
+
     free_model(&model);
     free_grid(&grid);
     free_light(&light);
     free_camera(&camera);
-    free_selection(&selection);
+    
+    free_selection();
 
     // Terminate ImGui
     ImGui_ImplOpenGL3_Shutdown();

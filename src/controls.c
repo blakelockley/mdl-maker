@@ -32,34 +32,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         clear_selection(&selection);
 }
 
-void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
-    if (io->WantCaptureMouse)
-        return;
-
-    float mouse_x = io->MousePos.x;
-    float mouse_y = io->MousePos.y;
-
-    int width, height;
-    glfwGetWindowSize(window, &width, &height);
-
-    if (mouse_x < 0 || mouse_x > width || mouse_y < 0 || mouse_y > height)
-        return; // discard action when click is outside of window
-
-    bool shift_pressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
-
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-        handle_selection_start(&selection, mouse_x, mouse_y, shift_pressed);
-    
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
-        handle_selection_end(&selection, mouse_x, mouse_y, shift_pressed);
-}
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     if (io->WantCaptureMouse)
         return;
-
-    float mouse_x = io->MousePos.x;
-    float mouse_y = io->MousePos.y;
 
     double delta_x = io->MouseDelta.x;
     double delta_y = io->MouseDelta.y;
@@ -70,18 +46,12 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     if (fabs(delta_x) > 100.0f || fabs(delta_y) > 100.0f)
         return; // discard action when delta is too large
 
-    bool shift_pressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
-
-    // Selection
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-        handle_selection_move(&selection, mouse_x, mouse_y, shift_pressed);
-
     // Euclidan translation
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && shift_pressed)
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         update_origin(&camera, delta_x, delta_y);
     
     // Orbital rotation
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && !shift_pressed)
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
         update_orbit(&camera, delta_x, delta_y);
 }
 
