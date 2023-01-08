@@ -37,9 +37,11 @@ void render_model_faces(renderer_t *renderer, model_t *model);
 renderer_t *init_normal_renderer(renderer_t *renderer);
 void render_model_normals(renderer_t *renderer, model_t *model);
 
-// Debug Renderer (singleton debug renderer instance is owned by debug_renderer.c file)
+// Selection Renderer
 
-void init_debug_renderer();
+renderer_t *init_selection_renderer(renderer_t *renderer);
+void render_selection_box(renderer_t *renderer, float ax, float ay, float bx, float by, vec3 color);
+void render_selection_handle(renderer_t *renderer, float x, float y, float size, vec3 color);
 
 // Control Renderer
 
