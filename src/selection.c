@@ -87,7 +87,7 @@ void init_selection(renderer_t *selection_renderer, renderer_t *control_renderer
     selection->is_hovering_rotation[Y] = false;
     selection->is_hovering_rotation[Z] = false;
 
-    selection->irot = -1;
+    selection->rotation_axis = -1;
     selection->rotations[X] = 0.0f;
     selection->rotations[Y] = 0.0f;
     selection->rotations[Z] = 0.0f;
@@ -413,8 +413,6 @@ void finish_resizing(double mouse_x, double mouse_y) {
 }
 
 void start_rotating(double mouse_x, double mouse_y, int axis) {
-    selection->irot = axis;
-
     int width, height;
     glfwGetWindowSize(window, &width, &height);
 
@@ -429,12 +427,18 @@ void start_rotating(double mouse_x, double mouse_y, int axis) {
 
     float mid_x = projected_midpoint[0];
     float mid_y = projected_midpoint[1];
-
+    
     float x = clip_x - mid_x;
     float y = clip_y - mid_y;
 
-    selection->rotations[selection->irot] = atan2f(y, x);
+    float dir = camera.dir[axis];
+    dir = dir != 0.0f ? (dir / fabsf(dir)) : 1.0f;
+    
     selection->state = ROTATING;
+    selection->rotation_axis = axis;
+    
+    selection->initial_angle = atan2f(y, x) * dir;
+    selection->initial_rotation = selection->rotations[axis];
 }
 
 void continue_rotating(double mouse_x, double mouse_y) {
@@ -456,12 +460,16 @@ void continue_rotating(double mouse_x, double mouse_y) {
     float x = clip_x - mid_x;
     float y = clip_y - mid_y;
 
-    selection->rotations[selection->irot] = atan2f(y, x);
+    float dir = camera.dir[selection->rotation_axis];
+    dir = dir != 0.0f ? (dir / fabsf(dir)) : 1.0f;
+
+    float angle = (atan2f(y, x) * dir) - selection->initial_angle;
+    selection->rotations[selection->rotation_axis] = selection->initial_rotation + angle;
 }
 
 void finish_rotating(double mouse_x, double mouse_y) {
     selection->state = SELECTED;
-    selection->irot = -1;
+    selection->rotation_axis = -1;
 }
 
 void render_selection() {
@@ -502,10 +510,21 @@ void render_selection() {
         render_control_circle(selection->control_renderer, selection->midpoint, (vec3){1.0f, 0.0f, 0.0f}, 0.1f, (vec3){1.0f, 0.0f, 0.0f});
         render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 1.0f, 0.0f}, 0.1f, (vec3){0.0f, 1.0f, 0.0f});
         render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 0.0f, 1.0f}, 0.1f, (vec3){0.0f, 0.0f, 1.0f});
+
+        if (selection->is_hovering_rotation[X]) vec3_set(color, 1.0f, 1.0f, 1.0f);
+        else vec3_set(color, 1.0f, 0.0f, 0.0f);
         
-        render_control_point(selection->control_renderer, x_handle, HANDLE_SIZE, (vec3){1.0f, 0.0f, 0.0f});
-        render_control_point(selection->control_renderer, y_handle, HANDLE_SIZE, (vec3){0.0f, 1.0f, 0.0f});
-        render_control_point(selection->control_renderer, z_handle, HANDLE_SIZE, (vec3){0.0f, 0.0f, 1.0f});
+        render_control_point(selection->control_renderer, x_handle, HANDLE_SIZE, color);
+
+        if (selection->is_hovering_rotation[Y]) vec3_set(color, 1.0f, 1.0f, 1.0f);
+        else vec3_set(color, 0.0f, 1.0f, 0.0f);
+        
+        render_control_point(selection->control_renderer, y_handle, HANDLE_SIZE, color);
+
+        if (selection->is_hovering_rotation[Z]) vec3_set(color, 1.0f, 1.0f, 1.0f);
+        else vec3_set(color, 0.0f, 0.0f, 1.0f);
+        
+        render_control_point(selection->control_renderer, z_handle, HANDLE_SIZE, color);
     }
     
     if (selection->len == 0)

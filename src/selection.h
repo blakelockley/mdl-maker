@@ -36,8 +36,9 @@ struct _selection_t {
     
     double resize_x, resize_y;
 
-    int irot; // current rot index -1 -> (none), 0 -> x, 2 -> y, 3 -> z
+    int rotation_axis;
     float rotations[3];
+    float initial_rotation, initial_angle;
     
     bool is_coplanar;
     vec3 midpoint, offset, normal;
