@@ -11,6 +11,9 @@
 #include "renderers.h"
 
 #define HANDLE_SIZE 16
+#define X 0
+#define Y 1
+#define Z 2
 
 // TODO: Update extend code and add co-planar calculations
 // TODO: Have resize handle positioned at bottom-right
@@ -48,11 +51,19 @@ void finish_moving(double mouse_x, double mouse_y);
 void start_resizing(double mouse_x, double mouse_y);
 void continue_resizing(double mouse_x, double mouse_y);
 void finish_resizing(double mouse_x, double mouse_y);
+void finish_moving(double mouse_x, double mouse_y);
+
+// rotating
+
+void start_rotating(double mouse_x, double mouse_y, int axis);
+void continue_rotating(double mouse_x, double mouse_y);
+void finish_rotating(double mouse_x, double mouse_y);
 
 // utilities
 
+void project_point(float *x, float *y, vec3 point);
 bool point_inside_selection(double x, double y);
-bool point_inside_handle(double x, double y);
+bool point_inside_handle(double handle_x, double handle_y, double mouse_x, double mouse_y);
 
 void init_selection(renderer_t *selection_renderer, renderer_t *control_renderer, renderer_t *vertex_renderer, renderer_t *edge_renderer) {
     selection->indices = (uint32_t*)malloc(sizeof(uint32_t) * 10);
@@ -72,6 +83,14 @@ void init_selection(renderer_t *selection_renderer, renderer_t *control_renderer
     
     selection->is_hovering = false;
     selection->is_hovering_handle = false;
+    selection->is_hovering_rotation[X] = false;
+    selection->is_hovering_rotation[Y] = false;
+    selection->is_hovering_rotation[Z] = false;
+
+    selection->irot = -1;
+    selection->rotations[X] = 0.0f;
+    selection->rotations[Y] = 0.0f;
+    selection->rotations[Z] = 0.0f;
 }
 
 void free_selection() {
@@ -86,7 +105,31 @@ void update_selection() {
     int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     
     bool is_inside = point_inside_selection(mouse_x, mouse_y);
-    bool is_inside_handle = point_inside_handle(mouse_x, mouse_y);
+    bool is_inside_handle = point_inside_handle(selection->bx, selection->by, mouse_x, mouse_y);
+
+    float angle_x = selection->rotations[X];
+    float angle_y = selection->rotations[Y];
+    float angle_z = selection->rotations[Z];
+    
+    vec3 x_handle;
+    vec3_add(x_handle, selection->midpoint, (vec3){0.0f, sinf(angle_x) * 0.1f, cosf(angle_x) * 0.1f});
+    
+    vec3 y_handle;
+    vec3_add(y_handle, selection->midpoint, (vec3){cosf(angle_y) * 0.1f, 0.0f, sinf(angle_y) * 0.1f});
+    
+    vec3 z_handle;
+    vec3_add(z_handle, selection->midpoint, (vec3){sinf(angle_z) * 0.1f, cosf(angle_z) * 0.1f, 0.0f});
+
+    float handle_x, handle_y;
+    
+    project_point(&handle_x, &handle_y, x_handle);
+    selection->is_hovering_rotation[X] = point_inside_handle(handle_x, handle_y, mouse_x, mouse_y);
+    
+    project_point(&handle_x, &handle_y, y_handle);
+    selection->is_hovering_rotation[Y] = point_inside_handle(handle_x, handle_y, mouse_x, mouse_y);
+    
+    project_point(&handle_x, &handle_y, z_handle);
+    selection->is_hovering_rotation[Z] = point_inside_handle(handle_x, handle_y, mouse_x, mouse_y);
 
     switch (selection->state) {
     case INITIAL:
@@ -112,11 +155,20 @@ void update_selection() {
         selection->is_hovering_handle = selection->len > 1 && is_inside_handle;
 
         if (action == GLFW_PRESS) {
-            if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
+            if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
                 start_selection(mouse_x, mouse_y);
             
             else if (is_inside_handle)
                 start_resizing(mouse_x, mouse_y);
+            
+            else if (selection->is_hovering_rotation[X])
+                start_rotating(mouse_x, mouse_y, X);
+            
+            else if (selection->is_hovering_rotation[Y])
+                start_rotating(mouse_x, mouse_y, Y);
+            
+            else if (selection->is_hovering_rotation[Z])
+                start_rotating(mouse_x, mouse_y, Z);
             
             else if (is_inside)
                 start_moving(mouse_x, mouse_y);
@@ -145,6 +197,18 @@ void update_selection() {
 
         if (action == GLFW_RELEASE)
             finish_resizing(mouse_x, mouse_y);
+
+        break;
+
+    case ROTATING:
+        update_selection_box();
+        update_selection_midpoint();
+        
+        if (action == GLFW_PRESS)
+            continue_rotating(mouse_x, mouse_y);
+
+        if (action == GLFW_RELEASE)
+            finish_rotating(mouse_x, mouse_y);
         
         break;
     
@@ -348,11 +412,63 @@ void finish_resizing(double mouse_x, double mouse_y) {
     selection->state = SELECTED;
 }
 
+void start_rotating(double mouse_x, double mouse_y, int axis) {
+    selection->irot = axis;
+
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+
+    float clip_x = (mouse_x / width) * 2.0f - 1.0f;
+    float clip_y = 1.0f - (mouse_y / height) * 2.0f;
+    
+    mat4x4 mvp;
+    get_view_projection_matrix(&camera, mvp);
+
+    vec3 projected_midpoint;
+    mat4x4_mul_vec3(projected_midpoint, mvp, selection->midpoint);
+
+    float mid_x = projected_midpoint[0];
+    float mid_y = projected_midpoint[1];
+
+    float x = clip_x - mid_x;
+    float y = clip_y - mid_y;
+
+    selection->rotations[selection->irot] = atan2f(y, x);
+    selection->state = ROTATING;
+}
+
+void continue_rotating(double mouse_x, double mouse_y) {
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+
+    float clip_x = (mouse_x / width) * 2.0f - 1.0f;
+    float clip_y = 1.0f - (mouse_y / height) * 2.0f;
+    
+    mat4x4 mvp;
+    get_view_projection_matrix(&camera, mvp);
+
+    vec3 projected_midpoint;
+    mat4x4_mul_vec3(projected_midpoint, mvp, selection->midpoint);
+
+    float mid_x = projected_midpoint[0];
+    float mid_y = projected_midpoint[1];
+
+    float x = clip_x - mid_x;
+    float y = clip_y - mid_y;
+
+    selection->rotations[selection->irot] = atan2f(y, x);
+}
+
+void finish_rotating(double mouse_x, double mouse_y) {
+    selection->state = SELECTED;
+    selection->irot = -1;
+}
+
 void render_selection() {
     if (selection->state == SELECTING)
         render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, (vec3){0.8f, 0.4f, 0.2f});
 
-    if (selection->state == SELECTED || selection->state == MOVING || selection->state == RESIZING) {
+    if (selection->state == SELECTED || selection->state == MOVING || selection->state == RESIZING || selection->state == ROTATING) {
         vec3 color;
         if (selection->is_hovering && !selection->is_hovering_handle)
             vec3_set(color, 1.0f, 1.0f, 1.0f);
@@ -369,6 +485,27 @@ void render_selection() {
             
             render_selection_handle(selection->selection_renderer, selection->bx, selection->by, HANDLE_SIZE, color);
         }
+
+        float angle_x = selection->rotations[X];
+        float angle_y = selection->rotations[Y];
+        float angle_z = selection->rotations[Z];
+        
+        vec3 x_handle;
+        vec3_add(x_handle, selection->midpoint, (vec3){0.0f, sinf(angle_x) * 0.1f, cosf(angle_x) * 0.1f});
+        
+        vec3 y_handle;
+        vec3_add(y_handle, selection->midpoint, (vec3){cosf(angle_y) * 0.1f, 0.0f, sinf(angle_y) * 0.1f});
+        
+        vec3 z_handle;
+        vec3_add(z_handle, selection->midpoint, (vec3){sinf(angle_z) * 0.1f, cosf(angle_z) * 0.1f, 0.0f});
+
+        render_control_circle(selection->control_renderer, selection->midpoint, (vec3){1.0f, 0.0f, 0.0f}, 0.1f, (vec3){1.0f, 0.0f, 0.0f});
+        render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 1.0f, 0.0f}, 0.1f, (vec3){0.0f, 1.0f, 0.0f});
+        render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 0.0f, 1.0f}, 0.1f, (vec3){0.0f, 0.0f, 1.0f});
+        
+        render_control_point(selection->control_renderer, x_handle, HANDLE_SIZE, (vec3){1.0f, 0.0f, 0.0f});
+        render_control_point(selection->control_renderer, y_handle, HANDLE_SIZE, (vec3){0.0f, 1.0f, 0.0f});
+        render_control_point(selection->control_renderer, z_handle, HANDLE_SIZE, (vec3){0.0f, 0.0f, 1.0f});
     }
     
     if (selection->len == 0)
@@ -377,8 +514,7 @@ void render_selection() {
     render_model_vertices_selection(selection->vertex_renderer, &model, selection->indices, selection->len);
     render_model_edges_selection(selection->edge_renderer, &model, selection->faces, selection->faces_len);
 
-    render_control_point(selection->control_renderer, selection->midpoint, (vec3){1.0f, 0.0f, 1.0f});
-    render_control_point(selection->control_renderer, selection->offset, (vec3){0.0f, 1.0f, 1.0f});
+    render_control_point(selection->control_renderer, selection->midpoint, 10.0f, (vec3){1.0f, 0.0f, 1.0f});
 }
 
 void update_selection_menu() {
@@ -561,14 +697,26 @@ bool point_inside_selection(double x, double y) {
     return (min_x < x && x < max_x) && (min_y < y && y < max_y);
 }
 
-bool point_inside_handle(double x, double y) {
+bool point_inside_handle(double handle_x, double handle_y, double mouse_x, double mouse_y) {
     float side = HANDLE_SIZE / 2.0f; 
 
-    float min_x = selection->bx - side;
-    float min_y = selection->by - side;
+    float min_x = handle_x - side;
+    float min_y = handle_y - side;
     
-    float max_x = selection->bx + side;
-    float max_y = selection->by + side;
+    float max_x = handle_x + side;
+    float max_y = handle_y + side;
 
-    return (min_x < x && x < max_x) && (min_y < y && y < max_y);
+    return (min_x < mouse_x && mouse_x < max_x) && (min_y < mouse_y && mouse_y < max_y);
+}
+
+void project_point(float *x, float *y, vec3 point) {
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    
+    mat4x4 mvp;
+    get_view_projection_matrix(&camera, mvp);
+
+    mat4x4_mul_vec3(point, mvp, point);
+    *x = (point[0] + 1) * width / 2.0f;
+    *y = (1.0f - point[1]) * height / 2.0f;
 }

@@ -25,7 +25,7 @@ renderer_t *init_control_renderer(renderer_t *renderer) {
     return renderer;
 }
 
-void render_control_point(renderer_t *renderer, vec3 p, vec3 color) {
+void render_control_point(renderer_t *renderer, vec3 p, float size, vec3 color) {
     glUseProgram(renderer->shader);
     
     mat4x4 mvp;
@@ -37,7 +37,7 @@ void render_control_point(renderer_t *renderer, vec3 p, vec3 color) {
     GLint color_loc = glGetUniformLocation(renderer->shader, "color");
     glUniform3fv(color_loc, 1, color);
     
-    glPointSize(10.0f);
+    glPointSize(size);
     glBindVertexArray(renderer->vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
@@ -132,4 +132,59 @@ void render_control_plane(renderer_t *renderer, vec3 origin, vec3 normal, float 
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+}
+
+void render_control_circle(renderer_t *renderer, vec3 origin, vec3 normal, float radius, vec3 color) {
+    vec3 other;
+    vec3_set(other, 0.0f, 1.0f, 0.0f);
+
+    float dot = vec3_dot(other, normal);
+    if (fabs(fabs(dot) - 1.0f) < 0.0001f)
+        vec3_set(other, 0.0f, 0.0f, -1.0f);
+
+    vec3 x_axis;
+    vec3_cross(x_axis, other, normal);
+    vec3_normalize(x_axis, x_axis);
+
+    vec3 y_axis;
+    vec3_cross(y_axis, normal, x_axis);
+    vec3_normalize(y_axis, y_axis);
+
+    int subs = 24;
+    float step = (M_PI * 2) / subs;
+
+    vec3 vertices[subs];
+    for (int i = 0; i < subs; i++) {
+        float x = cosf(step * i) * radius;
+        float y = sinf(step * i) * radius;
+
+        vec3 x_aligned, y_aligned;
+        vec3_scale(x_aligned, x_axis, x);
+        vec3_scale(y_aligned, y_axis, y);
+        
+        vec3_add(vertices[i], x_aligned, y_aligned);
+        vec3_add(vertices[i], vertices[i], origin);
+    }
+
+    glUseProgram(renderer->shader);
+    
+    mat4x4 mvp;
+    get_view_projection_matrix(&camera, mvp);
+    
+    GLint mvp_loc = glGetUniformLocation(renderer->shader, "mvp");
+    glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
+     
+    GLint color_loc = glGetUniformLocation(renderer->shader, "color");
+    glUniform3fv(color_loc, 1, color);
+    
+    glBindVertexArray(renderer->vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+
+    glDepthFunc(GL_ALWAYS);
+    {
+        glDrawArrays(GL_LINE_LOOP, 0, subs);
+    }
+    glDepthFunc(GL_LEQUAL);
 }

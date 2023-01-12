@@ -21,6 +21,7 @@ struct _selection_t {
     
     bool is_hovering;
     bool is_hovering_handle;
+    bool is_hovering_rotation[3];
     
     uint32_t *indices;
     uint32_t len;
@@ -34,6 +35,9 @@ struct _selection_t {
     double bx, by;
     
     double resize_x, resize_y;
+
+    int irot; // current rot index -1 -> (none), 0 -> x, 2 -> y, 3 -> z
+    float rotations[3];
     
     bool is_coplanar;
     vec3 midpoint, offset, normal;

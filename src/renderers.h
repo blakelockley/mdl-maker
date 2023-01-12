@@ -46,8 +46,9 @@ void render_selection_handle(renderer_t *renderer, float x, float y, float size,
 // Control Renderer
 
 renderer_t *init_control_renderer(renderer_t *renderer);
-void render_control_point(renderer_t *renderer, vec3 p, vec3 color);
+void render_control_point(renderer_t *renderer, vec3 p, float size, vec3 color);
 void render_control_line(renderer_t *renderer, vec3 a, vec3 b, vec3 color);
 void render_control_plane(renderer_t *renderer, vec3 origin, vec3 normal, float width, float height, vec3 color);
+void render_control_circle(renderer_t *renderer, vec3 origin, vec3 normal, float radius, vec3 color);
 
 #endif // RENDERERS_H
