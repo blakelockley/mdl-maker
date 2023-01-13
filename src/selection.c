@@ -74,6 +74,9 @@ void init_selection(renderer_t *selection_renderer, renderer_t *control_renderer
     selection->faces_len = 0;
     selection->faces_cap = 10;
 
+    selection->deltas = (vec3*)malloc(sizeof(vec3) * 10);
+    selection->deltas_cap = 10;
+
     selection->selection_renderer = selection_renderer;
     selection->control_renderer = control_renderer;
     selection->vertex_renderer = vertex_renderer;
@@ -439,6 +442,18 @@ void start_rotating(double mouse_x, double mouse_y, int axis) {
     
     selection->initial_angle = atan2f(y, x) * dir;
     selection->initial_rotation = selection->rotations[axis];
+
+    // Capture deltas
+    
+    if (selection->len > selection->deltas_cap) {
+        while (selection->len > selection->deltas_cap)
+            selection->deltas_cap *= 2;
+    
+        selection->deltas = (vec3*) realloc(selection->deltas, sizeof(vec3) * selection->deltas_cap);
+    }
+
+    for (int i = 0; i < selection->len; i++)
+        vec3_sub(selection->deltas[i], model.vertices[selection->indices[i]], selection->midpoint);
 }
 
 void continue_rotating(double mouse_x, double mouse_y) {
@@ -465,6 +480,23 @@ void continue_rotating(double mouse_x, double mouse_y) {
 
     float angle = (atan2f(y, x) * dir) - selection->initial_angle;
     selection->rotations[selection->rotation_axis] = selection->initial_rotation + angle;
+
+    mat4x4 rot;
+    if (selection->rotation_axis == X)
+        mat4x4_rotation_x(rot, -angle);
+
+    if (selection->rotation_axis == Y)
+        mat4x4_rotation_y(rot, -angle);
+
+    if (selection->rotation_axis == Z)
+        mat4x4_rotation_z(rot, -angle);
+
+    for (int i = 0; i < selection->len; i++) {
+        vec3 rotated_delta;
+        mat4x4_mul_vec3(rotated_delta, rot, selection->deltas[i]);
+
+        vec3_add(model.vertices[selection->indices[i]], selection->midpoint, rotated_delta);
+    }
 }
 
 void finish_rotating(double mouse_x, double mouse_y) {

@@ -30,6 +30,9 @@ struct _selection_t {
     uint32_t *faces;
     uint32_t faces_len;
     uint32_t faces_cap;
+
+    vec3 *deltas; // deltas_len == len
+    uint32_t deltas_cap; 
     
     double ax, ay;
     double bx, by;
@@ -38,7 +41,7 @@ struct _selection_t {
 
     int rotation_axis;
     float rotations[3];
-    float initial_rotation, initial_angle;
+    float initial_rotation, initial_angle, last_angle;
     
     bool is_coplanar;
     vec3 midpoint, offset, normal;
