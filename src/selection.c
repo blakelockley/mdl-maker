@@ -68,7 +68,6 @@ void finish_extending(double mouse_x, double mouse_y);
 void calculate_selection_box();
 void calculate_selection_faces();
 void calculate_selection_midpoint();
-void calculate_selection_normals();
 
 // utilities
 
@@ -303,6 +302,9 @@ void finish_selection(double mouse_x, double mouse_y) {
         selection->state = SELECTED;
     else
         selection->state = INITIAL;
+
+    selection->is_coplanar = check_coplanar_vertices(&model, selection->indices, selection->len);
+    calculate_selection_faces();
 }
 
 void start_moving(double mouse_x, double mouse_y) {
@@ -607,8 +609,21 @@ void render_selection() {
 
 void update_selection_menu() {
     static char buffer[128];
+
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+
+    const ImGuiViewport* viewport = igGetMainViewport();
+    ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+    ImVec2 work_size = viewport->WorkSize;
+    ImVec2 window_pos, window_pos_pivot;
+    window_pos.x = work_pos.x + work_size.x - 10.0f;
+    window_pos.y = work_pos.y + 10.0f;
+    window_pos_pivot.x = 1.0f;
+    window_pos_pivot.y = 0.0f;
+    igSetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+    igSetNextWindowBgAlpha(0.35f); // Transparent background
     
-    if (!igBegin("Edit Verticess", NULL, ImGuiWindowFlags_NoCollapse))
+    if (!igBegin("Edit Verticess", NULL, window_flags))
         return;
     
     sprintf(buffer, "Num. Vertices: %d", selection->len);
@@ -657,6 +672,13 @@ void update_selection_menu() {
     igEnd();
 }
 
+void clear_selection() {
+    selection->len = 0;
+    selection->faces_len = 0;
+
+    selection->state = INITIAL;
+}
+
 void calculate_selection_midpoint() {
     vec3 midpoint;
     vec3_zero(midpoint);
@@ -701,13 +723,6 @@ void calculate_selection_box() {
     selection->ay = (1 - tl_y) / 2.0f * height + padding;
     selection->bx = (br_x + 1) / 2.0f * width + padding;
     selection->by = (1 - br_y) / 2.0f * height - padding;
-}
-
-void clear_selection() {
-    selection->len = 0;
-    selection->faces_len = 0;
-
-    selection->state = INITIAL;
 }
 
 void calculate_selection_faces() {
