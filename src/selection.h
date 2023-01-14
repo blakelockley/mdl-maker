@@ -16,12 +16,21 @@ enum _selection_state_t {
 
 typedef enum _selection_state_t selection_state_t;
 
+enum _selection_control_t {
+    NONE      = 0,
+    SELECTION = 1,
+    RESIZE    = 2,
+    ROTATE_X  = 3,
+    ROTATE_Y  = 4,
+    ROTATE_Z  = 5,
+};
+
+typedef enum _selection_control_t selection_control_t;
+
 struct _selection_t {
     selection_state_t state;
-    
-    bool is_hovering;
-    bool is_hovering_handle;
-    bool is_hovering_rotation[3];
+
+    selection_control_t hovering_control;
     
     uint32_t *indices;
     uint32_t len;
@@ -58,6 +67,5 @@ void update_selection();
 void render_selection();
 
 void clear_selection();
-void extend_selection();
 
 #endif  // SELECT_H
