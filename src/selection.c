@@ -114,24 +114,34 @@ void update_selection() {
     glfwGetCursorPos(window, &mouse_x, &mouse_y);
    
     int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+
+    bool in_selection = point_inside_selection(mouse_x, mouse_y);
     
-    if (point_inside_handle(selection->bx, selection->by, mouse_x, mouse_y))
-        selection->hovering_control = RESIZE;
+    if (selection->len == 1) {
+        if (in_selection)
+            selection->hovering_control = SELECTION;
+        else
+            selection->hovering_control = NONE;
 
-    else if (point_inside_rotation_handle(X, mouse_x, mouse_y))
-        selection->hovering_control = ROTATE_X;
+    } else if (selection->len > 1) {
+        if (point_inside_handle(selection->bx, selection->by, mouse_x, mouse_y))
+            selection->hovering_control = RESIZE;
 
-    else if (point_inside_rotation_handle(Y, mouse_x, mouse_y))
-        selection->hovering_control = ROTATE_Y;
+        else if (point_inside_rotation_handle(X, mouse_x, mouse_y))
+            selection->hovering_control = ROTATE_X;
 
-    else if (point_inside_rotation_handle(Z, mouse_x, mouse_y))
-        selection->hovering_control = ROTATE_Z;
+        else if (point_inside_rotation_handle(Y, mouse_x, mouse_y))
+            selection->hovering_control = ROTATE_Y;
 
-    else if (point_inside_selection(mouse_x, mouse_y))
-        selection->hovering_control = SELECTION;
+        else if (point_inside_rotation_handle(Z, mouse_x, mouse_y))
+            selection->hovering_control = ROTATE_Z;
 
-    else
-        selection->hovering_control = NONE;
+        else if (in_selection)
+            selection->hovering_control = SELECTION;
+
+        else
+            selection->hovering_control = NONE;
+    }
 
     switch (selection->state) {
     case INITIAL:
@@ -181,6 +191,7 @@ void update_selection() {
                 break;
             
             default:
+                start_selection(mouse_x, mouse_y);
                 break;
             }
         }
@@ -230,6 +241,99 @@ void update_selection() {
     if (selection->len > 0)
         update_selection_menu();
 }
+
+void render_selection() {
+    vec3 active_colour = { 1.0f, 1.0f, 1.0f };
+    
+    if (selection->state == SELECTING)
+        render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, (vec3){0.8f, 0.4f, 0.2f});
+
+    if (selection->state == SELECTED) {
+        vec3 selection_colour = { 0.5f, 0.5f, 0.5f };
+        vec3 handle_colour    = { 0.5f, 0.5f, 0.5f };
+        vec3 rotate_x_colour  = { 1.0f, 0.0f, 0.0f };
+        vec3 rotate_y_colour  = { 0.0f, 1.0f, 0.0f };
+        vec3 rotate_z_colour  = { 0.0f, 0.0f, 1.0f };
+        
+        switch (selection->hovering_control) {
+        case SELECTION:
+            vec3_copy(selection_colour, active_colour);
+            break;
+
+        case RESIZE:
+            vec3_copy(handle_colour, active_colour);
+            break;
+
+        case ROTATE_X:
+            vec3_copy(rotate_x_colour, active_colour);
+            break;
+
+        case ROTATE_Y:
+            vec3_copy(rotate_y_colour, active_colour);
+            break;
+
+        case ROTATE_Z:
+            vec3_copy(rotate_z_colour, active_colour);
+            break;
+        
+        default:
+            break;
+        }
+
+        render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, selection_colour);
+        
+        if (selection->len > 1) {
+            render_selection_handle(selection->selection_renderer, selection->bx, selection->by, HANDLE_SIZE, handle_colour);
+            
+            vec3 x_handle;
+            get_rotation_handle(x_handle, X);
+            
+            vec3 y_handle;
+            get_rotation_handle(y_handle, Y);
+            
+            vec3 z_handle;
+            get_rotation_handle(z_handle, Z);
+
+            render_control_circle(selection->control_renderer, selection->midpoint, (vec3){1.0f, 0.0f, 0.0f}, 0.1f, rotate_x_colour);
+            render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 1.0f, 0.0f}, 0.1f, rotate_y_colour);
+            render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 0.0f, 1.0f}, 0.1f, rotate_z_colour);
+
+            render_control_point(selection->control_renderer, x_handle, HANDLE_SIZE, rotate_x_colour);
+            render_control_point(selection->control_renderer, y_handle, HANDLE_SIZE, rotate_y_colour);
+            render_control_point(selection->control_renderer, z_handle, HANDLE_SIZE, rotate_z_colour);
+        }
+    }
+
+    if (selection->state == MOVING) {
+        render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, active_colour);
+    }
+
+    if (selection->state == RESIZING) {
+        render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, active_colour);
+        render_selection_handle(selection->selection_renderer, selection->bx, selection->by, HANDLE_SIZE, active_colour);
+    }
+
+    if (selection->state == ROTATING) {
+        vec3 handle;
+        get_rotation_handle(handle, selection->rotation_axis);
+
+        vec3 axis = { 0.0f, 0.0f, 0.0f };
+        axis[selection->rotation_axis] = 1.0f;
+        
+        render_control_circle(selection->control_renderer, selection->midpoint, axis, 0.1f, active_colour);
+        render_control_point(selection->control_renderer, handle, HANDLE_SIZE, active_colour);
+    }
+    
+    if (selection->len == 0)
+        return;
+    
+    render_model_vertices_selection(selection->vertex_renderer, &model, selection->indices, selection->len);
+    render_model_edges_selection(selection->edge_renderer, &model, selection->faces, selection->faces_len);
+
+    render_control_point(selection->control_renderer, selection->midpoint, 10.0f, (vec3){1.0f, 0.0f, 1.0f});
+}
+
+// selection
 
 void start_selection(double mouse_x, double mouse_y) {
     selection->ax = mouse_x;
@@ -517,94 +621,6 @@ void continue_rotating(double mouse_x, double mouse_y) {
 void finish_rotating(double mouse_x, double mouse_y) {
     selection->state = SELECTED;
     selection->rotation_axis = -1;
-}
-
-void render_selection() {
-    vec3 active_colour = { 1.0f, 1.0f, 1.0f };
-    
-    if (selection->state == SELECTING)
-        render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, (vec3){0.8f, 0.4f, 0.2f});
-
-    if (selection->state == SELECTED) {
-        vec3 selection_colour = { 0.5f, 0.5f, 0.5f };
-        vec3 handle_colour    = { 0.5f, 0.5f, 0.5f };
-        vec3 rotate_x_colour  = { 1.0f, 0.0f, 0.0f };
-        vec3 rotate_y_colour  = { 0.0f, 1.0f, 0.0f };
-        vec3 rotate_z_colour  = { 0.0f, 0.0f, 1.0f };
-        
-        switch (selection->hovering_control) {
-        case SELECTION:
-            vec3_copy(selection_colour, active_colour);
-            break;
-
-        case RESIZE:
-            vec3_copy(handle_colour, active_colour);
-            break;
-
-        case ROTATE_X:
-            vec3_copy(rotate_x_colour, active_colour);
-            break;
-
-        case ROTATE_Y:
-            vec3_copy(rotate_y_colour, active_colour);
-            break;
-
-        case ROTATE_Z:
-            vec3_copy(rotate_z_colour, active_colour);
-            break;
-        
-        default:
-            break;
-        }
-            
-        render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, selection_colour);
-        render_selection_handle(selection->selection_renderer, selection->bx, selection->by, HANDLE_SIZE, handle_colour);
-        
-        vec3 x_handle;
-        get_rotation_handle(x_handle, X);
-        
-        vec3 y_handle;
-        get_rotation_handle(y_handle, Y);
-        
-        vec3 z_handle;
-        get_rotation_handle(z_handle, Z);
-
-        render_control_circle(selection->control_renderer, selection->midpoint, (vec3){1.0f, 0.0f, 0.0f}, 0.1f, rotate_x_colour);
-        render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 1.0f, 0.0f}, 0.1f, rotate_y_colour);
-        render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 0.0f, 1.0f}, 0.1f, rotate_z_colour);
-
-        render_control_point(selection->control_renderer, x_handle, HANDLE_SIZE, rotate_x_colour);
-        render_control_point(selection->control_renderer, y_handle, HANDLE_SIZE, rotate_y_colour);
-        render_control_point(selection->control_renderer, z_handle, HANDLE_SIZE, rotate_z_colour);
-    }
-
-    if (selection->state == MOVING) {
-        render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, active_colour);
-    }
-
-    if (selection->state == RESIZING) {
-        render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, active_colour);
-        render_selection_handle(selection->selection_renderer, selection->bx, selection->by, HANDLE_SIZE, active_colour);
-    }
-
-    if (selection->state == ROTATING) {
-        vec3 handle;
-        get_rotation_handle(handle, selection->rotation_axis);
-
-        vec3 axis = { 0.0f, 0.0f, 0.0f };
-        axis[selection->rotation_axis] = 1.0f;
-        
-        render_control_circle(selection->control_renderer, selection->midpoint, axis, 0.1f, active_colour);
-        render_control_point(selection->control_renderer, handle, HANDLE_SIZE, active_colour);
-    }
-    
-    if (selection->len == 0)
-        return;
-    
-    render_model_vertices_selection(selection->vertex_renderer, &model, selection->indices, selection->len);
-    render_model_edges_selection(selection->edge_renderer, &model, selection->faces, selection->faces_len);
-
-    render_control_point(selection->control_renderer, selection->midpoint, 10.0f, (vec3){1.0f, 0.0f, 1.0f});
 }
 
 void update_selection_menu() {
