@@ -21,12 +21,12 @@ extern picker_t picker;
 
 extern GLFWwindow *window;
 
+extern struct ImGuiIO* io;
+
 static selection_t _selection;
 selection_t *selection = &_selection;
 
-// update methods
-
-void update_selection_menu();
+void show_selection_menu();
 
 // selection
 
@@ -34,9 +34,7 @@ void start_selection(double mouse_x, double mouse_y);
 void continue_selection(double mouse_x, double mouse_y);
 void finish_selection(double mouse_x, double mouse_y);
 
-// all transforms
-void start_transform(double mouse_x, double mouse_y);
-void finish_transform(double mouse_x, double mouse_y);
+void create_vertex(double mouse_x, double mouse_y);
 
 // moving
 
@@ -110,10 +108,16 @@ void free_selection() {
 }
 
 void update_selection() {
+    if (selection->len > 0)
+        show_selection_menu();
+
+    if (io->WantCaptureMouse)
+        return;
+
+    int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+    
     double mouse_x, mouse_y;
     glfwGetCursorPos(window, &mouse_x, &mouse_y);
-   
-    int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 
     bool in_selection = point_inside_selection(mouse_x, mouse_y);
     
@@ -237,9 +241,6 @@ void update_selection() {
     default:
         break;
     }
-
-    if (selection->len > 0)
-        update_selection_menu();
 }
 
 void render_selection() {
@@ -623,7 +624,7 @@ void finish_rotating(double mouse_x, double mouse_y) {
     selection->rotation_axis = -1;
 }
 
-void update_selection_menu() {
+void show_selection_menu() {
     static char buffer[128];
 
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
@@ -654,6 +655,14 @@ void update_selection_menu() {
     sprintf(buffer, "Coplanar: %-5s", coplanar_str);
     igText(buffer);
 
+    if (selection->is_coplanar) {
+        igSeparator();
+
+        if (igButton("Add Face", (struct ImVec2){ 0, 0 })) {
+            add_face(&model, selection->indices, selection->len);
+        }
+    }
+
     if (selection->faces_len > 0) {
         igSeparator();
         
@@ -670,7 +679,7 @@ void update_selection_menu() {
                 flip_face(&model, selection->faces[i]);
         
         igSameLine(0, 10);
-        igText("Reverse the vertex order of the face");
+        igText("Reverse vertex order");
         
         float *color = model.faces[selection->faces[0]].color;
         igColorEdit3("Colour", color, ImGuiColorEditFlags_Float);
