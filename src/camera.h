@@ -22,8 +22,8 @@ typedef struct _camera_t camera_t;
 void init_camera(camera_t *camera);
 void free_camera(camera_t *camera);
 
-// Debug methods
-void debug_camera(camera_t *camera);
+// GUI methods
+void show_camera_gui(camera_t *camera);
 
 // Update methods
 void update_origin(camera_t *camera, float delta_x, float delta_y);

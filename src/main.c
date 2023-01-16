@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
 
         update_menu();
         update_selection();
-        debug_camera(&camera);
+        show_camera_gui(&camera);
 
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

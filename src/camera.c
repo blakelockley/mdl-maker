@@ -12,7 +12,7 @@ void derive_camera(camera_t *camera);
 void init_camera(camera_t *camera) {
     vec3_zero(camera->origin);
     
-    camera->theta = 0.0f;
+    camera->theta = M_PI_2;
     camera->phi = M_PI_4;
     camera->radius = 2.0f;
     
@@ -26,7 +26,7 @@ void free_camera(camera_t *camera) {
     // no-op
 }
 
-void debug_camera(camera_t *camera) {
+void show_camera_gui(camera_t *camera) {
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
 
     const ImGuiViewport* viewport = igGetMainViewport();
@@ -38,6 +38,27 @@ void debug_camera(camera_t *camera) {
     window_pos_pivot.y = 0.0f;
     igSetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
     igSetNextWindowBgAlpha(0.35f); // Transparent background
+
+    static char *cardinal;
+    if (fabs(camera->dir[0]) > fabs(camera->dir[2])) {
+        if (camera->dir[0] > 0.0f)
+            cardinal = "East (+X)";
+        else
+            cardinal = "West (-X)";
+    } else {
+        if (camera->dir[2] > 0.0f)
+            cardinal = "North (+Z)";
+        else
+            cardinal = "South (-Z)";
+    }
+
+    static char *vertical;
+    if (camera->dir[1] > 0.0f)
+        vertical = "Up (+Y)";
+    else
+        vertical = "Down (-Y)";
+
+    bool horizontal = fmaxf(fabs(camera->dir[0]), fabs(camera->dir[2])) >= fabs(camera->dir[1]);
     
     if (igBegin("Camera", NULL, window_flags)) {
         igText("Camera");
@@ -53,6 +74,11 @@ void debug_camera(camera_t *camera) {
         igText("Position:  %+.2f, %+.2f, %+.2f", camera->pos[0], camera->pos[1], camera->pos[2]);
         igText("Direction: %+.2f, %+.2f, %+.2f", camera->dir[0], camera->dir[1], camera->dir[2]);
         igText("Up:        %+.2f, %+.2f, %+.2f", camera->up[0], camera->up[1], camera->up[2]);
+        
+        igSeparator();
+        
+        igText("Cardinal: %s%s", cardinal, horizontal ? "*" : "");
+        igText("Vertical: %s%s", vertical, horizontal ? "" : "*");
         
         igEnd();
     }
