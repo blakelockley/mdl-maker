@@ -7,6 +7,7 @@
 
 extern GLFWwindow *window;
 
+void adjust_camera(camera_t *camera, float theta, float phi);
 void derive_camera(camera_t *camera);
 
 void init_camera(camera_t *camera) {
@@ -69,6 +70,30 @@ void show_camera_gui(camera_t *camera) {
         igText("Phi:    %+.2f", camera->phi);
         igText("Radius: %+.2f", camera->radius);
         
+        igText("Set Orbit");
+        if (igButton("X+", (ImVec2){0, 0}))
+            adjust_camera(camera, 0.0f, 0.0f);
+
+        igSameLine(0, 10);
+        if (igButton("X-", (ImVec2){0, 0}))
+            adjust_camera(camera, M_PI, 0.0f);
+
+        igSameLine(0, 20);
+        if (igButton("Z+", (ImVec2){0, 0}))
+            adjust_camera(camera, M_PI_2, 0.0f);
+
+        igSameLine(0, 10);
+        if (igButton("Z-", (ImVec2){0, 0}))
+            adjust_camera(camera, M_PI + M_PI_2, 0.0f);
+
+        igSameLine(0, 20);
+        if (igButton("Y+", (ImVec2){0, 0}))
+            adjust_camera(camera, 0.0f, M_PI_2);
+
+        igSameLine(0, 10);
+        if (igButton("Y-", (ImVec2){0, 0}))
+            adjust_camera(camera, 0.0f, -M_PI_2);
+        
         igSeparator();
         
         igText("Position:  %+.2f, %+.2f, %+.2f", camera->pos[0], camera->pos[1], camera->pos[2]);
@@ -76,7 +101,8 @@ void show_camera_gui(camera_t *camera) {
         igText("Up:        %+.2f, %+.2f, %+.2f", camera->up[0], camera->up[1], camera->up[2]);
         
         igSeparator();
-        
+
+        igText("Heading");
         igText("Cardinal: %s%s", cardinal, horizontal ? "*" : "");
         igText("Vertical: %s%s", vertical, horizontal ? "" : "*");
         
@@ -138,6 +164,13 @@ void update_radius(camera_t *camera, float delta) {
     camera->radius += delta * -0.1f;
     camera->radius = CLAMP(camera->radius, 0.1f, 10.0f);
     
+    derive_camera(camera);
+}
+
+void adjust_camera(camera_t *camera, float theta, float phi) {
+    camera->theta = theta;
+    camera->phi = phi;
+
     derive_camera(camera);
 }
 
