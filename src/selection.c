@@ -76,6 +76,11 @@ bool point_inside_selection(double x, double y);
 bool point_inside_handle(double handle_x, double handle_y, double mouse_x, double mouse_y);
 bool point_inside_rotation_handle(int axis, double mouse_x, double mouse_y);
 
+// operations
+
+void remove_vertices();
+void merge_vertices();
+
 void init_selection(renderer_t *selection_renderer, renderer_t *control_renderer, renderer_t *vertex_renderer, renderer_t *edge_renderer) {
     selection->indices = (uint32_t*)malloc(sizeof(uint32_t) * 10);
     selection->len = 0;
@@ -651,6 +656,14 @@ void show_selection_menu() {
         sprintf(buffer, "%s%d ", buffer, selection->indices[i]);
     igText(buffer);
 
+    if (igButton("Remove Vertices", (struct ImVec2){ 0, 0 })) {
+        remove_vertices();
+    }
+
+    if (igButton("Merge Vertices", (struct ImVec2){ 0, 0 })) {
+        merge_vertices();
+    }
+
     char *coplanar_str = selection->len > 1 ? (selection->is_coplanar ? "Yes" : "No") : "--";
     sprintf(buffer, "Coplanar: %-5s", coplanar_str);
     igText(buffer);
@@ -882,4 +895,70 @@ bool point_inside_rotation_handle(int axis, double mouse_x, double mouse_y) {
     project_point(&handle_x, &handle_y, handle);
     
     return point_inside_handle(handle_x, handle_y, mouse_x, mouse_y);
+}
+
+// operations
+
+void remove_vertices() {
+    bool removed_faces_map[model.faces_len];
+    memset(removed_faces_map, false, sizeof(removed_faces_map));
+    
+    for (int i = 0; i < selection->len; i++) {
+        uint32_t removed_index = selection->indices[i];
+
+        model.vertices_len--;
+        for (int j = removed_index; j < model.vertices_len; j++)
+            vec3_copy(model.vertices[j],  model.vertices[j + 1]);
+        
+        for (int j = 0; j < model.faces_len; j++) {
+            face_t *face = &model.faces[j];
+            for (int k = 0; k < face->len; k++) {
+                 if (face->indices[k] == removed_index)
+                    removed_faces_map[j] = true;
+                 
+                 if (face->indices[k] > removed_index)
+                    face->indices[k]--;
+            }
+        }
+    }
+
+    for (int i = model.faces_len - 1; i >= 0; i--) {
+        if (removed_faces_map[i]) {
+            model.faces_len--;
+            for (int j = i; j < model.faces_len; j++)
+                memcpy(&model.faces[j], &model.faces[j+1], sizeof(face_t));
+        }
+    }
+
+    clear_selection();
+}
+
+void merge_vertices() {
+    uint32_t target_index = selection->indices[0];
+
+    for (int i = 1; i < selection->len; i++) {
+        uint32_t merged_index = selection->indices[i];
+
+        for (int j = 0; j < model.faces_len; j++) {
+            face_t *face = &model.faces[j];
+            
+            for (int k = 0; k < face->len; k++) {
+                 if (face->indices[k] == merged_index)
+                    face->indices[k] = target_index;
+            }
+        }
+
+        model.vertices_len--;
+        for (int j = merged_index; j < model.vertices_len; j++)
+            vec3_copy(model.vertices[j],  model.vertices[j + 1]);
+        
+        for (int j = 0; j < model.faces_len; j++) {
+            face_t *face = &model.faces[j];
+            for (int k = 0; k < face->len; k++)
+                 if (face->indices[k] > merged_index)
+                    face->indices[k]--;
+        }
+    }
+
+    clear_selection();
 }
