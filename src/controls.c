@@ -8,6 +8,7 @@
 #include "selection.h"
 #include "model.h"
 #include "picker.h"
+#include "builder.h"
 #include "file.h"
 
 extern camera_t camera;
@@ -36,13 +37,12 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     if (io->WantCaptureMouse)
         return;
 
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-        vec3 vertex = { 0.0f, 0.0f, 0.0f };
-        
-        // TODO: Add project to plane calculations
-        
-        add_vertex(&model, vertex);
-    }
+    double mouse_x, mouse_y;
+    glfwGetCursorPos(window, &mouse_x, &mouse_y);
+
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+        build_vertex(mouse_x, mouse_y);
+
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
