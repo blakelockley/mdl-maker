@@ -15,6 +15,9 @@
 #define Y 1
 #define Z 2
 
+extern bool render_vertices;
+extern bool render_edges;
+
 extern camera_t camera;
 extern model_t model;
 extern picker_t picker;
@@ -98,10 +101,15 @@ void init_selection(renderer_t *selection_renderer, renderer_t *control_renderer
     selection->vertex_renderer = vertex_renderer;
     selection->edge_renderer = edge_renderer;
 
+    selection->show_rotate = false;
     selection->rotation_axis = -1;
     selection->rotations[X] = 0.0f;
     selection->rotations[Y] = 0.0f;
     selection->rotations[Z] = 0.0f;
+
+    selection->allow_x = true;
+    selection->allow_y = true;
+    selection->allow_z = true;
     
     selection->state = INITIAL;
     selection->hovering_control = NONE;
@@ -136,13 +144,13 @@ void update_selection() {
         if (point_inside_handle(selection->bx, selection->by, mouse_x, mouse_y))
             selection->hovering_control = RESIZE;
 
-        else if (point_inside_rotation_handle(X, mouse_x, mouse_y))
+        else if (selection->show_rotate && selection->allow_x && point_inside_rotation_handle(X, mouse_x, mouse_y))
             selection->hovering_control = ROTATE_X;
 
-        else if (point_inside_rotation_handle(Y, mouse_x, mouse_y))
+        else if (selection->show_rotate && selection->allow_y && point_inside_rotation_handle(Y, mouse_x, mouse_y))
             selection->hovering_control = ROTATE_Y;
 
-        else if (point_inside_rotation_handle(Z, mouse_x, mouse_y))
+        else if (selection->show_rotate && selection->allow_z && point_inside_rotation_handle(Z, mouse_x, mouse_y))
             selection->hovering_control = ROTATE_Z;
 
         else if (in_selection)
@@ -290,23 +298,32 @@ void render_selection() {
         
         if (selection->len > 1) {
             render_selection_handle(selection->selection_renderer, selection->bx, selection->by, HANDLE_SIZE, handle_colour);
-            
-            vec3 x_handle;
-            get_rotation_handle(x_handle, X);
-            
-            vec3 y_handle;
-            get_rotation_handle(y_handle, Y);
-            
-            vec3 z_handle;
-            get_rotation_handle(z_handle, Z);
 
-            render_control_circle(selection->control_renderer, selection->midpoint, (vec3){1.0f, 0.0f, 0.0f}, 0.1f, rotate_x_colour);
-            render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 1.0f, 0.0f}, 0.1f, rotate_y_colour);
-            render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 0.0f, 1.0f}, 0.1f, rotate_z_colour);
+            if (selection->show_rotate) {
+                if (selection->allow_x) {
+                    vec3 x_handle;
+                    get_rotation_handle(x_handle, X);
 
-            render_control_point(selection->control_renderer, x_handle, HANDLE_SIZE, rotate_x_colour);
-            render_control_point(selection->control_renderer, y_handle, HANDLE_SIZE, rotate_y_colour);
-            render_control_point(selection->control_renderer, z_handle, HANDLE_SIZE, rotate_z_colour);
+                    render_control_circle(selection->control_renderer, selection->midpoint, (vec3){1.0f, 0.0f, 0.0f}, 0.1f, rotate_x_colour);
+                    render_control_point(selection->control_renderer, x_handle, HANDLE_SIZE, rotate_x_colour);
+                }
+
+                if (selection->allow_y) {
+                    vec3 y_handle;
+                    get_rotation_handle(y_handle, Y);
+
+                    render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 1.0f, 0.0f}, 0.1f, rotate_y_colour);
+                    render_control_point(selection->control_renderer, y_handle, HANDLE_SIZE, rotate_y_colour);
+                }
+
+                if (selection->allow_z) {
+                    vec3 z_handle;
+                    get_rotation_handle(z_handle, Z);
+
+                    render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 0.0f, 1.0f}, 0.1f, rotate_z_colour);
+                    render_control_point(selection->control_renderer, z_handle, HANDLE_SIZE, rotate_z_colour);
+                }
+            }
         }
     }
 
@@ -333,10 +350,13 @@ void render_selection() {
     if (selection->len == 0)
         return;
     
-    render_model_vertices_selection(selection->vertex_renderer, &model, selection->indices, selection->len);
-    render_model_edges_selection(selection->edge_renderer, &model, selection->faces, selection->faces_len);
-
-    render_control_point(selection->control_renderer, selection->midpoint, 10.0f, (vec3){1.0f, 0.0f, 1.0f});
+    if (render_vertices)
+        render_model_vertices_selection(selection->vertex_renderer, &model, selection->indices, selection->len);
+    
+    if (render_edges)
+        render_model_edges_selection(selection->edge_renderer, &model, selection->faces, selection->faces_len);
+    
+    render_control_point(selection->control_renderer, selection->midpoint, 20.0f, (vec3){1.0f, 0.0f, 1.0f});
 }
 
 // selection
@@ -421,73 +441,74 @@ void start_moving(double mouse_x, double mouse_y) {
     int width, height;
     glfwGetWindowSize(window, &width, &height);
 
-    float clip_x = (mouse_x / width) * 2.0f - 1.0f;
-    float clip_y = 1.0f - (mouse_y / height) * 2.0f;
-    
-    mat4x4 view, projection, vp, inverse_vp;
-    get_view_matrix(&camera, view);
-    get_projection_matrix(&camera, projection);
-    
-    mat4x4_mul(vp, projection, view);
+    mat4x4 mvp, inverse_mvp;
+    get_view_projection_matrix(&camera, mvp);
+    mat4x4_invert(inverse_mvp, mvp);
 
-    vec4 midpoint, projected_midpoint;
-    vec4_from_vec3(midpoint, selection->midpoint, 1);
-    mat4x4_mul_vec4(projected_midpoint, vp, midpoint);
-    
-    float clip_z = projected_midpoint[2] / projected_midpoint[3]; // perspective divide
-    
-    vec4 v, r;
-    vec4_set(v, clip_x, clip_y, clip_z, 1);
-    
-    mat4x4_invert(inverse_vp, vp);
-    mat4x4_mul_vec4(r, inverse_vp, v);
-    
-    vec3 plane_pos;
-    vec3_from_vec4(plane_pos, r);
-
-    vec3_sub(selection->offset, plane_pos, selection->midpoint);
-
-    selection->state = MOVING;
-}
-
-void continue_moving(double mouse_x, double mouse_y) {
-    mat4x4 view, projection, vp, inverse_vp;
-    get_view_matrix(&camera, view);
-    get_projection_matrix(&camera, projection);
-    
-    mat4x4_mul(vp, projection, view);
-
-    vec4 midpoint, projected_midpoint;
-    vec4_from_vec3(midpoint, selection->midpoint, 1);
-    
-    mat4x4_mul_vec4(projected_midpoint, vp, midpoint);
-    vec4_scale(projected_midpoint, projected_midpoint, 1 / projected_midpoint[3]); // perspective divide
-
-    int width, height;
-    glfwGetWindowSize(window, &width, &height);
+    vec3 projected_midpoint;
+    mat4x4_mul_vec3(projected_midpoint, mvp, selection->midpoint);
 
     float clip_x = (mouse_x / width) * 2.0f - 1.0f;
     float clip_y = 1.0f - (mouse_y / height) * 2.0f;
     float clip_z = projected_midpoint[2];
     
-    vec4 v, r;
-    vec4_set(v, clip_x, clip_y, clip_z, 1);
-    
-    mat4x4_invert(inverse_vp, vp);
-    mat4x4_mul_vec4(r, inverse_vp, v);
-    
+    vec3 clip;
+    vec3_set(clip, clip_x, clip_y, clip_z);
+
     vec3 plane_pos;
-    vec3_from_vec4(plane_pos, r);
+    mat4x4_mul_vec3(plane_pos, inverse_mvp, clip);
+
+    vec3_sub(selection->offset, plane_pos, selection->midpoint);
+
+    // Capture deltas
+    
+    if (selection->len > selection->deltas_cap) {
+        while (selection->len > selection->deltas_cap)
+            selection->deltas_cap *= 2;
+    
+        selection->deltas = (vec3*) realloc(selection->deltas, sizeof(vec3) * selection->deltas_cap);
+    }
+
+    for (int i = 0; i < selection->len; i++)
+        vec3_sub(selection->deltas[i], model.vertices[selection->indices[i]], selection->midpoint);
+
+    selection->state = MOVING;
+}
+
+void continue_moving(double mouse_x, double mouse_y) {
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+
+    mat4x4 mvp, inverse_mvp;
+    get_view_projection_matrix(&camera, mvp);
+    mat4x4_invert(inverse_mvp, mvp);
+
+    vec3 projected_midpoint;
+    mat4x4_mul_vec3(projected_midpoint, mvp, selection->midpoint);
+
+    float clip_x = (mouse_x / width) * 2.0f - 1.0f;
+    float clip_y = 1.0f - (mouse_y / height) * 2.0f;
+    float clip_z = projected_midpoint[2];
+    
+    vec3 clip;
+    vec3_set(clip, clip_x, clip_y, clip_z);
+
+    vec3 plane_pos;
+    mat4x4_mul_vec3(plane_pos, inverse_mvp, clip);
+
     vec3_sub(plane_pos, plane_pos, selection->offset);
 
-    for (int i = 0; i < selection->len; i++) {
-        uint32_t index = selection->indices[i];
+    if (!selection->allow_x)
+        plane_pos[0] = selection->midpoint[0];
 
-        vec3 delta;
-        vec3_sub(delta, model.vertices[index], selection->midpoint);
-        
-        vec3_add(model.vertices[index], plane_pos, delta);
-    }
+    if (!selection->allow_y)
+        plane_pos[1] = selection->midpoint[1];
+
+    if (!selection->allow_z)
+        plane_pos[2] = selection->midpoint[2];
+
+    for (int i = 0; i < selection->len; i++)
+        vec3_add(model.vertices[selection->indices[i]], plane_pos, selection->deltas[i]);
 
     calculate_selection_midpoint();
     recalculate_faces(&model);
@@ -651,10 +672,10 @@ void show_selection_menu() {
     sprintf(buffer, "Num. Vertices: %d", selection->len);
     igText(buffer);
 
-    sprintf(buffer, "Sel. Vertices: ");
-    for (int i = 0; i < selection->len; i++)
-        sprintf(buffer, "%s%d ", buffer, selection->indices[i]);
-    igText(buffer);
+    // sprintf(buffer, "Sel. Vertices: ");
+    // for (int i = 0; i < selection->len; i++)
+    //     sprintf(buffer, "%s%d ", buffer, selection->indices[i]);
+    // igText(buffer);
 
     if (igButton("Remove Vertices", (struct ImVec2){ 0, 0 })) {
         remove_vertices();
@@ -682,10 +703,10 @@ void show_selection_menu() {
         sprintf(buffer, "Num. Faces: %d", selection->faces_len);
         igText(buffer);
 
-        sprintf(buffer, "Sel. Faces: ");
-        for (int i = 0; i < selection->faces_len; i++)
-            sprintf(buffer, "%s%d ", buffer, selection->faces[i]);
-        igText(buffer);
+        // sprintf(buffer, "Sel. Faces: ");
+        // for (int i = 0; i < selection->faces_len; i++)
+        //     sprintf(buffer, "%s%d ", buffer, selection->faces[i]);
+        // igText(buffer);
         
         if (igButton("Flip Face(s)", (struct ImVec2){ 0, 0 }))
             for (int i = 0; i < selection->faces_len; i++)
@@ -705,7 +726,21 @@ void show_selection_menu() {
         
         for (int i = 1; apply_to_all && i < selection->faces_len; i++)
             vec3_copy(model.faces[selection->faces[i]].color, color);
+
     }
+    
+    igSeparator();
+
+    igCheckbox("Show rotation (r)", &selection->show_rotate);
+
+    igText("Transformation axises");
+    igCheckbox("X", &selection->allow_x);
+
+    igSameLine(0, 10);
+    igCheckbox("Y", &selection->allow_y);
+
+    igSameLine(0, 10);
+    igCheckbox("Z", &selection->allow_z);
     
     igEnd();
 }
@@ -715,6 +750,19 @@ void clear_selection() {
     selection->faces_len = 0;
 
     selection->state = INITIAL;
+}
+
+void select_all() {
+    for (int i = 0; i < model.vertices_len; i++) {
+        if (selection->len == selection->cap) {
+            selection->cap *= 2;
+            selection->indices = (uint32_t*)realloc(selection->indices, sizeof(uint32_t) * selection->cap);
+        }
+
+        selection->indices[selection->len++] = i;
+    }
+
+    selection->state = SELECTED;
 }
 
 void calculate_selection_midpoint() {

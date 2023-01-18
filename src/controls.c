@@ -12,7 +12,7 @@
 #include "file.h"
 
 extern camera_t camera;
-extern selection_t selection;
+extern selection_t *selection;
 extern model_t model;
 extern picker_t picker;
 
@@ -21,6 +21,26 @@ extern struct ImGuiIO* io;
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (io->WantCaptureKeyboard)
         return;
+    
+    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+        select_all();
+    }
+    
+    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+        selection->show_rotate = !selection->show_rotate;
+    }
+    
+    if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+        selection->allow_x = true; selection->allow_y = false; selection->allow_z = false;
+    }
+    
+    if (key == GLFW_KEY_Y && action == GLFW_PRESS) {
+        selection->allow_x = false; selection->allow_y = true; selection->allow_z = false;
+    }
+    
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+        selection->allow_x = false; selection->allow_y = false; selection->allow_z = true;
+    }
     
     // TODO: Check for changes and show save dialog before closing
     if (key == GLFW_KEY_W && action == GLFW_PRESS && mods == GLFW_MOD_SUPER)

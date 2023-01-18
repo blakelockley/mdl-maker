@@ -51,6 +51,9 @@ struct _selection_t {
     int rotation_axis;
     float rotations[3];
     float initial_rotation, initial_angle, last_angle;
+
+    bool show_rotate;
+    bool allow_x, allow_y, allow_z;
     
     bool is_coplanar;
     vec3 midpoint, offset, normal;
@@ -66,6 +69,7 @@ void free_selection();
 void update_selection();
 void render_selection();
 
+void select_all();
 void clear_selection();
 
 #endif  // SELECT_H
