@@ -70,6 +70,7 @@ void update_selection();
 void render_selection();
 
 void select_all();
+void remove_vertices();
 void clear_selection();
 
 #endif  // SELECT_H

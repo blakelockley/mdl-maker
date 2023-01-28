@@ -81,7 +81,6 @@ bool point_inside_rotation_handle(int axis, double mouse_x, double mouse_y);
 
 // operations
 
-void remove_vertices();
 void merge_vertices();
 
 void init_selection(renderer_t *selection_renderer, renderer_t *control_renderer, renderer_t *vertex_renderer, renderer_t *edge_renderer) {
@@ -323,6 +322,28 @@ void render_selection() {
                     render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 0.0f, 1.0f}, 0.1f, rotate_z_colour);
                     render_control_point(selection->control_renderer, z_handle, HANDLE_SIZE, rotate_z_colour);
                 }
+            }
+
+            vec3 va, vb;
+            if (selection->allow_x) {
+                vec3_add(va, selection->midpoint, (vec3){10.0f, 0.0f, 0.0f});
+                vec3_add(vb, selection->midpoint, (vec3){-10.0f, 0.0f, 0.0f});
+
+                render_control_line(selection->control_renderer, va, vb, (vec3){1.0f, 0.0f, 0.0f});
+            }
+
+            if (selection->allow_y) {
+                vec3_add(va, selection->midpoint, (vec3){0.0f, 10.0f, 0.0f});
+                vec3_add(vb, selection->midpoint, (vec3){0.0f, -10.0f, 0.0f});
+
+                render_control_line(selection->control_renderer, va, vb, (vec3){0.0f, 1.0f, 0.0f});
+            }
+
+            if (selection->allow_z) {
+                vec3_add(va, selection->midpoint, (vec3){0.0f, 0.0f, 10.0f});
+                vec3_add(vb, selection->midpoint, (vec3){0.0f, 0.0f, -10.0f});
+
+                render_control_line(selection->control_renderer, va, vb, (vec3){0.0f, 0.0f, 1.0f});
             }
         }
     }
@@ -968,6 +989,10 @@ void remove_vertices() {
                     face->indices[k]--;
             }
         }
+
+        for (int j = i + 1; j < selection->len; j++)
+            if (selection->indices[j] > removed_index)
+                selection->indices[j]--;
     }
 
     for (int i = model.faces_len - 1; i >= 0; i--) {

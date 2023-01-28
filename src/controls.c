@@ -42,6 +42,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         selection->allow_x = false; selection->allow_y = false; selection->allow_z = true;
     }
     
+    if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS) {
+        remove_vertices();
+    }
+    
     // TODO: Check for changes and show save dialog before closing
     if (key == GLFW_KEY_W && action == GLFW_PRESS && mods == GLFW_MOD_SUPER)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
