@@ -83,7 +83,7 @@ bool point_inside_rotation_handle(int axis, double mouse_x, double mouse_y);
 
 void merge_vertices();
 
-void init_selection(renderer_t *selection_renderer, renderer_t *control_renderer, renderer_t *vertex_renderer, renderer_t *edge_renderer) {
+void init_selection(renderer_t *selection_renderer, renderer_t *vertex_renderer, renderer_t *edge_renderer) {
     selection->indices = (uint32_t*)malloc(sizeof(uint32_t) * 10);
     selection->len = 0;
     selection->cap = 10;
@@ -96,7 +96,6 @@ void init_selection(renderer_t *selection_renderer, renderer_t *control_renderer
     selection->deltas_cap = 10;
 
     selection->selection_renderer = selection_renderer;
-    selection->control_renderer = control_renderer;
     selection->vertex_renderer = vertex_renderer;
     selection->edge_renderer = edge_renderer;
 
@@ -303,24 +302,24 @@ void render_selection() {
                     vec3 x_handle;
                     get_rotation_handle(x_handle, X);
 
-                    render_control_circle(selection->control_renderer, selection->midpoint, (vec3){1.0f, 0.0f, 0.0f}, 0.1f, rotate_x_colour);
-                    render_control_point(selection->control_renderer, x_handle, HANDLE_SIZE, rotate_x_colour);
+                    render_control_circle(selection->midpoint, (vec3){1.0f, 0.0f, 0.0f}, 0.1f, rotate_x_colour);
+                    render_control_point(x_handle, HANDLE_SIZE, rotate_x_colour);
                 }
 
                 if (selection->allow_y) {
                     vec3 y_handle;
                     get_rotation_handle(y_handle, Y);
 
-                    render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 1.0f, 0.0f}, 0.1f, rotate_y_colour);
-                    render_control_point(selection->control_renderer, y_handle, HANDLE_SIZE, rotate_y_colour);
+                    render_control_circle(selection->midpoint, (vec3){0.0f, 1.0f, 0.0f}, 0.1f, rotate_y_colour);
+                    render_control_point(y_handle, HANDLE_SIZE, rotate_y_colour);
                 }
 
                 if (selection->allow_z) {
                     vec3 z_handle;
                     get_rotation_handle(z_handle, Z);
 
-                    render_control_circle(selection->control_renderer, selection->midpoint, (vec3){0.0f, 0.0f, 1.0f}, 0.1f, rotate_z_colour);
-                    render_control_point(selection->control_renderer, z_handle, HANDLE_SIZE, rotate_z_colour);
+                    render_control_circle(selection->midpoint, (vec3){0.0f, 0.0f, 1.0f}, 0.1f, rotate_z_colour);
+                    render_control_point(z_handle, HANDLE_SIZE, rotate_z_colour);
                 }
             }
 
@@ -329,21 +328,21 @@ void render_selection() {
                 vec3_add(va, selection->midpoint, (vec3){10.0f, 0.0f, 0.0f});
                 vec3_add(vb, selection->midpoint, (vec3){-10.0f, 0.0f, 0.0f});
 
-                render_control_line(selection->control_renderer, va, vb, (vec3){1.0f, 0.0f, 0.0f});
+                render_control_line(va, vb, (vec3){1.0f, 0.0f, 0.0f});
             }
 
             if (selection->allow_y) {
                 vec3_add(va, selection->midpoint, (vec3){0.0f, 10.0f, 0.0f});
                 vec3_add(vb, selection->midpoint, (vec3){0.0f, -10.0f, 0.0f});
 
-                render_control_line(selection->control_renderer, va, vb, (vec3){0.0f, 1.0f, 0.0f});
+                render_control_line(va, vb, (vec3){0.0f, 1.0f, 0.0f});
             }
 
             if (selection->allow_z) {
                 vec3_add(va, selection->midpoint, (vec3){0.0f, 0.0f, 10.0f});
                 vec3_add(vb, selection->midpoint, (vec3){0.0f, 0.0f, -10.0f});
 
-                render_control_line(selection->control_renderer, va, vb, (vec3){0.0f, 0.0f, 1.0f});
+                render_control_line(va, vb, (vec3){0.0f, 0.0f, 1.0f});
             }
         }
     }
@@ -364,8 +363,8 @@ void render_selection() {
         vec3 axis = { 0.0f, 0.0f, 0.0f };
         axis[selection->rotation_axis] = 1.0f;
         
-        render_control_circle(selection->control_renderer, selection->midpoint, axis, 0.1f, active_colour);
-        render_control_point(selection->control_renderer, handle, HANDLE_SIZE, active_colour);
+        render_control_circle(selection->midpoint, axis, 0.1f, active_colour);
+        render_control_point(handle, HANDLE_SIZE, active_colour);
     }
     
     if (selection->len == 0)
@@ -377,7 +376,7 @@ void render_selection() {
     if (render_edges)
         render_model_edges_selection(selection->edge_renderer, &model, selection->faces, selection->faces_len);
     
-    render_control_point(selection->control_renderer, selection->midpoint, 20.0f, (vec3){1.0f, 0.0f, 1.0f});
+    render_control_point(selection->midpoint, 20.0f, (vec3){1.0f, 0.0f, 1.0f});
 }
 
 // selection

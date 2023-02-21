@@ -103,8 +103,9 @@ int main(int argc, char **argv) {
     renderer_t *face_renderer   = init_face_renderer(malloc(sizeof(renderer_t)));
     renderer_t *normal_renderer = init_normal_renderer(malloc(sizeof(renderer_t)));
     
-    renderer_t *control_renderer = init_control_renderer(malloc(sizeof(renderer_t)));
     renderer_t *selection_renderer = init_selection_renderer(malloc(sizeof(renderer_t)));
+    
+    init_control_renderer();
 
     // Engine setup
 
@@ -173,9 +174,6 @@ int main(int argc, char **argv) {
 
     deinit_renderer(normal_renderer);
     free(normal_renderer);
-
-    deinit_renderer(control_renderer);
-    free(control_renderer);
 
     deinit_renderer(selection_renderer);
     free(selection_renderer);

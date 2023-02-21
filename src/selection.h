@@ -58,12 +58,12 @@ struct _selection_t {
     bool is_coplanar;
     vec3 midpoint, offset, normal;
 
-    renderer_t *selection_renderer, *control_renderer, *vertex_renderer, *edge_renderer;
+    renderer_t *selection_renderer, *vertex_renderer, *edge_renderer;
 };
 
 typedef struct _selection_t selection_t;
 
-void init_selection(renderer_t *selection_renderer, renderer_t *control_renderer, renderer_t *vertex_renderer, renderer_t *edge_renderer);
+void init_selection(renderer_t *selection_renderer, renderer_t *vertex_renderer, renderer_t *edge_renderer);
 void free_selection();
 
 void update_selection();

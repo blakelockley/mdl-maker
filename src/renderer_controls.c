@@ -9,11 +9,14 @@
 extern camera_t camera;
 extern light_t light;
 
-renderer_t *init_control_renderer(renderer_t *renderer) {
-    init_renderer(renderer, 1);
+static renderer_t _control_renderer;
+static renderer_t *control_renderer = &_control_renderer;
+
+void init_control_renderer() {
+    init_renderer(control_renderer, 1);
 
     // Positions
-    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, control_renderer->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
@@ -21,26 +24,25 @@ renderer_t *init_control_renderer(renderer_t *renderer) {
 
     glBindVertexArray(0);
     
-    renderer->shader = load_shader("shaders/static.vert", "shaders/static.frag");
-    return renderer;
+    control_renderer->shader = load_shader("shaders/static.vert", "shaders/static.frag");
 }
 
-void render_control_point(renderer_t *renderer, vec3 p, float size, vec3 color) {
-    glUseProgram(renderer->shader);
+void render_control_point(vec3 p, float size, vec3 color) {
+    glUseProgram(control_renderer->shader);
     
     mat4x4 mvp;
     get_view_projection_matrix(&camera, mvp);
     
-    GLint mvp_loc = glGetUniformLocation(renderer->shader, "mvp");
+    GLint mvp_loc = glGetUniformLocation(control_renderer->shader, "mvp");
     glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
      
-    GLint color_loc = glGetUniformLocation(renderer->shader, "color");
+    GLint color_loc = glGetUniformLocation(control_renderer->shader, "color");
     glUniform3fv(color_loc, 1, color);
     
     glPointSize(size);
-    glBindVertexArray(renderer->vao);
+    glBindVertexArray(control_renderer->vao);
 
-    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, control_renderer->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3), p, GL_DYNAMIC_DRAW);
     
     glDepthFunc(GL_ALWAYS);
@@ -50,25 +52,25 @@ void render_control_point(renderer_t *renderer, vec3 p, float size, vec3 color) 
     glDepthFunc(GL_LEQUAL);
 }
 
-void render_control_line(renderer_t *renderer, vec3 a, vec3 b, vec3 color) {
+void render_control_line(vec3 a, vec3 b, vec3 color) {
     vec3 vertices[2];
     vec3_copy(vertices[0], a);
     vec3_copy(vertices[1], b);
     
-    glUseProgram(renderer->shader);
+    glUseProgram(control_renderer->shader);
     
     mat4x4 mvp;
     get_view_projection_matrix(&camera, mvp);
     
-    GLint mvp_loc = glGetUniformLocation(renderer->shader, "mvp");
+    GLint mvp_loc = glGetUniformLocation(control_renderer->shader, "mvp");
     glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
      
-    GLint color_loc = glGetUniformLocation(renderer->shader, "color");
+    GLint color_loc = glGetUniformLocation(control_renderer->shader, "color");
     glUniform3fv(color_loc, 1, color);
     
-    glBindVertexArray(renderer->vao);
+    glBindVertexArray(control_renderer->vao);
 
-    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, control_renderer->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
     glDepthFunc(GL_ALWAYS);
@@ -78,7 +80,7 @@ void render_control_line(renderer_t *renderer, vec3 a, vec3 b, vec3 color) {
     glDepthFunc(GL_LEQUAL);  
 }
 
-void render_control_plane(renderer_t *renderer, vec3 origin, vec3 normal, float width, float height, vec3 color) {
+void render_control_plane(vec3 origin, vec3 normal, float width, float height, vec3 color) {
     vec3 other;
     vec3_set(other, 0.0f, 1.0f, 0.0f);
 
@@ -115,26 +117,26 @@ void render_control_plane(renderer_t *renderer, vec3 origin, vec3 normal, float 
     vec3_copy(vertices[2], br);
     vec3_copy(vertices[3], bl);
 
-    glUseProgram(renderer->shader);
+    glUseProgram(control_renderer->shader);
     
     mat4x4 mvp;
     get_view_projection_matrix(&camera, mvp);
     
-    GLint mvp_loc = glGetUniformLocation(renderer->shader, "mvp");
+    GLint mvp_loc = glGetUniformLocation(control_renderer->shader, "mvp");
     glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
      
-    GLint color_loc = glGetUniformLocation(renderer->shader, "color");
+    GLint color_loc = glGetUniformLocation(control_renderer->shader, "color");
     glUniform3fv(color_loc, 1, color);
     
-    glBindVertexArray(renderer->vao);
+    glBindVertexArray(control_renderer->vao);
 
-    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, control_renderer->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-void render_control_circle(renderer_t *renderer, vec3 origin, vec3 normal, float radius, vec3 color) {
+void render_control_circle(vec3 origin, vec3 normal, float radius, vec3 color) {
     vec3 other;
     vec3_set(other, 0.0f, 1.0f, 0.0f);
 
@@ -166,20 +168,20 @@ void render_control_circle(renderer_t *renderer, vec3 origin, vec3 normal, float
         vec3_add(vertices[i], vertices[i], origin);
     }
 
-    glUseProgram(renderer->shader);
+    glUseProgram(control_renderer->shader);
     
     mat4x4 mvp;
     get_view_projection_matrix(&camera, mvp);
     
-    GLint mvp_loc = glGetUniformLocation(renderer->shader, "mvp");
+    GLint mvp_loc = glGetUniformLocation(control_renderer->shader, "mvp");
     glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
      
-    GLint color_loc = glGetUniformLocation(renderer->shader, "color");
+    GLint color_loc = glGetUniformLocation(control_renderer->shader, "color");
     glUniform3fv(color_loc, 1, color);
     
-    glBindVertexArray(renderer->vao);
+    glBindVertexArray(control_renderer->vao);
 
-    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, control_renderer->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
     glDepthFunc(GL_ALWAYS);
