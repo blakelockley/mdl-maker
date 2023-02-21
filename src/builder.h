@@ -13,6 +13,8 @@ typedef struct _builder_t builder_t;
 void init_builder();
 void free_builder();
 
+void render_builder();
+
 void build_vertex(float mouse_x, float mouse_y);
 
 #endif  // BUILDER_H

@@ -66,7 +66,6 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
         build_vertex(mouse_x, mouse_y);
-
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {

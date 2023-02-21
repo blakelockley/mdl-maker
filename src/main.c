@@ -21,6 +21,7 @@
 #include "menu.h"
 #include "primitives.h"
 #include "picker.h"
+#include "builder.h"
 #include "renderers.h"
 
 #define DEBUG 1
@@ -114,7 +115,7 @@ int main(int argc, char **argv) {
     init_grid(&grid);
     init_model(&model);
     
-    init_selection(selection_renderer, control_renderer, vertex_renderer, edge_renderer);
+    init_selection(selection_renderer, vertex_renderer, edge_renderer);
 
     init_picker(&picker);
 
@@ -153,6 +154,7 @@ int main(int argc, char **argv) {
             render_model_normals(normal_renderer, &model);
 
         render_selection();
+        render_builder();
 
         igRender();
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
