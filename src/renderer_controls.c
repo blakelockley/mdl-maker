@@ -27,7 +27,7 @@ void init_control_renderer() {
     control_renderer->shader = load_shader("shaders/static.vert", "shaders/static.frag");
 }
 
-void render_control_point(vec3 p, float size, vec3 color) {
+void render_control_point(vec3 p, float size, vec4 color) {
     glUseProgram(control_renderer->shader);
     
     mat4x4 mvp;
@@ -37,7 +37,7 @@ void render_control_point(vec3 p, float size, vec3 color) {
     glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
      
     GLint color_loc = glGetUniformLocation(control_renderer->shader, "color");
-    glUniform3fv(color_loc, 1, color);
+    glUniform4fv(color_loc, 1, color);
     
     glPointSize(size);
     glBindVertexArray(control_renderer->vao);
@@ -52,7 +52,7 @@ void render_control_point(vec3 p, float size, vec3 color) {
     glDepthFunc(GL_LEQUAL);
 }
 
-void render_control_line(vec3 a, vec3 b, vec3 color) {
+void render_control_line(vec3 a, vec3 b, vec4 color) {
     vec3 vertices[2];
     vec3_copy(vertices[0], a);
     vec3_copy(vertices[1], b);
@@ -66,7 +66,7 @@ void render_control_line(vec3 a, vec3 b, vec3 color) {
     glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
      
     GLint color_loc = glGetUniformLocation(control_renderer->shader, "color");
-    glUniform3fv(color_loc, 1, color);
+    glUniform4fv(color_loc, 1, color);
     
     glBindVertexArray(control_renderer->vao);
 
@@ -80,7 +80,7 @@ void render_control_line(vec3 a, vec3 b, vec3 color) {
     glDepthFunc(GL_LEQUAL);  
 }
 
-void render_control_plane(vec3 origin, vec3 normal, float width, float height, vec3 color) {
+void render_control_plane(vec3 origin, vec3 normal, float width, float height, vec4 color) {
     vec3 other;
     vec3_set(other, 0.0f, 1.0f, 0.0f);
 
@@ -126,7 +126,7 @@ void render_control_plane(vec3 origin, vec3 normal, float width, float height, v
     glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
      
     GLint color_loc = glGetUniformLocation(control_renderer->shader, "color");
-    glUniform3fv(color_loc, 1, color);
+    glUniform4fv(color_loc, 1, color);
     
     glBindVertexArray(control_renderer->vao);
 
@@ -136,7 +136,7 @@ void render_control_plane(vec3 origin, vec3 normal, float width, float height, v
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-void render_control_circle(vec3 origin, vec3 normal, float radius, vec3 color) {
+void render_control_circle(vec3 origin, vec3 normal, float radius, vec4 color) {
     vec3 other;
     vec3_set(other, 0.0f, 1.0f, 0.0f);
 
@@ -177,7 +177,7 @@ void render_control_circle(vec3 origin, vec3 normal, float radius, vec3 color) {
     glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
      
     GLint color_loc = glGetUniformLocation(control_renderer->shader, "color");
-    glUniform3fv(color_loc, 1, color);
+    glUniform4fv(color_loc, 1, color);
     
     glBindVertexArray(control_renderer->vao);
 

@@ -261,11 +261,11 @@ void render_selection() {
         render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, (vec3){0.8f, 0.4f, 0.2f});
 
     if (selection->state == SELECTED) {
-        vec3 selection_colour = { 0.5f, 0.5f, 0.5f };
-        vec3 handle_colour    = { 0.5f, 0.5f, 0.5f };
-        vec3 rotate_x_colour  = { 1.0f, 0.0f, 0.0f };
-        vec3 rotate_y_colour  = { 0.0f, 1.0f, 0.0f };
-        vec3 rotate_z_colour  = { 0.0f, 0.0f, 1.0f };
+        vec4 selection_colour = { 0.5f, 0.5f, 0.5f, 0.8f };
+        vec4 handle_colour    = { 0.5f, 0.5f, 0.5f, 0.8f };
+        vec4 rotate_x_colour  = { 1.0f, 0.0f, 0.0f, 0.8f };
+        vec4 rotate_y_colour  = { 0.0f, 1.0f, 0.0f, 0.8f };
+        vec4 rotate_z_colour  = { 0.0f, 0.0f, 1.0f, 0.8f };
         
         switch (selection->hovering_control) {
         case SELECTION:

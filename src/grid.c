@@ -61,12 +61,12 @@ void render_grid(grid_t *grid) {
     GLint color_loc = glGetUniformLocation(grid->shader, "color");
     glBindVertexArray(grid->vao);
 
-    glUniform3f(color_loc, 0.5f, 0.5f, 0.5f);
+    glUniform4f(color_loc, 0.5f, 0.5f, 0.5f, 1.0f);
     glDrawArrays(GL_LINES, 0, 80);
 
-    glUniform3f(color_loc, 1.0f, 0.0f, 0.0f);
+    glUniform4f(color_loc, 1.0f, 0.0f, 0.0f, 1.0f);
     glDrawArrays(GL_LINES, 80, 2);
 
-    glUniform3f(color_loc, 0.0f, 0.0f, 1.0f);
+    glUniform4f(color_loc, 0.0f, 0.0f, 1.0f, 1.0f);
     glDrawArrays(GL_LINES, 82, 2);
 }

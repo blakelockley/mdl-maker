@@ -21,22 +21,24 @@ void free_builder() {
 }
 
 void render_builder() {
-    vec3 lt;
+    vec4 color;
+    vec4_set(color, 0.5f, 0.5f, 0.5f, 0.5f);
 
-    vec3_scale(lt, l, 10.0f);
-    vec3_add(lt, lt, l0);
-
-    render_control_point(l0, 10.0f, (vec3){1.0f, 0.0f, 0.0f});
-    render_control_line(l0, lt, (vec3){1.0f, 1.0f, 0.0f});
-
+    render_control_plane(p0, n, 2.0f, 2.0f, color);
+    
+    vec3 p0n;
+    vec3_add(p0n, p0, n);
+    
+    render_control_line(p0, p0n, color);
 }
 
 void build_vertex(float mouse_x, float mouse_y) {
     // plane normal
     vec3_set(n, 0, 1, 0);
+    vec3_normalize(n, n);
 
     // plane origin, origin relative to point p
-    vec3_set(p0, 0, 0, 0);
+    vec3_set(p0, 0, 0.5, 0);
     
     // ray origin l0 is at camera
     vec3_copy(l0, camera.pos);
