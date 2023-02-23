@@ -99,12 +99,12 @@ int main(int argc, char **argv) {
 
     // Renderers setup
 
-    renderer_t *vertex_renderer = init_vertex_renderer(malloc(sizeof(renderer_t)));
-    renderer_t *edge_renderer   = init_edge_renderer(malloc(sizeof(renderer_t)));
-    renderer_t *face_renderer   = init_face_renderer(malloc(sizeof(renderer_t)));
-    renderer_t *normal_renderer = init_normal_renderer(malloc(sizeof(renderer_t)));
+    init_vertex_renderer(malloc(sizeof(renderer_t)));
+    init_edge_renderer(malloc(sizeof(renderer_t)));
+    init_face_renderer(malloc(sizeof(renderer_t)));
+    init_normal_renderer(malloc(sizeof(renderer_t)));
     
-    renderer_t *selection_renderer = init_selection_renderer(malloc(sizeof(renderer_t)));
+    init_selection_renderer(malloc(sizeof(renderer_t)));
     
     init_control_renderer();
 
@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
     init_grid(&grid);
     init_model(&model);
     
-    init_selection(selection_renderer, vertex_renderer, edge_renderer);
+    init_selection();
 
     init_picker(&picker);
 
@@ -142,16 +142,16 @@ int main(int argc, char **argv) {
         render_grid(&grid);
 
         if (render_vertices)
-            render_model_vertices(vertex_renderer, &model);
+            render_model_vertices(&model);
         
         if (render_edges)
-            render_model_edges(edge_renderer, &model);
+            render_model_edges(&model);
         
         if (render_faces)
-            render_model_faces(face_renderer, &model);
+            render_model_faces(&model);
         
         if (render_normals)
-            render_model_normals(normal_renderer, &model);
+            render_model_normals(&model);
 
         render_selection();
         render_builder();
@@ -165,20 +165,11 @@ int main(int argc, char **argv) {
 
     free_picker(&picker);
 
-    deinit_renderer(vertex_renderer);
-    free(vertex_renderer);
-
-    deinit_renderer(edge_renderer);
-    free(edge_renderer);
-
-    deinit_renderer(face_renderer);
-    free(face_renderer);
-
-    deinit_renderer(normal_renderer);
-    free(normal_renderer);
-
-    deinit_renderer(selection_renderer);
-    free(selection_renderer);
+    deinit_vertex_renderer();
+    deinit_edge_renderer();
+    deinit_face_renderer();
+    deinit_normal_renderer();
+    deinit_selection_renderer();
 
     free_model(&model);
     free_grid(&grid);

@@ -4,7 +4,10 @@
 
 extern camera_t camera;
 
-renderer_t *init_normal_renderer(renderer_t *renderer) {
+static renderer_t _renderer;
+static renderer_t *renderer = &_renderer;
+
+renderer_t *init_normal_renderer() {
     init_renderer(renderer, 1);
     
     // Vertices
@@ -20,7 +23,11 @@ renderer_t *init_normal_renderer(renderer_t *renderer) {
     return renderer;
 }
 
-void render_model_normals(renderer_t *renderer, model_t *model) {
+void deinit_normal_renderer() {
+    deinit_renderer(renderer);
+}
+
+void render_model_normals(model_t *model) {
     vec3 vertices[model->faces_len * 2];
     
     for (int i = 0; i < model->faces_len; i++) {

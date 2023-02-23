@@ -83,7 +83,7 @@ bool point_inside_rotation_handle(int axis, double mouse_x, double mouse_y);
 
 void merge_vertices();
 
-void init_selection(renderer_t *selection_renderer, renderer_t *vertex_renderer, renderer_t *edge_renderer) {
+void init_selection() {
     selection->indices = (uint32_t*)malloc(sizeof(uint32_t) * 10);
     selection->len = 0;
     selection->cap = 10;
@@ -94,10 +94,6 @@ void init_selection(renderer_t *selection_renderer, renderer_t *vertex_renderer,
 
     selection->deltas = (vec3*)malloc(sizeof(vec3) * 10);
     selection->deltas_cap = 10;
-
-    selection->selection_renderer = selection_renderer;
-    selection->vertex_renderer = vertex_renderer;
-    selection->edge_renderer = edge_renderer;
 
     selection->show_rotate = false;
     selection->rotation_axis = -1;
@@ -258,7 +254,7 @@ void render_selection() {
     vec3 active_colour = { 1.0f, 1.0f, 1.0f };
     
     if (selection->state == SELECTING)
-        render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, (vec3){0.8f, 0.4f, 0.2f});
+        render_selection_box(selection->ax, selection->ay, selection->bx, selection->by, (vec3){0.8f, 0.4f, 0.2f});
 
     if (selection->state == SELECTED) {
         vec4 selection_colour = { 0.5f, 0.5f, 0.5f, 0.8f };
@@ -292,10 +288,10 @@ void render_selection() {
             break;
         }
 
-        render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, selection_colour);
+        render_selection_box(selection->ax, selection->ay, selection->bx, selection->by, selection_colour);
         
         if (selection->len > 1) {
-            render_selection_handle(selection->selection_renderer, selection->bx, selection->by, HANDLE_SIZE, handle_colour);
+            render_selection_handle(selection->bx, selection->by, HANDLE_SIZE, handle_colour);
 
             if (selection->show_rotate) {
                 if (selection->allow_x) {
@@ -348,12 +344,12 @@ void render_selection() {
     }
 
     if (selection->state == MOVING) {
-        render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, active_colour);
+        render_selection_box(selection->ax, selection->ay, selection->bx, selection->by, active_colour);
     }
 
     if (selection->state == RESIZING) {
-        render_selection_box(selection->selection_renderer, selection->ax, selection->ay, selection->bx, selection->by, active_colour);
-        render_selection_handle(selection->selection_renderer, selection->bx, selection->by, HANDLE_SIZE, active_colour);
+        render_selection_box(selection->ax, selection->ay, selection->bx, selection->by, active_colour);
+        render_selection_handle(selection->bx, selection->by, HANDLE_SIZE, active_colour);
     }
 
     if (selection->state == ROTATING) {
@@ -371,10 +367,10 @@ void render_selection() {
         return;
     
     if (render_vertices)
-        render_model_vertices_selection(selection->vertex_renderer, &model, selection->indices, selection->len);
+        render_model_vertices_selection(&model, selection->indices, selection->len);
     
     if (render_edges)
-        render_model_edges_selection(selection->edge_renderer, &model, selection->faces, selection->faces_len);
+        render_model_edges_selection(&model, selection->faces, selection->faces_len);
     
     render_control_point(selection->midpoint, 20.0f, (vec3){1.0f, 0.0f, 1.0f});
 }

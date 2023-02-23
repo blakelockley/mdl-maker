@@ -7,7 +7,10 @@
 extern camera_t camera;
 extern light_t light;
 
-renderer_t * init_edge_renderer(renderer_t *renderer) {
+static renderer_t _renderer;
+static renderer_t *renderer = &_renderer;
+
+renderer_t * init_edge_renderer() {
     init_renderer(renderer, 1);
 
     // Positions
@@ -23,7 +26,11 @@ renderer_t * init_edge_renderer(renderer_t *renderer) {
     return renderer;
 }
 
-void render_model_edges(renderer_t *renderer, model_t *model) {    
+void deinit_edge_renderer() {
+    deinit_renderer(renderer);
+}
+
+void render_model_edges(model_t *model) {    
     uint32_t total_vertices = 0;
     for (int i = 0; i < model->faces_len; i++)
         total_vertices += model->faces[i].len * 2; // n -> * 2
@@ -60,7 +67,7 @@ void render_model_edges(renderer_t *renderer, model_t *model) {
     glBindVertexArray(0);
 }
 
-void render_model_edges_selection(renderer_t *renderer, model_t *model, uint32_t *indices, uint32_t len) {
+void render_model_edges_selection(model_t *model, uint32_t *indices, uint32_t len) {
     uint32_t total_vertices = 0;
     for (int i = 0; i < len; i++)
         total_vertices += model->faces[indices[i]].len * 2; // n -> * 2

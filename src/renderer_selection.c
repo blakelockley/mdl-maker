@@ -8,6 +8,9 @@ extern GLFWwindow *window;
 extern camera_t camera;
 extern light_t light;
 
+static renderer_t _renderer;
+static renderer_t *renderer = &_renderer;
+
 // Converts the coordinates from screen space: [0, width/height] to clip space: [-1.0f, 1.0f]
 void normalize_screen_coords(GLFWwindow *window, float *clip_x, float *clip_y, float screen_x, float screen_y) {
     int width, height;
@@ -17,7 +20,11 @@ void normalize_screen_coords(GLFWwindow *window, float *clip_x, float *clip_y, f
     *clip_y = 1.0f - (2.0f * screen_y) / height;
 }
 
-renderer_t* init_selection_renderer(renderer_t *renderer) {
+void deinit_selection_renderer() {
+    deinit_renderer(renderer);
+}
+
+renderer_t* init_selection_renderer() {
     init_renderer(renderer, 1);
     
     // Vertices
@@ -34,7 +41,7 @@ renderer_t* init_selection_renderer(renderer_t *renderer) {
     return renderer;
 }
 
-void render_selection_box(renderer_t *renderer, float ax, float ay, float bx, float by, vec3 color) {
+void render_selection_box(float ax, float ay, float bx, float by, vec3 color) {
     float clip_ax, clip_ay;
     normalize_screen_coords(window, &clip_ax, &clip_ay, ax, ay);
         
@@ -65,7 +72,7 @@ void render_selection_box(renderer_t *renderer, float ax, float ay, float bx, fl
     glBindVertexArray(0);
 }
 
-void render_selection_handle(renderer_t *renderer, float x, float y, float size, vec3 color) {
+void render_selection_handle(float x, float y, float size, vec3 color) {
     float clip_ax, clip_ay;
     normalize_screen_coords(window, &clip_ax, &clip_ay, x, y);
     

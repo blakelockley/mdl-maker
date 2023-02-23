@@ -9,7 +9,10 @@ extern light_t light;
 bool is_mirror_enabled = true;
 float mirror_alpha = 0.25f;
 
-renderer_t *init_face_renderer(renderer_t *renderer) {
+static renderer_t _renderer;
+static renderer_t *renderer = &_renderer;
+
+renderer_t *init_face_renderer() {
     init_renderer(renderer, 3);
     
     // Positions
@@ -39,7 +42,12 @@ renderer_t *init_face_renderer(renderer_t *renderer) {
     return renderer;
 }
 
-void render_model_faces(renderer_t *renderer, model_t *model) {
+void deinit_face_renderer() {
+    deinit_renderer(renderer);
+}
+
+
+void render_model_faces(model_t *model) {
     uint32_t total_vertices = 0;
     for (int i = 0; i < model->faces_len; i++)
         total_vertices += (model->faces[i].len - 2) * 3; // n -> (n - 2) * 3

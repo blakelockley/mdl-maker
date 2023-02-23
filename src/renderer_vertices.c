@@ -6,7 +6,10 @@
 extern camera_t camera;
 extern light_t light;
 
-renderer_t *init_vertex_renderer(renderer_t *renderer) {
+static renderer_t _renderer;
+static renderer_t *renderer = &_renderer;
+
+renderer_t *init_vertex_renderer() {
     init_renderer(renderer, 1);
     
     // Positions
@@ -22,7 +25,11 @@ renderer_t *init_vertex_renderer(renderer_t *renderer) {
     return renderer;
 }
 
-void render_model_vertices(renderer_t *renderer, model_t *model) {    
+void deinit_vertex_renderer() {
+    deinit_renderer(renderer);
+}
+
+void render_model_vertices(model_t *model) {    
     glBindVertexArray(renderer->vao);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * model->vertices_len, model->vertices, GL_DYNAMIC_DRAW);
@@ -46,7 +53,7 @@ void render_model_vertices(renderer_t *renderer, model_t *model) {
     glBindVertexArray(0);
 }
 
-void render_model_vertices_selection(renderer_t *renderer, model_t *model, uint32_t *indices, uint32_t len) {
+void render_model_vertices_selection(model_t *model, uint32_t *indices, uint32_t len) {
     vec3 positions[len];
     for (int i = 0; i < len; i++)
         vec3_copy(positions[i], model->vertices[indices[i]]);
