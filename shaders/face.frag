@@ -9,6 +9,8 @@ out vec4 out_frag_color;
 uniform vec3 light_pos;
 uniform vec3 light_color;
 
+uniform vec4 filter_color;
+
 void main()
 {
     vec3 norm = normalize(out_normal);
@@ -21,5 +23,5 @@ void main()
     vec3 diffuse = diff * light_color;
     
     vec3 result = (ambient + diffuse) * out_color;
-    out_frag_color = vec4(result, 1.0);
+    out_frag_color = vec4(result, 1.0) * filter_color;
 }

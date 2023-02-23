@@ -6,6 +6,9 @@
 extern camera_t camera;
 extern light_t light;
 
+bool is_mirror_enabled = true;
+float mirror_alpha = 0.25f;
+
 renderer_t *init_face_renderer(renderer_t *renderer) {
     init_renderer(renderer, 3);
     
@@ -81,6 +84,9 @@ void render_model_faces(renderer_t *renderer, model_t *model) {
     GLint light_color_loc = glGetUniformLocation(renderer->shader, "light_color");
     glUniform3fv(light_color_loc, 1, (float*)light.color);
 
+    GLint filter_color_loc = glGetUniformLocation(renderer->shader, "filter_color");
+    glUniform4fv(filter_color_loc, 1, (float[]){1.0f, 1.0f, 1.0f, 1.0f});
+
     glBindVertexArray(renderer->vao);
     
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
@@ -93,5 +99,19 @@ void render_model_faces(renderer_t *renderer, model_t *model) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_DYNAMIC_DRAW);
 
     glDrawArrays(GL_TRIANGLES, 0, total_vertices);
+
+    if (is_mirror_enabled) {
+        mat4x4 scale;
+        mat4x4_identity(scale);
+        mat4x4_scale(scale, scale, -1.0f, 1.0f, 1.0f);
+
+        mat4x4_mul(mvp, mvp, scale);
+        glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
+
+        glUniform4fv(filter_color_loc, 1, (float[]){1.0f, 1.0f, 1.0f, mirror_alpha});
+
+        glDrawArrays(GL_TRIANGLES, 0, total_vertices);
+    }
+    
     glBindVertexArray(0);
 }
