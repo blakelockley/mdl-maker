@@ -115,6 +115,7 @@ int main(int argc, char **argv) {
     init_grid(&grid);
     init_model(&model);
     
+    init_builder();
     init_selection();
 
     init_picker(&picker);
@@ -134,6 +135,8 @@ int main(int argc, char **argv) {
 
         update_menu();
         update_selection();
+        update_builder();
+        
         show_camera_gui(&camera);
 
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);

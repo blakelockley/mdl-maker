@@ -46,6 +46,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         remove_vertices();
     }
     
+    if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
+        toggle_building_plane();
+    }
+    
     // TODO: Check for changes and show save dialog before closing
     if (key == GLFW_KEY_W && action == GLFW_PRESS && mods == GLFW_MOD_SUPER)
         glfwSetWindowShouldClose(window, GLFW_TRUE);

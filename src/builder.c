@@ -3,43 +3,53 @@
 #include "model.h"
 #include "utils.h"
 #include "renderers.h"
+#include "glfw.h"
 
 extern GLFWwindow *window;
 
 extern camera_t camera;
 extern model_t model;
 
+int normal_axis = 1; // Y
+
 // fill out variables
 vec3 n, p0, l0, l;
 
+
 void init_builder() {
-    // TODO: ...
-}
-
-void free_builder() {
-    // TODO: ...
-}
-
-void render_builder() {
-    vec4 color;
-    vec4_set(color, 0.5f, 0.5f, 0.5f, 0.5f);
-
-    render_control_plane(p0, n, 2.0f, 2.0f, color);
-    
-    vec3 p0n;
-    vec3_add(p0n, p0, n);
-    
-    render_control_line(p0, p0n, color);
-}
-
-void build_vertex(float mouse_x, float mouse_y) {
     // plane normal
     vec3_set(n, 0, 1, 0);
     vec3_normalize(n, n);
 
     // plane origin, origin relative to point p
     vec3_set(p0, 0, 0.5, 0);
+}
+
+void free_builder() {
+    // TODO: ...
+}
+
+void toggle_building_plane() {
+    normal_axis = (normal_axis + 1) % 3;
+}
+
+void update_builder() {
+    vec3_copy(p0, camera.origin);
+
+    vec3_zero(n);
+    n[normal_axis] = 1.0f;
+}
+
+void render_builder() {
+    glDepthFunc(GL_LESS);
+
+    vec4 color = {1.0f, 1.0f, 1.0f, 0.25f};
+    render_control_plane(p0, n, 2.0f, 2.0f, color);
     
+    glDepthFunc(GL_LEQUAL);
+}
+
+void build_vertex(float mouse_x, float mouse_y) {
     // ray origin l0 is at camera
     vec3_copy(l0, camera.pos);
     
@@ -68,11 +78,11 @@ void build_vertex(float mouse_x, float mouse_y) {
     float t; // written to by intersect_plane
     bool intersects = intersect_plane(&t, n, p0, l0, l);
 
-    if (!intersects)
+    if (!intersects || t > 20.f)
         return;
 
     vec3 point;
     point_intersect_plane(point, l0, l, t);
-    
+
     add_vertex(&model, point);
 }
