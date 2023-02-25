@@ -43,7 +43,7 @@ void render_model_vertices(model_t *model) {
     glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
      
     GLint color_loc = glGetUniformLocation(renderer->shader, "color");
-    glUniform3f(color_loc, 1.0f, 1.0f, 1.0f);
+    glUniform4f(color_loc, 1.0f, 1.0f, 1.0f, 1.0f);
     
     glBindVertexArray(renderer->vao);
 
@@ -72,7 +72,7 @@ void render_model_vertices_selection(model_t *model, uint32_t *indices, uint32_t
     glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
      
     GLint color_loc = glGetUniformLocation(renderer->shader, "color");
-    glUniform3f(color_loc, 0.20f, 0.92f, 0.34f);
+    glUniform4f(color_loc, 0.20f, 0.92f, 0.34f, 1.0f);
 
     glDepthFunc(GL_ALWAYS);
     glBindVertexArray(renderer->vao);

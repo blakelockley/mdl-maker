@@ -85,9 +85,12 @@ void render_selection_handle(float x, float y, float size, vec3 color) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
     glUseProgram(renderer->shader);
+
+    vec4 color4;
+    vec4_from_vec3(color4, color, 1.0f);
     
     GLint color_loc = glGetUniformLocation(renderer->shader, "color");
-    glUniform3fv(color_loc, 1, color);
+    glUniform4fv(color_loc, 1, color4);
 
     glPointSize(size);
     glDrawArrays(GL_POINTS, 0, 1);
