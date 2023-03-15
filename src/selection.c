@@ -7,6 +7,7 @@
 #include "shader.h"
 #include "model.h"
 #include "picker.h"
+#include "builder.h"
 
 #include "renderers.h"
 
@@ -739,6 +740,12 @@ void show_selection_menu() {
 
         if (selection->faces_len > 1)
             igCheckbox("Apply to all selected faces", &apply_to_all);
+
+        if (selection->faces_len == 1)
+            if (igButton("Set plane to face", (struct ImVec2){ 0, 0 })) {
+                face_t *face = &model.faces[selection->faces[0]];
+                set_building_plane(face->midpoint, face->normal);
+            }
         
         for (int i = 1; apply_to_all && i < selection->faces_len; i++)
             vec3_copy(model.faces[selection->faces[i]].color, color);

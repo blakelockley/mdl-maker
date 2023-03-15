@@ -29,6 +29,11 @@ void free_builder() {
     // TODO: ...
 }
 
+void set_building_plane(vec3 origin, vec3 normal) {
+    vec3_copy(p0, origin);
+    vec3_copy(n, normal);
+}
+
 void toggle_building_plane() {
     normal_axis = (normal_axis + 1) % 3;
 }
