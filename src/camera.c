@@ -136,9 +136,16 @@ void get_view_projection_matrix(camera_t *camera, mat4x4 m) {
 }
 
 void update_origin(camera_t *camera, float delta_x, float delta_y) {
+    
+    vec3 xz;
+    vec3_copy(xz, camera->dir);
+    
+    xz[1] = 0.0f;
+    vec3_normalize(xz, xz);
+    
     // xz
     vec3 right;
-    vec3_cross(right, camera->dir, camera->up);
+    vec3_cross(right, xz, camera->up);
     vec3_normalize(right, right);
     
     vec3 xz_vector;
@@ -206,11 +213,11 @@ void derive_camera(camera_t *camera) {
         // orbital
         
         // pos.xz
-        camera->pos[0] = cosf(phi) * cosf(theta) * camera->radius;
-        camera->pos[2] = cosf(phi) * sinf(theta) * camera->radius;
+        camera->pos[0] = camera->origin[0] + cosf(phi) * cosf(theta) * camera->radius;
+        camera->pos[2] = camera->origin[2] + cosf(phi) * sinf(theta) * camera->radius;
 
         // pos.y
-        camera->pos[1] = sinf(phi) * camera->radius;
+        camera->pos[1] = camera->origin[1] + sinf(phi) * camera->radius;
 
         // up
         vec3_set(camera->up, 0.0f, 1.0f, 0.0f);
