@@ -9,8 +9,12 @@ void point_intersect_plane(vec3 p, vec3 l0, vec3 l, float t) {
     vec3_add(p, p, l0);
 }
 
+// t: time
+// n: normal of plane (normalised)
+// p0: origin of plane
+// l0: origin of ray
+// l: ray direction (normalised)
 bool intersect_plane(float *t, const vec3 n, const vec3 p0, const vec3 l0, const vec3 l) {
-    // assumes n and l are normalised
 
     float denom = vec3_dot(n, l);
     if (fabs(denom) > 1e-6) {
