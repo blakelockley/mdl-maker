@@ -105,8 +105,6 @@ void update_builder() {
     if (io->WantCaptureMouse)
         return;
 
-    int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-    
     double mouse_x, mouse_y;
     glfwGetCursorPos(window, &mouse_x, &mouse_y);
 
@@ -116,6 +114,7 @@ void update_builder() {
     if (project_cursor_onto_plane(cursor, mouse_x, mouse_y))
         vec3_copy(cursor_projection, cursor);
 
+    // int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     // if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
     // }
 

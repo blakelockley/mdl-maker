@@ -6,9 +6,6 @@
 extern camera_t camera;
 extern light_t light;
 
-bool is_mirror_enabled = true;
-float mirror_alpha = 0.25f;
-
 static renderer_t _renderer;
 static renderer_t *renderer = &_renderer;
 
@@ -47,7 +44,7 @@ void deinit_face_renderer() {
 }
 
 
-void render_model_faces(model_t *model) {
+void render_model_faces(model_t *model, mat4x4 model_matrix, float alpha) {
     uint32_t total_vertices = 0;
     for (int i = 0; i < model->faces_len; i++)
         total_vertices += (model->faces[i].len - 2) * 3; // n -> (n - 2) * 3
@@ -79,9 +76,16 @@ void render_model_faces(model_t *model) {
     }
     
     glUseProgram(renderer->shader);
-    
+
+    mat4x4 m;
+    if (model_matrix == NULL)
+        mat4x4_identity(m);
+    else
+        mat4x4_copy(m, model_matrix);
+
     mat4x4 mvp;
     get_view_projection_matrix(&camera, mvp);
+    mat4x4_mul(mvp, mvp, m);
     
     GLint mvp_loc = glGetUniformLocation(renderer->shader, "mvp");
     glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
@@ -93,7 +97,7 @@ void render_model_faces(model_t *model) {
     glUniform3fv(light_color_loc, 1, (float*)light.color);
 
     GLint filter_color_loc = glGetUniformLocation(renderer->shader, "filter_color");
-    glUniform4fv(filter_color_loc, 1, (float[]){1.0f, 1.0f, 1.0f, 1.0f});
+    glUniform4fv(filter_color_loc, 1, (float[]){1.0f, 1.0f, 1.0f, alpha});
 
     glBindVertexArray(renderer->vao);
     
@@ -108,18 +112,5 @@ void render_model_faces(model_t *model) {
 
     glDrawArrays(GL_TRIANGLES, 0, total_vertices);
 
-    if (is_mirror_enabled) {
-        mat4x4 scale;
-        mat4x4_identity(scale);
-        mat4x4_scale(scale, scale, -1.0f, 1.0f, 1.0f);
-
-        mat4x4_mul(mvp, mvp, scale);
-        glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (float*)mvp);
-
-        glUniform4fv(filter_color_loc, 1, (float[]){1.0f, 1.0f, 1.0f, mirror_alpha});
-
-        glDrawArrays(GL_TRIANGLES, 0, total_vertices);
-    }
-    
     glBindVertexArray(0);
 }

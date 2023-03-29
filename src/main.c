@@ -23,6 +23,7 @@
 #include "picker.h"
 #include "builder.h"
 #include "renderers.h"
+#include "mirror.h"
 
 #define DEBUG 1
 
@@ -140,6 +141,7 @@ int main(int argc, char **argv) {
         show_camera_gui(&camera);
 
         gui_builder();
+        gui_mirror();
 
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -153,10 +155,13 @@ int main(int argc, char **argv) {
             render_model_edges(&model);
         
         if (render_faces)
-            render_model_faces(&model);
+            render_model_faces(&model, NULL, 1.0f);
         
         if (render_normals)
             render_model_normals(&model);
+
+
+        render_mirror_faces(&model);
 
         render_selection();
         render_builder();

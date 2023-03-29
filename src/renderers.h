@@ -32,7 +32,7 @@ void deinit_edge_renderer();
 // Face Renderer
 
 renderer_t *init_face_renderer();
-void render_model_faces(model_t *model);
+void render_model_faces(model_t *model, mat4x4 model_matrix, float alpha);
 void deinit_face_renderer();
 
 // Normal Renderer
