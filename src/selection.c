@@ -8,6 +8,7 @@
 #include "model.h"
 #include "picker.h"
 #include "builder.h"
+#include "mirror.h"
 
 #include "renderers.h"
 
@@ -524,8 +525,10 @@ void continue_moving(double mouse_x, double mouse_y) {
     if (!selection->allow_z)
         plane_pos[2] = selection->midpoint[2];
 
-    for (int i = 0; i < selection->len; i++)
+    for (int i = 0; i < selection->len; i++) {
         vec3_add(model.vertices[selection->indices[i]], plane_pos, selection->deltas[i]);
+        limit_mirror_source_vertex(model.vertices[selection->indices[i]]);
+    }
 
     calculate_selection_midpoint();
     recalculate_faces(&model);

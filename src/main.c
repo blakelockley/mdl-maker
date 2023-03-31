@@ -161,6 +161,7 @@ int main(int argc, char **argv) {
             render_model_normals(&model);
 
 
+        render_mirror_plane();
         render_mirror_faces(&model);
 
         render_selection();

@@ -28,7 +28,7 @@ vec3 cursor_projection;
 
 void init_builder() {
     // plane normal
-    vec3_set(plane_normal, 0, 1, 0);
+    vec3_set(plane_normal, 1, 0, 0);
     vec3_normalize(plane_normal, plane_normal);
 
     // plane origin, origin relative to point p
