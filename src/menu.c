@@ -102,6 +102,10 @@ void MainMenuBar() {
             
             if (igMenuItem_Bool("Add Icosphere", NULL, show_add_icosphere, true))
                 show_add_icosphere = !show_add_icosphere;
+
+            if (igMenuItem_Bool("Solidify Mirror", NULL, show_add_icosphere, true)) {
+                solidify_mirror(&model);
+            }
             
             igEndMenu();
         }

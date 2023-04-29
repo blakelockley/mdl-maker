@@ -64,4 +64,9 @@ void recalculate_faces(model_t *model);
 int check_coplanar_vertices(model_t *model, uint32_t *indices, uint32_t len);
 void sort_by_angle(model_t *model, vec3 midpoint, vec3 normal, uint32_t *indices, uint32_t len);
 
+void solidify_mirror(model_t *model);
+
+void set_min_vertices_cap(model_t *model, uint32_t cap);
+void set_min_faces_cap(model_t *model, uint32_t cap);
+
 #endif  // MODEL_H

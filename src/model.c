@@ -227,3 +227,44 @@ void sort_by_angle(model_t *model, vec3 midpoint, vec3 normal, uint32_t *indices
     for (int i = 0; i < len; i++)
         indices[i] = sorted_indices[i];
 }
+
+void set_min_vertices_cap(model_t *model, uint32_t cap) {
+    while (model->vertices_cap < cap)
+        model->vertices_cap *= 2;
+    
+    model->vertices = (vec3*)realloc(model->vertices, sizeof(face_t) * model->vertices_cap);
+}
+
+void set_min_faces_cap(model_t *model, uint32_t cap) {
+    while (model->faces_cap < cap)
+        model->faces_cap *= 2;
+    
+    model->faces = (face_t*)realloc(model->faces, sizeof(face_t) * model->faces_cap);
+}
+
+void solidify_mirror(model_t *model) {
+    uint32_t len = model->vertices_len;
+    set_min_vertices_cap(model, len * 2);
+
+    for (int i = 0; i < len; i++) {
+        vec3 v;
+        vec3_mul(v, model->vertices[i], (vec3){-1.0f, 1.0f, 1.0f});
+        add_vertex(model, v);
+    }
+
+    uint32_t faces_len = model->faces_len;
+    set_min_faces_cap(model, faces_len * 2);
+
+    for (int i = 0; i < faces_len; i++) {
+        face_t *face = &model->faces[i];
+
+        uint32_t vs[face->len];
+        for (int j = 0; j < face->len; j++)
+            vs[j] = face->indices[j] + len;
+
+        uint32_t fi = add_face(model, vs, face->len);
+        flip_face(model, fi);
+        
+        vec3_copy(model->faces[fi].color, model->faces[i].color);
+    }
+}
