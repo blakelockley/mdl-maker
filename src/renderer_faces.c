@@ -59,17 +59,17 @@ void render_model_faces(model_t *model, mat4x4 model_matrix, float alpha) {
             uint32_t *indices = model->faces[i].indices;
 
             vec3_copy(positions[vi], model->vertices[indices[0]]);
-            vec3_copy(normals[vi], model->faces[i].normal);
+            vec3_normalize(normals[vi], model->vertices[indices[0]]);
             vec3_copy(colors[vi], model->faces[i].color);
             vi++;
             
             vec3_copy(positions[vi], model->vertices[indices[j - 1]]);
-            vec3_copy(normals[vi], model->faces[i].normal);
+            vec3_normalize(normals[vi], model->vertices[indices[j - 1]]);
             vec3_copy(colors[vi], model->faces[i].color);
             vi++;
             
             vec3_copy(positions[vi], model->vertices[indices[j - 0]]);
-            vec3_copy(normals[vi], model->faces[i].normal);
+            vec3_normalize(normals[vi], model->vertices[indices[j - 0]]);
             vec3_copy(colors[vi], model->faces[i].color);
             vi++;
         }

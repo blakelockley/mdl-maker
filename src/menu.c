@@ -22,6 +22,15 @@ bool render_edges = false;
 bool render_faces = true;
 bool render_normals = false;
 
+enum _normals_mode_t {
+    NORMALS_FACE = 0,
+    NORMALS_VERTEX = 1,
+};
+
+typedef enum _normals_mode_t normals_mode_t;
+
+normals_mode_t normals_mode = NORMALS_FACE;
+
 void AddVertexMenu(bool *p_open);
 void AddPlaneMenu(bool *p_open);
 void AddDiscMenu(bool *p_open);
@@ -80,6 +89,15 @@ void MainMenuBar() {
             
             if (igMenuItem_Bool("Render Normals", NULL, render_normals, true))
                 render_normals = !render_normals;
+            
+            igSeparator();
+            igMenuItem_Bool("Lighting Normals", NULL, false, false);
+            
+            if (igMenuItem_Bool("Face Normals", NULL, normals_mode == NORMALS_FACE, true))
+                normals_mode = NORMALS_FACE;
+            
+            if (igMenuItem_Bool("Vertex Normals", NULL, normals_mode == NORMALS_VERTEX, true))
+                normals_mode = NORMALS_VERTEX;
             
             igEndMenu();
         }
