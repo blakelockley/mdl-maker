@@ -22,29 +22,29 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (io->WantCaptureKeyboard)
         return;
     
-    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-        select_all();
-    }
+    // if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+    //     select_all();
+    // }
     
-    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-        selection->show_rotate = !selection->show_rotate;
-    }
+    // if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+    //     selection->show_rotate = !selection->show_rotate;
+    // }
     
-    if (key == GLFW_KEY_X && action == GLFW_PRESS) {
-        selection->allow_x = true; selection->allow_y = false; selection->allow_z = false;
-    }
+    // if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+    //     selection->allow_x = true; selection->allow_y = false; selection->allow_z = false;
+    // }
     
-    if (key == GLFW_KEY_Y && action == GLFW_PRESS) {
-        selection->allow_x = false; selection->allow_y = true; selection->allow_z = false;
-    }
+    // if (key == GLFW_KEY_Y && action == GLFW_PRESS) {
+    //     selection->allow_x = false; selection->allow_y = true; selection->allow_z = false;
+    // }
     
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
-        selection->allow_x = false; selection->allow_y = false; selection->allow_z = true;
-    }
+    // if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+    //     selection->allow_x = false; selection->allow_y = false; selection->allow_z = true;
+    // }
     
-    if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS) {
-        remove_vertices();
-    }
+    // if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS) {
+    //     remove_vertices();
+    // }
     
     if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
         toggle_building_plane();
@@ -57,8 +57,8 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_S && action == GLFW_PRESS && mods == GLFW_MOD_SUPER)
         save_file(NULL, &model);
 
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        clear_selection(&selection);
+    // if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    //     clear_selection(&selection);
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {

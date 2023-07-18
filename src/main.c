@@ -24,6 +24,7 @@
 #include "builder.h"
 #include "renderers.h"
 #include "mirror.h"
+#include "operations/translate.h"
 
 #define DEBUG 1
 
@@ -118,7 +119,7 @@ int main(int argc, char **argv) {
     
     init_builder();
     init_selection();
-
+    
     init_picker(&picker);
 
     if (filename)
@@ -137,6 +138,8 @@ int main(int argc, char **argv) {
         update_menu();
         update_selection();
         update_builder();
+
+        update_translate();
         
         show_camera_gui(&camera);
 
@@ -165,6 +168,8 @@ int main(int argc, char **argv) {
 
         render_selection();
         render_builder();
+
+        render_translate();
 
         igRender();
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());

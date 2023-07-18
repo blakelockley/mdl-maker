@@ -3,7 +3,7 @@
 # make clean  		# remove output files
 
 CC = gcc
-CFLAGS = -Wall -g -Iincludes
+CFLAGS = -Wall -g -Iincludes -Isrc
 LFLAGS = libglfw.3.dylib libfreetype.6.dylib cimgui.dylib -framework OpenGL -framework Cocoa -framework IOKit
 
 TARGET = main
