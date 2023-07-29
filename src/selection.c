@@ -50,7 +50,7 @@ void finish_selection(double mouse_x, double mouse_y) {
 
     selection->is_visible = false;
 
-    bool shift_pressed = true; // TODO: ...
+    int shift_pressed = glfwGetKey(GLFW_KEY_LEFT_SHIFT, GLFW_PRESS);
 
     if (shift_pressed || selection->len == 0) {
         float min_x = fminf(selection->ax, selection->bx);
@@ -87,8 +87,6 @@ void update_selection() {
     
     if (action != GLFW_PRESS && selection->is_visible)
         finish_selection(mouse_x, mouse_y);
-
-
 }
 
 void render_selection() {
