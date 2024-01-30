@@ -11,20 +11,9 @@
 
 #define ENGINE_INCLUDES
 #include "camera.h"
-#include "grid.h"
 #include "controls.h"
-#include "selection.h"
-#include "model.h"
-#include "light.h"
-#include "fps.h"
-#include "file.h"
-#include "menu.h"
-#include "primitives.h"
-#include "picker.h"
-#include "builder.h"
-#include "renderers.h"
-#include "mirror.h"
-#include "operations/translate.h"
+#include "scene/scene.h"
+#include "renderers/renderers.h"
 
 #define DEBUG 1
 
@@ -33,18 +22,7 @@ GLFWwindow *window;
 struct ImGuiContext* ctx;
 struct ImGuiIO* io;
 
-camera_t camera;
-light_t light;
-grid_t grid;
-model_t model;
-picker_t picker;
-
 char buffer[128];
-
-extern bool render_vertices;
-extern bool render_edges;
-extern bool render_faces;
-extern bool render_normals;
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -99,77 +77,32 @@ int main(int argc, char **argv) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Renderers setup
-
-    init_vertex_renderer(malloc(sizeof(renderer_t)));
-    init_edge_renderer(malloc(sizeof(renderer_t)));
-    init_face_renderer(malloc(sizeof(renderer_t)));
-    init_normal_renderer(malloc(sizeof(renderer_t)));
-    
-    init_selection_renderer(malloc(sizeof(renderer_t)));
-    
-    init_control_renderer();
-
     // Engine setup
 
-    init_camera(&camera);
-    init_light(&light);
-    init_grid(&grid);
-    init_model(&model);
-    
-    init_builder();
-    init_selection();
-    
-    init_picker(&picker);
+    init_camera();
+    init_renderers();
 
-    if (filename)
-        open_file(filename, &model);
+    set_sky_color((vec3){ 0.1f, 0.8f, 1.0f });
+    set_ground_color((vec3){ 0.9f, 0.8f, 0.7f });
 
     // Update-Render loop
 
     while (!glfwWindowShouldClose(window)) {
-        sprintf(buffer, "mdl-maker - %s", model.filename);
+        // Update
+        
+        sprintf(buffer, "mdl-maker - %s", filename);
         glfwSetWindowTitle(window, buffer);
        
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         igNewFrame();
 
-        update_menu();
-        update_selection();
-        update_builder();
-
-        update_translate();
+        // Render
         
-        show_camera_gui(&camera);
-
-        gui_builder();
-        gui_mirror();
-
         glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        render_grid(&grid);
-
-        if (render_vertices)
-            render_model_vertices(&model);
-        
-        if (render_edges)
-            render_model_edges(&model);
-        
-        if (render_faces)
-            render_model_faces(&model, NULL, 1.0f);
-        
-        if (render_normals)
-            render_model_normals(&model);
-
-        render_mirror_plane();
-        render_mirror_faces(&model);
-
-        render_selection();
-        render_builder();
-
-        render_translate();
+        render_scene();
 
         igRender();
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
@@ -177,21 +110,6 @@ int main(int argc, char **argv) {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    free_picker(&picker);
-
-    deinit_vertex_renderer();
-    deinit_edge_renderer();
-    deinit_face_renderer();
-    deinit_normal_renderer();
-    deinit_selection_renderer();
-
-    free_model(&model);
-    free_grid(&grid);
-    free_light(&light);
-    free_camera(&camera);
-    
-    free_selection();
 
     // Terminate ImGui
     ImGui_ImplOpenGL3_Shutdown();

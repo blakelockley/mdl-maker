@@ -2,7 +2,7 @@
   "configurations": [
     {
       "name": "Mac",
-      "includePath": ["${workspaceFolder}/**"],
+      "includePath": ["${workspaceFolder}/includes/*", "${workspaceFolder}/src/*", "${workspaceFolder}/src/**/*"],
       "defines": [],
       "macFrameworkPath": [],
       "compilerPath": "/usr/bin/clang",

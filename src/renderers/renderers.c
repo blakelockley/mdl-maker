@@ -1,7 +1,7 @@
 #include "renderers.h"
 #include "stdlib.h"
 
-renderer_t * init_renderer(renderer_t *renderer, uint32_t vbo_len) {
+renderer_t *init_renderer(renderer_t *renderer, uint32_t vbo_len) {
     glGenVertexArrays(1, &renderer->vao);
     glBindVertexArray(renderer->vao);
 
@@ -18,4 +18,8 @@ void deinit_renderer(renderer_t *renderer) {
     glDeleteBuffers(renderer->vbo_len, renderer->vbo);
     
     free(renderer->vbo);
+}
+
+void init_renderers() {
+    init_static_renderer();
 }
